@@ -56,5 +56,5 @@ Status: feita
 | R2 | `test/repo.test.mjs` | atendida |
 | R3 | `test/templates.test.mjs` | atendida |
 | R4 | `test/workflow.test.mjs` | atendida |
-| R5 | CI deste PR | falta (aguarda o CI) |
+| R5 | CI do PR #9: test (ubuntu-latest), test (windows-latest) e plugin-validate verdes | atendida |
 | R6 | `test/repo.test.mjs` (LF e BOM) | atendida |

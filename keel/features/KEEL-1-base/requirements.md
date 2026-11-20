@@ -37,7 +37,7 @@ R6. IF um arquivo do repo tem CR ou BOM THEN THE suíte SHALL falhar. [fonte: AD
 
 ## Perguntas e suposições
 - [SUPOSIÇÃO] product.md e ADRs ficam em `docs/` (ADR-005) — aguarda aceite do Miguel no PR.
-- [SUPOSIÇÃO] Sequência por script (ADR-002) e testes em quatro camadas (ADR-003) seguem como recomendados — aguardam aceite do Miguel no PR.
+- Sequência por script (ADR-002) e testes em quatro camadas (ADR-003) aceitos por Miguel em 2026-11-20 no review do PR #9.
 
 ## Conflitos encontrados
 - Nenhum.

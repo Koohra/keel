@@ -1,7 +1,7 @@
 # ADR-002 — Sequência do fluxo controlada por script
 
 ## Status
-Proposta em 2026-11-20; aguarda confirmação do Miguel neste PR (recomendada e sem objeção até aqui).
+Aceita por Miguel em 2026-11-20 (review do PR #9).
 
 ## Contexto
 No Keel 1, portões e ordem do fluxo viviam em prosa de skill, e o modelo às vezes pulava etapas. Regras sem exceção pertencem a hooks e scripts, não à prosa. [fonte: especificacao.md#sequência-controlada-por-script-workflowjson]
