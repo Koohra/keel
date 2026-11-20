@@ -10,7 +10,7 @@ Tudo aqui é proposta: nada é gravado sem o dev aprovar o trecho exato. Faça u
 com a opção recomendada.
 
 Scripts (Node, sem dependências), rodados na raiz do projeto:
-- `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-context.mjs" <comando>`: AGENTS.md e CLAUDE.md.
+- `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-context.mjs" <command>`: AGENTS.md e CLAUDE.md.
 - `node "${CLAUDE_PLUGIN_ROOT}/scripts/arch-check.mjs"`: regras de `keel/architecture.json`.
 
 Modelos: `${CLAUDE_PLUGIN_ROOT}/templates/principles.md`, `${CLAUDE_PLUGIN_ROOT}/templates/architecture.json`,
@@ -21,11 +21,11 @@ Modelos: `${CLAUDE_PLUGIN_ROOT}/templates/principles.md`, `${CLAUDE_PLUGIN_ROOT}
 1. Rode `keel-context.mjs review`. É uma revisão que lê e não grava: não edite nenhum arquivo neste passo.
 2. Leia os arquivos apontados e classifique cada regra que o script não pegou:
    - **conflita com o fluxo** (ex.: "commite direto", "pule testes", "não peça confirmação");
-   - **comando do projeto** (teste, lint, build): vai para "Checagem" do product.md com a origem `(AGENTS.md:L<n>)`;
+   - **comando do projeto** (teste, lint, build): vai para "Checks" do product.md com a origem `(AGENTS.md:L<n>)`;
    - **princípio de engenharia**: fica onde está; a seção de princípios só aponta para ele. Se for checável,
      sugira virar lint ou teste do projeto;
    - o resto fica como está, sem comentário.
-3. Antes de mostrar uma citação sua, confira com `keel-context.mjs quote <arquivo> <linha> "<trecho>"`.
+3. Antes de mostrar uma citação sua, confira com `keel-context.mjs quote <file> <line> "<text>"`.
    Citação que não confere não aparece.
 4. Mostre o relatório: conflitos com arquivo e linha, comandos mortos, tamanho, visibilidade e fluxos de
    outras ferramentas. Para cada conflito o dev escolhe: (a) mudar o próprio arquivo (você mostra o texto
@@ -47,14 +47,14 @@ Visibilidade (o relatório diz qual caso é):
   Não copie o que o código já diz. Documentação antiga: proponha destino ou descarte para cada fonte.
 - ADRs no formato `keel/adrs/ADR-NNN-<slug>.md`, com Status, Contexto, Decisão, Consequências e Confirmação.
 
-## 3. Princípios de engenharia (seção do product.md)
+## 3. Engineering principles (seção do product.md)
 
 Parta de `templates/principles.md` e ajuste com o dev:
 - No máximo 10 regras, cada uma marcada `[hook]` (checada por script) ou `[review]` (rubrica de design).
 - Degrau de arquitetura de cada módulo, com motivo. Clean Architecture e DDD não são o padrão: a regra
   universal é a direção das dependências; o resto segue o degrau.
 - Exemplares a seguir e caminhos que não se copia.
-- Checagem: comandos de teste, lint com complexidade e arquitetura, cada um com a origem quando vier do AGENTS.md.
+- Checks: comandos de teste, lint com complexidade e arquitetura, cada um com a origem quando vier do AGENTS.md.
 
 ## 4. keel/architecture.json e testes de arquitetura
 
@@ -68,7 +68,7 @@ Parta de `templates/principles.md` e ajuste com o dev:
    `arch-check.mjs --write-baseline`. Assim só violação nova falha.
 5. Ferramenta nativa da linguagem (ArchUnit, Konsist, NetArchTest/ArchUnitNET, dependency-cruiser,
    import-linter, go-arch-lint): proponha a tradução do architecture.json e só instale com autorização
-   explícita. O comando escolhido vai para "Checagem".
+   explícita. O comando escolhido vai para "Checks".
 
 ## 5. AGENTS.md (opcional)
 
@@ -76,11 +76,11 @@ Parta de `templates/principles.md` e ajuste com o dev:
   resposta sai. Não gere o conteúdo a partir do código.
 - Com AGENTS.md: se o dev quiser, proponha uma reestruturação nas seções do modelo que só move e remove
   linhas, sem reescrever o texto do dev. Escreva a proposta num arquivo temporário, rode
-  `keel-context.mjs restructure-check AGENTS.md <proposta>` e só mostre se passar. Mostre o diff e aplique
+  `keel-context.mjs restructure-check AGENTS.md <proposal>` e só mostre se passar. Mostre o diff e aplique
   só com aprovação.
-- Bloco do Keel: o padrão é "não". Ofereça só se o relatório trouxer `outros-agentes` (Copilot, Cursor, Gemini).
-  Com aprovação, `keel-context.mjs block apply --file <AGENTS.md ou CLAUDE.md>`: um arquivo só, até 6 linhas,
-  nada fora do bloco muda. `block remove --file <arquivo>` tira.
+- Bloco do Keel: o padrão é "não". Ofereça só se o relatório trouxer `other-agents` (Copilot, Cursor, Gemini).
+  Com aprovação, `keel-context.mjs block apply --file <AGENTS.md or CLAUDE.md>`: um arquivo só, até 6 linhas,
+  nada fora do bloco muda. `block remove --file <file>` tira.
 - Depois de qualquer mudança nesses arquivos, rode `keel-context.mjs check`.
 
 ## Portão

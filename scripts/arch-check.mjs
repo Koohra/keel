@@ -1,23 +1,23 @@
 #!/usr/bin/env node
-// Confere keel/architecture.json com um varredor de imports aproximado (JS/TS e Python),
-// para quando o projeto não tem a ferramenta nativa da linguagem.
-// Uso: node scripts/arch-check.mjs [--root <pasta>] [--json] [--write-baseline] [--files a,b]
-// Saída: 0 sem violação nova (ou sem architecture.json), 1 com violação nova, 2 configuração inválida.
+// Checks keel/architecture.json with an approximate import scanner (JS/TS and Python),
+// for when the project does not have the language's native tool.
+// Usage: node scripts/arch-check.mjs [--root <folder>] [--json] [--write-baseline] [--files a,b]
+// Exit: 0 no new violation (or no architecture.json), 1 new violation, 2 invalid configuration.
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const CONFIG_PATH = 'keel/architecture.json';
 const DEFAULT_BASELINE = 'keel/arch-baseline.txt';
-const CYCLE_FIX = 'quebre o ciclo invertendo uma das dependências ou extraindo o que é comum';
+const CYCLE_FIX = 'break the cycle by inverting one of the dependencies or extracting what is shared';
 
 const JS_EXTENSIONS = ['.ts', '.tsx', '.js', '.mjs', '.cjs', '.jsx', '.mts', '.cts'];
 const SOURCE_EXTENSIONS = new Set([...JS_EXTENSIONS, '.py']);
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', 'coverage', '.venv', 'venv', '__pycache__', '.next', 'target', 'results']);
 
-// Pacotes por categoria. Casam por nome exato ou prefixo "nome/" (JS) ou "nome." (Python);
-// o prefixo mais longo vence. "clock" não tem pacote padrão: declare-o em "externals".
-// "externals" do architecture.json soma pacotes a uma categoria ou cria categorias novas.
+// Packages per category. They match by exact name or prefix "name/" (JS) or "name." (Python);
+// the longest prefix wins. "clock" has no default package: declare it in "externals".
+// "externals" in architecture.json adds packages to a category or creates new categories.
 export const DEFAULT_EXTERNALS = {
   web: ['express', 'fastify', 'koa', '@nestjs', 'next', 'hapi', 'flask', 'fastapi', 'django', 'starlette'],
   db: ['pg', 'mysql', 'mysql2', 'mongodb', 'mongoose', 'typeorm', '@prisma/client', 'prisma', 'sequelize', 'knex',
@@ -49,8 +49,8 @@ export function globToRegExp(glob) {
 
 const isPython = (path) => path.endsWith('.py');
 
-// Troca comentários // e /* */ fora de strings por espaços, preservando as quebras de linha.
-// Com strings: true, troca também o conteúdo das strings. Aproximado: não reconhece literais de regex.
+// Replaces // and /* */ comments outside strings with spaces, keeping line breaks.
+// With strings: true, also replaces the content of strings. Approximate: does not recognize regex literals.
 export function blankComments(text, { strings = false } = {}) {
   let out = '';
   let quote = null;
@@ -79,7 +79,7 @@ export function blankComments(text, { strings = false } = {}) {
 
 function parseJs(text) {
   const clean = blankComments(text);
-  // Só vale import cuja palavra-chave está fora de string.
+  // Only an import whose keyword is outside a string counts.
   const code = blankComments(text, { strings: true });
   const patterns = [
     /(?<![\w$.])(?:import|export)\s+(?:type\s+)?[\w$*{},\s]*?\bfrom\s*(['"])([^'"\n]+)\1/g,
@@ -161,7 +161,7 @@ function resolveJsFile(base, fileSet) {
   return candidates.find((p) => fileSet.has(p));
 }
 
-// Aliases de tsconfig/jsconfig: devolve os caminhos candidatos, ou null se nenhum padrão casa.
+// tsconfig/jsconfig aliases: returns the candidate paths, or null if no pattern matches.
 function aliasTargets(specifier, aliases) {
   if (!aliases) return null;
   const base = aliases.baseUrl ?? '.';
@@ -177,8 +177,8 @@ function aliasTargets(specifier, aliases) {
   return null;
 }
 
-// Resolve um import para arquivos do projeto ({ internal: [paths] }), um pacote externo
-// ({ external }) ou um import que parece do projeto mas não foi achado ({ unresolved: true }).
+// Resolves an import to project files ({ internal: [paths] }), an external package
+// ({ external }) or an import that looks like the project's but was not found ({ unresolved: true }).
 function resolveImport(imp, from, context) {
   const { fileSet, externals, roots, aliases, topDirs } = context;
   if (isPython(from)) {
@@ -237,52 +237,52 @@ function resolveImport(imp, from, context) {
 
 function validateConfig(config, paths) {
   const fail = (message) => { throw new Error(`${CONFIG_PATH}: ${message}`); };
-  if (!config || typeof config !== 'object' || Array.isArray(config)) fail('esperado um objeto');
+  if (!config || typeof config !== 'object' || Array.isArray(config)) fail('expected an object');
   const components = config.components ?? {};
-  if (typeof components !== 'object' || Array.isArray(components)) fail('"components" deve ser um objeto nome → lista de globs');
+  if (typeof components !== 'object' || Array.isArray(components)) fail('"components" must be an object name -> list of globs');
   for (const [name, globs] of Object.entries(components)) {
-    if (!Array.isArray(globs) || globs.some((g) => typeof g !== 'string')) fail(`componente ${name}: esperada uma lista de globs`);
+    if (!Array.isArray(globs) || globs.some((g) => typeof g !== 'string')) fail(`component ${name}: expected a list of globs`);
   }
   const externals = { ...DEFAULT_EXTERNALS };
   for (const [category, entries] of Object.entries(config.externals ?? {})) {
-    if (!Array.isArray(entries) || entries.some((e) => typeof e !== 'string')) fail(`externals.${category}: esperada uma lista de pacotes`);
+    if (!Array.isArray(entries) || entries.some((e) => typeof e !== 'string')) fail(`externals.${category}: expected a list of packages`);
     externals[category] = [...(DEFAULT_EXTERNALS[category] ?? []), ...entries];
   }
   const roots = config.roots ?? [];
-  if (!Array.isArray(roots) || roots.some((r) => typeof r !== 'string')) fail('"roots" deve ser uma lista de pastas');
+  if (!Array.isArray(roots) || roots.some((r) => typeof r !== 'string')) fail('"roots" must be a list of folders');
   const matches = (component) => {
     const regexes = components[component].map(globToRegExp);
     return paths.some((path) => regexes.some((re) => re.test(path)));
   };
-  if (!Array.isArray(config.rules ?? [])) fail('"rules" deve ser uma lista');
+  if (!Array.isArray(config.rules ?? [])) fail('"rules" must be a list');
   for (const rule of config.rules ?? []) {
     const name = rule?.name;
-    if (typeof name !== 'string' || !name) fail('regra sem "name"');
-    if (!(rule.from in components)) fail(`regra ${name}: componente desconhecido "${rule.from}" em "from"`);
+    if (typeof name !== 'string' || !name) fail('rule without "name"');
+    if (!(rule.from in components)) fail(`rule ${name}: unknown component "${rule.from}" in "from"`);
     if (!matches(rule.from)) {
-      fail(`regra ${name} casa com zero arquivos (componente ${rule.from}); corrija os globs para evitar passe vazio`);
+      fail(`rule ${name} matches zero files (component ${rule.from}); fix the globs to avoid an empty pass`);
     }
-    if (!Array.isArray(rule.forbid)) fail(`regra ${name}: "forbid" deve ser uma lista`);
+    if (!Array.isArray(rule.forbid)) fail(`rule ${name}: "forbid" must be a list`);
     for (const target of rule.forbid) {
       if (typeof target === 'string' && target.startsWith('external:')) {
         const category = target.slice('external:'.length);
-        if (!(category in externals)) fail(`regra ${name}: categoria externa desconhecida "${category}"`);
-      } else if (!(target in components)) fail(`regra ${name}: componente desconhecido "${target}" em "forbid"`);
-      else if (!matches(target)) fail(`regra ${name}: componente ${target} em "forbid" casa com zero arquivos; corrija os globs`);
+        if (!(category in externals)) fail(`rule ${name}: unknown external category "${category}"`);
+      } else if (!(target in components)) fail(`rule ${name}: unknown component "${target}" in "forbid"`);
+      else if (!matches(target)) fail(`rule ${name}: component ${target} in "forbid" matches zero files; fix the globs`);
     }
-    if (typeof rule.fix !== 'string' || !rule.fix.trim()) fail(`regra ${name} sem "fix"`);
+    if (typeof rule.fix !== 'string' || !rule.fix.trim()) fail(`rule ${name} without "fix"`);
   }
   const noCycles = config.noCycles ?? [];
-  if (!Array.isArray(noCycles) || noCycles.some((g) => typeof g !== 'string')) fail('"noCycles" deve ser uma lista de globs');
+  if (!Array.isArray(noCycles) || noCycles.some((g) => typeof g !== 'string')) fail('"noCycles" must be a list of globs');
   for (const pattern of noCycles) {
     const regex = globToRegExp(pattern);
-    if (!paths.some((path) => moduleOf(path, regex))) fail(`noCycles: "${pattern}" não casa com nenhum módulo; corrija o glob`);
+    if (!paths.some((path) => moduleOf(path, regex))) fail(`noCycles: "${pattern}" matches no module; fix the glob`);
   }
-  if (config.baseline != null && typeof config.baseline !== 'string') fail('"baseline" deve ser um caminho');
+  if (config.baseline != null && typeof config.baseline !== 'string') fail('"baseline" must be a path');
   return { components, externals, rules: config.rules ?? [], noCycles, roots: roots.map((r) => toPosix(r).replace(/^\.\/|\/+$/g, '')).filter(Boolean) };
 }
 
-// Módulo de um arquivo para um padrão de noCycles: o menor prefixo do caminho que casa com o glob.
+// Module of a file for a noCycles pattern: the shortest path prefix that matches the glob.
 function moduleOf(path, regex) {
   const parts = path.split('/');
   for (let k = 1; k <= parts.length; k++) {
@@ -292,7 +292,7 @@ function moduleOf(path, regex) {
   return null;
 }
 
-// Tarjan: componentes fortemente conexos com mais de um nó.
+// Tarjan: strongly connected components with more than one node.
 function stronglyConnected(graph) {
   let index = 0;
   const stack = [];
@@ -325,7 +325,7 @@ function stronglyConnected(graph) {
   return result;
 }
 
-// Ciclo mais curto que sai do menor módulo do componente e volta a ele.
+// Shortest cycle that leaves the component's smallest module and comes back to it.
 function shortestCycle(start, graph, members) {
   const previous = new Map([[start, null]]);
   const queue = [start];
@@ -348,8 +348,8 @@ export function parseBaseline(text) {
   return new Set(text.replace(/\r\n?/g, '\n').split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#')));
 }
 
-// files: Map ou objeto caminho posix relativo → conteúdo. baseline: Set de chaves conhecidas.
-// aliases: { baseUrl, paths } lidos do tsconfig/jsconfig, ou null.
+// files: Map or object relative posix path -> content. baseline: Set of known keys.
+// aliases: { baseUrl, paths } read from tsconfig/jsconfig, or null.
 export function checkArchitecture({ config, files, baseline = new Set(), aliases = null }) {
   const entries = files instanceof Map ? [...files] : Object.entries(files);
   const paths = entries.map(([path]) => path).sort();
@@ -389,7 +389,7 @@ export function checkArchitecture({ config, files, baseline = new Set(), aliases
         }
       } else {
         const hit = forbiddenComponents.find((c) => componentsOf(edge.target).has(c));
-        if (hit) { target = edge.target; label = `componente ${hit}`; }
+        if (hit) { target = edge.target; label = `component ${hit}`; }
       }
       if (!target) continue;
       add({
@@ -398,7 +398,7 @@ export function checkArchitecture({ config, files, baseline = new Set(), aliases
         file: edge.from,
         line: edge.line,
         target,
-        message: `${edge.from}:${edge.line} importa "${edge.specifier}" (${label}), proibido pela regra ${rule.name}. Correção: ${rule.fix}`,
+        message: `${edge.from}:${edge.line} imports "${edge.specifier}" (${label}), forbidden by rule ${rule.name}. Fix: ${rule.fix}`,
       });
     }
   }
@@ -428,7 +428,7 @@ export function checkArchitecture({ config, files, baseline = new Set(), aliases
         line: edge.line,
         target: edge.target,
         modules: cycle.slice(0, -1),
-        message: `ciclo entre módulos (${pattern}): ${chain}; ${edge.from}:${edge.line} importa "${edge.specifier}". Correção: ${CYCLE_FIX}`,
+        message: `cycle between modules (${pattern}): ${chain}; ${edge.from}:${edge.line} imports "${edge.specifier}". Fix: ${CYCLE_FIX}`,
       });
     }
   }
@@ -457,7 +457,7 @@ function walk(root, dir = root, out = new Map()) {
   return out;
 }
 
-// Lê compilerOptions.baseUrl e paths do tsconfig.json ou jsconfig.json da raiz (sem seguir "extends").
+// Reads compilerOptions.baseUrl and paths from the root tsconfig.json or jsconfig.json (without following "extends").
 export function loadAliases(root) {
   for (const name of ['tsconfig.json', 'jsconfig.json']) {
     const file = join(root, name);
@@ -469,13 +469,13 @@ export function loadAliases(root) {
       const baseUrl = typeof options.baseUrl === 'string' ? posix.normalize(toPosix(options.baseUrl)) : null;
       return { aliases: { baseUrl, paths: options.paths ?? {} }, notes: [] };
     } catch (error) {
-      return { aliases: null, notes: [`${name} ignorado: não é JSON válido (${error.message}); aliases não serão resolvidos`] };
+      return { aliases: null, notes: [`${name} ignored: not valid JSON (${error.message}); aliases will not be resolved`] };
     }
   }
   return { aliases: null, notes: [] };
 }
 
-// null quando o projeto não tem keel/architecture.json.
+// null when the project has no keel/architecture.json.
 export function loadProject(root) {
   const configFile = join(root, ...CONFIG_PATH.split('/'));
   if (!existsSync(configFile)) return null;
@@ -483,7 +483,7 @@ export function loadProject(root) {
   try {
     config = JSON.parse(readFileSync(configFile, 'utf8'));
   } catch (error) {
-    throw new Error(`${CONFIG_PATH} não é JSON válido: ${error.message}`);
+    throw new Error(`${CONFIG_PATH} is not valid JSON: ${error.message}`);
   }
   const baselinePath = typeof config?.baseline === 'string' ? config.baseline : DEFAULT_BASELINE;
   const baselineFile = join(root, ...baselinePath.split('/'));
@@ -523,7 +523,7 @@ export function writeBaseline(root) {
   const keys = [...violations, ...known].map((v) => v.key).sort();
   const file = join(root, ...project.baselinePath.split('/'));
   mkdirSync(dirname(file), { recursive: true });
-  const header = '# Baseline do arch-check (varredor aproximado): violações conhecidas, uma chave por linha.\n# Só violações novas falham. Apague a linha quando a violação for corrigida.\n';
+  const header = '# arch-check baseline (approximate scanner): known violations, one key per line.\n# Only new violations fail. Delete the line when the violation is fixed.\n';
   writeFileSync(file, header + keys.map((k) => `${k}\n`).join(''));
   return { path: project.baselinePath, count: keys.length };
 }
@@ -536,14 +536,14 @@ function parseArgs(argv) {
     else if (arg === '--json') options.json = true;
     else if (arg === '--write-baseline') options.writeBaseline = true;
     else if (arg === '--files') options.files = (argv[++i] ?? '').split(',').map((f) => f.trim()).filter(Boolean);
-    else throw new Error(`argumento desconhecido: ${arg}`);
+    else throw new Error(`unknown argument: ${arg}`);
   }
-  if (!options.root) throw new Error('--root precisa de uma pasta');
+  if (!options.root) throw new Error('--root needs a folder');
   options.root = resolve(options.root);
   return options;
 }
 
-const SKIPPED = `sem ${CONFIG_PATH}: checagem de arquitetura pulada (skipped)`;
+const SKIPPED = `no ${CONFIG_PATH}: architecture check skipped`;
 
 function main(argv) {
   let options;
@@ -553,7 +553,7 @@ function main(argv) {
       const written = writeBaseline(options.root);
       if (!written) console.log(options.json ? JSON.stringify({ status: 'skipped' }) : SKIPPED);
       else if (options.json) console.log(JSON.stringify({ status: 'baseline', ...written }));
-      else console.log(`baseline gravada em ${written.path}: ${written.count} violação(ões) conhecida(s)`);
+      else console.log(`baseline written to ${written.path}: ${written.count} known violation(s)`);
       return 0;
     }
     const result = runCheck(options.root, { files: options.files });
@@ -565,14 +565,14 @@ function main(argv) {
       console.log(SKIPPED);
       return 0;
     }
-    console.log(`arch-check (varredor aproximado): ${result.files} arquivo(s) lido(s), ${result.violations.length} violação(ões) nova(s), ${result.known.length} conhecida(s) na baseline`);
-    for (const note of result.notes) console.log(`nota: ${note}`);
+    console.log(`arch-check (approximate scanner): ${result.files} file(s) read, ${result.violations.length} new violation(s), ${result.known.length} known in the baseline`);
+    for (const note of result.notes) console.log(`note: ${note}`);
     for (const violation of result.violations) console.log(`- ${violation.message}`);
     if (result.unresolved.length) {
-      console.log('imports não resolvidos (aproximado), não contam como violação:');
+      console.log('unresolved imports (approximate), not counted as violations:');
       for (const u of result.unresolved) console.log(`  ${u.file}:${u.line} "${u.specifier}"`);
     }
-    for (const key of result.stale) console.log(`pode sair da baseline: ${key}`);
+    for (const key of result.stale) console.log(`can leave the baseline: ${key}`);
     return result.status === 'fail' ? 1 : 0;
   } catch (error) {
     if (options?.json) console.log(JSON.stringify({ status: 'error', error: error.message }));

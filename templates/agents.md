@@ -1,38 +1,38 @@
 <!-- Modelo do Keel para AGENTS.md. O dev preenche; o Keel não gera o conteúdo a partir do código.
      Só o que o agente não deduz lendo o código. Seção sem resposta sai do arquivo.
-     Até cerca de 150 linhas; detalhe longo vai para um doc linkado em "Mais detalhes".
+     Até cerca de 150 linhas; detalhe longo vai para um doc linkado em "More details".
      Regra checável vira lint, teste ou hook, e aqui só aparece o comando.
      Cada regra com o motivo em meia frase quando não for óbvio. Apague estes comentários. -->
-# <Nome do projeto>
+# <Project name>
 
-<Uma ou duas frases: o que é o projeto e a stack principal. Link para o README, sem repetir.>
+<One or two sentences: what the project is and the main stack. Link to the README, without repeating it.>
 
-## Comandos
-<!-- Comandos exatos, copiáveis. O Keel usa estes na "Checagem" do keel/product.md. -->
-- Instalar: `<comando>`
-- Testar tudo: `<comando>` · um arquivo: `<comando>`
-- Lint e formatação: `<comando>`
-- Rodar localmente: `<comando>`
+## Commands
+<!-- Comandos exatos, copiáveis. O Keel usa estes em "Checks" do keel/product.md. -->
+- Install: `<command>`
+- Test everything: `<command>` · one file: `<command>`
+- Lint and formatting: `<command>`
+- Run locally: `<command>`
 
-## Convenções
+## Conventions
 <!-- Só o que difere do padrão da linguagem ou que o código não mostra. -->
-- <convenção> (<motivo>)
-- Commits: <formato>. Branches: <padrão>.
+- <convention> (<reason>)
+- Commits: <format>. Branches: <pattern>.
 
-## Limites
+## Boundaries
 <!-- O que o agente nunca faz e o que pergunta antes. -->
-- Pergunte antes de: <ex.: adicionar dependência, mudar esquema do banco, apagar arquivo>.
-- Nunca: <ex.: editar arquivos gerados em `<pasta>`, commitar segredos, mudar `<arquivo>` à mão>.
+- Ask before: <e.g.: adding a dependency, changing the database schema, deleting a file>.
+- Never: <e.g.: editing generated files in `<folder>`, committing secrets, changing `<file>` by hand>.
 
-## Pronto quando
+## Done when
 <!-- Definição de pronto de qualquer mudança. -->
-- <ex.: testes e lint passam com os comandos acima; teste novo para comportamento novo>.
+- <e.g.: tests and lint pass with the commands above; new test for new behavior>.
 
-## Armadilhas
+## Pitfalls
 <!-- Coisas que já fizeram o agente ou uma pessoa errar. Remova quando deixarem de valer. -->
-- <armadilha> (<como evitar>)
+- <pitfall> (<how to avoid it>)
 
-## Mais detalhes
-- Arquitetura e princípios: `keel/product.md`
-- Decisões: `keel/adrs/`
-- <outro doc>: `<caminho>`
+## More details
+- Architecture and principles: `keel/product.md`
+- Decisions: `keel/adrs/`
+- <other doc>: `<path>`

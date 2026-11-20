@@ -1,15 +1,15 @@
 {
   "components": {
-    "dominio": ["src/cobranca/dominio/**"],
-    "aplicacao": ["src/cobranca/aplicacao/**"],
-    "infra": ["src/cobranca/infra/**", "src/cobranca/web/**"]
+    "domain": ["src/billing/domain/**"],
+    "application": ["src/billing/application/**"],
+    "infra": ["src/billing/infra/**", "src/billing/web/**"]
   },
   "rules": [
     {
-      "name": "dominio-nao-depende-de-fora",
-      "from": "dominio",
-      "forbid": ["aplicacao", "infra", "external:web", "external:db", "external:http"],
-      "fix": "Declare uma porta no domínio e implemente-a em infra; passe-a por parâmetro."
+      "name": "domain-does-not-depend-on-outside",
+      "from": "domain",
+      "forbid": ["application", "infra", "external:web", "external:db", "external:http"],
+      "fix": "Declare a port in the domain and implement it in infra; pass it as a parameter."
     }
   ],
   "noCycles": ["src/*"],

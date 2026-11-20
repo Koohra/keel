@@ -27,7 +27,7 @@ function withProject(files, fn) {
   }
 }
 
-test('extrai definições com a linha em cada linguagem', () => {
+test('extracts definitions with the line in each language', () => {
   const cases = {
     'a.ts': ['import x from "y";', 'export class Conta {', '  async sacar(valor: number): Promise<void> {', '    if (valor) {', '  }', '}', 'export function abrir(id) {', 'export interface Repo {', 'const interno = 1;'],
     'b.py': ['import os', 'class Pedido:', '    def total(self, itens):', 'async def enviar(p):'],
@@ -53,7 +53,7 @@ test('extrai definições com a linha em cada linguagem', () => {
   assert.deepEqual(definitions('notas.md', '# class X'), []);
 });
 
-test('arquivo citado por outros vem antes do que ninguém cita', () => {
+test('a file cited by others comes before one nobody cites', () => {
   withProject({
     'src/sozinho.js': 'export function isolado() {}\n',
     'src/conta.js': 'export class Conta {}\n',
@@ -66,52 +66,52 @@ test('arquivo citado por outros vem antes do que ninguém cita', () => {
   });
 });
 
-test('o mapa cabe no orçamento e diz quantos arquivos ficaram de fora', () => {
+test('the map fits the budget and says how many files were left out', () => {
   const files = {};
   for (let i = 0; i < 40; i += 1) files[`src/m${i}.js`] = `export function funcao${i}(parametroComprido, outroParametro) {}\n`;
   withProject(files, (dir) => {
     const map = repoMap(dir, { budget: 120 });
-    assert.ok(Math.ceil(map.length / 4) <= 120, `${map.length} caracteres`);
-    assert.match(map, /^… \d+ arquivos fora do orçamento de 120 tokens$/m);
+    assert.ok(Math.ceil(map.length / 4) <= 120, `${map.length} characters`);
+    assert.match(map, /^… \d+ files outside the budget of 120 tokens$/m);
   });
 });
 
-test('ignora node_modules, .git e pastas de build; o foco puxa arquivos para cima', () => {
+test('ignores node_modules, .git and build folders; the focus pulls files up', () => {
   withProject({
     'node_modules/lib/index.js': 'export function lib() {}\n',
     '.git/hooks/x.js': 'function hook() {}\n',
-    'dist/app.js': 'function compilado() {}\n',
-    'src/cobranca.js': 'export function cobrar() {}\n',
-    'src/login.js': 'export function entrar() {}\n',
+    'dist/app.js': 'function compiled() {}\n',
+    'src/billing.js': 'export function charge() {}\n',
+    'src/login.js': 'export function signIn() {}\n',
   }, (dir) => {
     const map = repoMap(dir, { budget: 1000 });
     assert.doesNotMatch(map, /node_modules|\.git|dist\//);
     const focused = repoMap(dir, { budget: 1000, focus: ['login'] });
-    assert.ok(focused.indexOf('src/login.js') < focused.indexOf('src/cobranca.js'), focused);
+    assert.ok(focused.indexOf('src/login.js') < focused.indexOf('src/billing.js'), focused);
   });
-  withProject({ 'README.md': '# nada\n' }, (dir) => {
-    assert.match(repoMap(dir, { budget: 100 }), /nenhuma definição encontrada/);
+  withProject({ 'README.md': '# nothing\n' }, (dir) => {
+    assert.match(repoMap(dir, { budget: 100 }), /no definitions found/);
   });
 });
 
-test('arquivo central grande entra cortado, não some', () => {
+test('a large central file goes in cut, it does not drop out', () => {
   const files = { 'src/servico.js': Array.from({ length: 80 }, (_, i) => `export function operacao${i}(a, b) {}`).join('\n') };
   for (let i = 0; i < 5; i += 1) files[`src/uso${i}.js`] = `import { operacao1 } from './servico.js';\nexport function uso${i}() { return operacao1(); }\n`;
   withProject(files, (dir) => {
     const map = repoMap(dir, { budget: 300 });
-    assert.ok(Math.ceil(map.length / 4) <= 300, `${map.length} caracteres`);
+    assert.ok(Math.ceil(map.length / 4) <= 300, `${map.length} characters`);
     assert.match(map, /^src\/servico\.js$\n^ {2}1: export function operacao0/m);
-    assert.match(map, /^ {2}… \+\d+ definições$/m);
+    assert.match(map, /^ {2}… \+\d+ definitions$/m);
   });
 });
 
-test('orçamento menor que o mínimo é recusado', () => {
+test('a budget below the minimum is refused', () => {
   withProject({ 'a.js': 'export function a() {}\n' }, (dir) => {
-    assert.throws(() => repoMap(dir, { budget: 5 }), /mínimo/);
+    assert.throws(() => repoMap(dir, { budget: 5 }), /minimum/);
   });
 });
 
-test('no git, caminhos com acento entram no mapa', () => {
+test('in git, paths with accents go into the map', () => {
   withProject({ 'src/cobrança.js': 'export function cobrar() {}\n' }, (dir) => {
     const git = spawnSync('git', ['init', '-q'], { cwd: dir });
     if (git.status !== 0) return;
@@ -119,18 +119,18 @@ test('no git, caminhos com acento entram no mapa', () => {
   });
 });
 
-test('CLI imprime o mapa do diretório atual', () => {
+test('CLI prints the map of the current directory', () => {
   const result = spawnSync(process.execPath, [script, '--budget', '800', '--focus', 'state'], { cwd: root, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /^scripts\/keel-state\.mjs$/m);
   assert.doesNotMatch(result.stdout, /\\/);
-  const bad = spawnSync(process.execPath, [script, '--budget', 'muito'], { cwd: root, encoding: 'utf8' });
+  const bad = spawnSync(process.execPath, [script, '--budget', 'lots'], { cwd: root, encoding: 'utf8' });
   assert.equal(bad.status, 1);
   assert.match(bad.stderr, /--budget/);
   const spaced = spawnSync(process.execPath, [script, '--focus', 'state', 'scripts', 'test'], { cwd: root, encoding: 'utf8' });
   assert.equal(spaced.status, 1);
-  assert.match(spaced.stderr, /vírgula/);
-  const missing = spawnSync(process.execPath, [script, 'nao-existe'], { cwd: root, encoding: 'utf8' });
+  assert.match(spaced.stderr, /comma/);
+  const missing = spawnSync(process.execPath, [script, 'does-not-exist'], { cwd: root, encoding: 'utf8' });
   assert.equal(missing.status, 1);
-  assert.match(missing.stderr, /não existe/);
+  assert.match(missing.stderr, /does not exist/);
 });

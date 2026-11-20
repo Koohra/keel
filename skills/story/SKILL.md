@@ -15,7 +15,7 @@ Você conduz uma história do dev pelo fluxo do Keel. Quem decide a ordem das fa
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" next`
    A saída diz `phase`, `instructions` (arquivo da fase), `missing` (o que falta para sair dela) e `expired` (aprovação que venceu porque o documento mudou).
 3. Se o `next` diz que não há história para a branch atual, é uma história nova. Confirme com o dev a chave (código do Jira ou parecido), um slug curto, o título, o link e a branch. A branch é criada pelo dev; se estiver na principal, peça que ele crie. Depois:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" init --key <CHAVE> --slug <descricao> --title "<título>" [--source <link>]`
+   `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" init --key <KEY> --slug <slug> --title "<title>" [--source <link>]`
    Passe `--source` só se a história tiver link; não invente um.
 4. Leia `${CLAUDE_SKILL_DIR}/<instructions>` (por exemplo `${CLAUDE_SKILL_DIR}/phases/triage.md`) e siga. Carregue só a fase atual. Se o arquivo da fase não existe nesta versão do Keel, diga ao dev em que fase a história está e pare.
 5. Quando o trabalho da fase terminar, peça para avançar:
@@ -34,7 +34,7 @@ Se `expired` não estiver vazio, diga ao dev qual documento mudou depois da apro
 
 ## Regras de todas as fases
 
-- Fonte em todo fato: `keel/product.md#seção`, `ADR-NNN`, `arquivo:linha`, link da história ou `dev em AAAA-MM-DD`. Sem fonte, é `[PERGUNTA]` ou `[SUPOSIÇÃO]`.
+- Fonte em todo fato: `keel/product.md#seção`, `ADR-NNN`, `arquivo:linha`, link da história ou `dev on YYYY-MM-DD`. Sem fonte, é `[QUESTION]` ou `[ASSUMPTION]`.
 - Nada inventado: categoria sem informação recebe "sem orientação encontrada"; resultado esperado desconhecido é pergunta, não critério.
 - Perguntas ao dev uma por vez, cada uma com a opção que você recomenda, no máximo cerca de cinco por documento.
 - Contexto mínimo: só as seções do product.md e as ADRs que a história toca; código sob demanda.

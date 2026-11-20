@@ -17,10 +17,10 @@ function storyIn(phase) {
   return { ...newState({ key: 'APP-1', slug: 'login', title: 'Login', branch: 'feat/x', now: 'x' }), phase };
 }
 
-// História real em implementation: portões cumpridos pelo caminho válido.
+// Real story in implementation: gates met along the valid path.
 function implementationState(docs) {
   const now = 'x';
-  let state = setLevel(storyIn('triage'), 'padrao', 'Ana', now);
+  let state = setLevel(storyIn('triage'), 'standard', 'Ana', now);
   state = advance(state, workflow, docs, now).state;
   state = advance(recordGenerated(state, 'repo-map', now), workflow, docs, now).state;
   state = advance(state, workflow, docs, now).state;
@@ -29,7 +29,7 @@ function implementationState(docs) {
   return advance(approve(state, 'tasks.md', 'Ana', docs, workflow, now), workflow, docs, now).state;
 }
 
-test('checkEdit bloqueia state.json em qualquer fase', () => {
+test('checkEdit blocks state.json in any phase', () => {
   for (const state of [null, storyIn('implementation')]) {
     const result = checkEdit('keel/features/APP-1-login/state.json', state, workflow);
     assert.equal(result.block, true);
@@ -38,15 +38,15 @@ test('checkEdit bloqueia state.json em qualquer fase', () => {
   assert.equal(checkEdit('keel/features/APP-1-login/State.JSON', null, workflow).block, true);
 });
 
-test('checkEdit libera código só na fase que permite', () => {
-  assert.match(checkEdit('src/app.js', storyIn('tasks'), workflow).reason, /fase tasks/);
+test('checkEdit allows code only in the phase that permits it', () => {
+  assert.match(checkEdit('src/app.js', storyIn('tasks'), workflow).reason, /phase tasks/);
   assert.equal(checkEdit('src/app.js', storyIn('implementation'), workflow).block, false);
   assert.equal(checkEdit('keel/features/APP-1-login/tasks.md', storyIn('tasks'), workflow).block, false);
-  assert.equal(checkEdit('../fora/notas.md', storyIn('tasks'), workflow).block, false);
+  assert.equal(checkEdit('../outside/notes.md', storyIn('tasks'), workflow).block, false);
   assert.equal(checkEdit('src/app.js', null, workflow).block, false);
 });
 
-test('checkCommand bloqueia comando de terminal que grava state.json', () => {
+test('checkCommand blocks a terminal command that writes state.json', () => {
   for (const command of [
     'echo \'{"phase":"implementation"}\' > keel/features/X/state.json',
     'cat a >> keel/features/X/State.json',
@@ -63,7 +63,7 @@ test('checkCommand bloqueia comando de terminal que grava state.json', () => {
   ]) assert.equal(checkCommand(command).block, false, command);
 });
 
-test('hook lê o evento, acha a história da branch e sai com 2 ao bloquear', () => {
+test('hook reads the event, finds the branch story and exits with 2 when blocking', () => {
   const dir = mkdtempSync(join(tmpdir(), 'keel-hook-'));
   try {
     mkdirSync(join(dir, '.git'));
@@ -78,18 +78,18 @@ test('hook lê o evento, acha a história da branch e sai com 2 ao bloquear', ()
       input: JSON.stringify({ tool_name: 'Edit', tool_input: { file_path: join(dir, file) }, cwd: dir }),
       encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: dir },
     });
-    // state.json com phase "implementation" escrito à mão, sem portões: o hook usa a fase real.
+    // state.json with phase "implementation" written by hand, without gates: the hook uses the real phase.
     const forged = run('src/app.js');
     assert.equal(forged.status, 2);
-    assert.match(forged.stderr, /APP-1 está na fase triage/);
+    assert.match(forged.stderr, /APP-1 is in phase triage/);
     assert.equal(run('keel/features/APP-1-login/requirements.md').status, 0);
     writeFileSync(join(folder, 'state.json'), JSON.stringify(implementationState(docs)));
     assert.equal(run('src/app.js').status, 0);
     writeFileSync(join(folder, 'requirements.md'), docs['requirements.md'].replace('mostrar aviso', 'mostrar banner'));
-    assert.match(run('src/app.js').stderr, /APP-1 está na fase confirmation/);
+    assert.match(run('src/app.js').stderr, /APP-1 is in phase confirmation/);
     mkdirSync(join(dir, 'keel', 'features', 'OLD-1-x'));
-    writeFileSync(join(dir, 'keel', 'features', 'OLD-1-x', 'state.json'), '{ conflito');
-    assert.match(run('src/app.js').stderr, /fase confirmation/);
+    writeFileSync(join(dir, 'keel', 'features', 'OLD-1-x', 'state.json'), '{ broken');
+    assert.match(run('src/app.js').stderr, /phase confirmation/);
     writeFileSync(join(dir, '.git', 'HEAD'), 'ref: refs/heads/main\n');
     assert.equal(run('keel/features/APP-1-login/tasks.md').status, 0);
     const bash = spawnSync(process.execPath, [hook], {
@@ -100,13 +100,13 @@ test('hook lê o evento, acha a história da branch e sai com 2 ao bloquear', ()
     assert.match(bash.stderr, /keel-state\.mjs/);
     const unreadable = run('src/app.js');
     assert.equal(unreadable.status, 2);
-    assert.match(unreadable.stderr, /ilegível.*OLD-1-x/s);
+    assert.match(unreadable.stderr, /unreadable.*OLD-1-x/s);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test('hooks.json registra o PreToolUse nas ferramentas de edição e no Bash', () => {
+test('hooks.json registers PreToolUse on the edit tools and on Bash', () => {
   const entry = readJson('hooks/hooks.json').hooks.PreToolUse[0];
   assert.equal(entry.matcher, 'Write|Edit|MultiEdit|NotebookEdit|Bash');
   assert.match(entry.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/hooks\/pre-tool-use\.mjs/);

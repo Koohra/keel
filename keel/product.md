@@ -1,9 +1,9 @@
 # Keel — produto
 
-Versão 2 · Responsável: Miguel · Fonte detalhada: [docs/especificacao.md](../docs/especificacao.md)
+Versão 2 · Responsável: Miguel · Fonte detalhada: [docs/specification.md](../docs/specification.md)
 
 ## Visão
-O Keel é um plugin do Claude Code que transforma documentação mínima e cuidadosa em código bom, uma história e uma task pequena por vez, com TDD em cada task e evidência verificável em cada passo. [fonte: docs/especificacao.md#propósito]
+O Keel é um plugin do Claude Code que transforma documentação mínima e cuidadosa em código bom, uma história e uma task pequena por vez, com TDD em cada task e evidência verificável em cada passo. [source: docs/specification.md#propósito]
 
 Para quem: devs que usam o Claude Code em projetos reais e querem que a IA siga um processo de engenharia sem gerar volume de texto para revisar.
 
@@ -23,9 +23,9 @@ Para quem: devs que usam o Claude Code em projetos reais e querem que a IA siga 
 ## Glossário
 | Termo | Significado |
 |---|---|
-| História | Unidade de trabalho vinda do Jira ou ferramenta parecida, identificada por `<CHAVE>` |
-| Pasta da história | `keel/features/<CHAVE>-<descricao>/` com requirements.md, design.md, tasks.md e state.json |
-| Nível | `trivial`, `padrao` ou `com-design`; dosa a cerimônia |
+| História | Unidade de trabalho vinda do Jira ou ferramenta parecida, identificada por `<KEY>` |
+| Pasta da história | `keel/features/<KEY>-<slug>/` com requirements.md, design.md, tasks.md e state.json |
+| Nível | `trivial`, `standard` ou `with-design`; dosa a cerimônia |
 | Regra | Obrigação em EARS com ID `R#` |
 | Critério de aceite | Exemplo Given/When/Then com ID `AC-#.#` |
 | Portão | Ponto onde o dev aprova antes de o fluxo seguir |
@@ -34,13 +34,13 @@ Para quem: devs que usam o Claude Code em projetos reais e querem que a IA siga 
 
 ## Decisões
 As decisões que afetam o projeto inteiro estão em [adrs/](adrs/):
-- [ADR-001](adrs/ADR-001-fluxo-por-historia.md) Fluxo por história e arquivos versionados.
-- [ADR-002](adrs/ADR-002-sequencia-por-script.md) Sequência do fluxo controlada por script.
-- [ADR-003](adrs/ADR-003-testes-em-quatro-camadas.md) Testes enxutos em quatro camadas.
-- [ADR-004](adrs/ADR-004-scripts-node-sem-dependencias.md) Scripts em Node sem dependências.
-- [ADR-005](adrs/ADR-005-documentos-do-projeto-em-keel.md) Documentos que o Keel lê ficam em `keel/`.
+- [ADR-001](adrs/ADR-001-per-story-flow.md) Fluxo por história e arquivos versionados.
+- [ADR-002](adrs/ADR-002-script-driven-sequence.md) Sequência do fluxo controlada por script.
+- [ADR-003](adrs/ADR-003-four-layer-tests.md) Testes enxutos em quatro camadas.
+- [ADR-004](adrs/ADR-004-dependency-free-node-scripts.md) Scripts em Node sem dependências.
+- [ADR-005](adrs/ADR-005-project-docs-in-keel.md) Documentos que o Keel lê ficam em `keel/`.
 
-## Princípios de engenharia
+## Engineering principles
 
 Valem para código novo ou alterado. [hook] é checado automaticamente; [review] entra na
 rubrica de design. Se uma regra daqui contradiz o código existente, aponte o conflito e
@@ -61,8 +61,8 @@ pergunte antes de escolher.
 9. Arquivos com LF e sem BOM; caminhos montados com `node:path`; tudo passa no Windows. [hook]
 10. Cada skill carrega só as instruções da fase atual; nada de skill enorme sempre no contexto. [review]
 
-### Degraus por módulo
-| Módulo | Degrau | Motivo |
+### Rungs per module
+| Module | Rung | Reason |
 |---|---|---|
 | `scripts/` | 2 — funções puras separadas do I/O | Regras de estado e validação são testadas sem disco |
 | `scripts/hooks/` | 1 — script de transação | Lê o evento, chama `scripts/`, devolve código de saída |
@@ -71,9 +71,9 @@ pergunte antes de escolher.
 Degraus: 1 script de transação; 2 funções de domínio puras separadas do I/O; 3 modelo de
 domínio; genérico (biblioteca pronta); organizacional.
 
-### Exemplares e o que não copiar
-Siga: os modelos em `templates/` e o fluxo de `workflow/workflow.json`. Não copie: o keel-dev
+### Exemplars and what not to copy
+Follow: os modelos em `templates/` e o fluxo de `workflow/workflow.json`. Do not copy: o keel-dev
 (Keel 1), exceto o que a especificação mandar reaproveitar, como o revisor e o commit.
 
-### Checagem
-Arquitetura: `node scripts/arch-check.mjs` (regras em `keel/architecture.json`) · Lint/complexidade: não se aplica ainda · Testes: `npm test`
+### Checks
+Architecture: `node scripts/arch-check.mjs` (regras em `keel/architecture.json`) · Lint/complexity: não se aplica ainda · Tests: `npm test`

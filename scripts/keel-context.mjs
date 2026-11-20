@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Lê e revisa os arquivos de instrução do projeto (AGENTS.md, CLAUDE.md e parentes) para o
-// setup do Keel. scan, review, quote, restructure-check e check só leem. Só três comandos
-// escrevem, cada um depois da aprovação do dev: block apply/remove (o bloco keel opcional,
-// entre <!-- keel:start --> e <!-- keel:end -->, num arquivo só) e import-agents (a linha
-// @AGENTS.md no topo do CLAUDE.md). Nada fora do bloco muda: BOM e CRLF ficam como estão.
+// Reads and reviews the project's instruction files (AGENTS.md, CLAUDE.md and relatives) for
+// Keel setup. scan, review, quote, restructure-check and check only read. Only three commands
+// write, each after the dev's approval: block apply/remove (the optional keel block, between
+// <!-- keel:start --> and <!-- keel:end -->, in a single file) and import-agents (the
+// @AGENTS.md line at the top of CLAUDE.md). Nothing outside the block changes: BOM and CRLF stay as they are.
 import {
   existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync, realpathSync, writeFileSync,
 } from 'node:fs';
@@ -22,11 +22,11 @@ const BLOCK_TARGETS = ['AGENTS.md', 'CLAUDE.md', '.claude/CLAUDE.md'];
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', 'vendor', '.venv']);
 const OTHER_AGENTS = ['.github/copilot-instructions.md', '.cursor/rules', 'GEMINI.md'];
 const SETTINGS = ['.claude/settings.json', '.claude/settings.local.json'];
-const FALLBACK_HEADINGS = ['Comandos', 'Convenções', 'Limites', 'Pronto quando', 'Armadilhas', 'Mais detalhes'];
+const FALLBACK_HEADINGS = ['Commands', 'Conventions', 'Boundaries', 'Done when', 'Pitfalls', 'More details'];
 
-const CONFLICT_MESSAGE = 'Conflita com o fluxo do Keel. O dev decide: (a) mudar o próprio arquivo (o Keel mostra o texto '
-  + 'sugerido e não aplica); (b) a regra vale só fora das histórias do Keel; ou (c) manter, ciente de que o hook '
-  + 'bloqueia durante uma história.';
+const CONFLICT_MESSAGE = 'Conflicts with the Keel flow. The dev decides: (a) change the file itself (Keel shows the '
+  + 'suggested text and does not apply it); (b) the rule applies only outside Keel stories; or (c) keep it, aware that '
+  + 'the hook blocks during a story.';
 const CONFLICTS = [
   /\b(commit|push)\w*\b.{0,40}\b(directly|straight)\s+(to|on|into)\b/i,
   /\bcommit\w*\b.{0,40}\bwithout\s+(asking|approval|review|confirmation|permission)/i,
@@ -52,7 +52,7 @@ const YARN_BUILTINS = new Set(['install', 'add', 'remove', 'upgrade', 'up', 'why
 const toPosix = (path) => path.split(sep).join('/');
 const splitLines = (text) => text.replace(/^\uFEFF/, '').split(/\r?\n/);
 
-// ---- fatos de um texto ----
+// ---- facts of a text ----
 
 export function eolOf(text) {
   const crlf = (text.match(/\r\n/g) ?? []).length;
@@ -73,8 +73,8 @@ function lineCount(text) {
   return body.split('\n').length - (body.endsWith('\n') ? 1 : 0);
 }
 
-// Acha o par de marcadores keel. ok traz os offsets: start no começo da linha do marcador de
-// início, end depois da quebra de linha que segue o marcador de fim.
+// Finds the pair of keel markers. ok carries the offsets: start at the beginning of the start
+// marker's line, end after the line break that follows the end marker.
 export function findBlock(text) {
   const markers = [...text.matchAll(/<!--\s*keel:(start|end)\s*-->/gi)];
   if (markers.length === 0) return { state: 'none' };
@@ -86,7 +86,7 @@ export function findBlock(text) {
   }
   const [open, close] = markers;
   if (markers.length !== 2 || open[1].toLowerCase() !== 'start' || close[1].toLowerCase() !== 'end') return { state: 'malformed' };
-  // Um BOM no começo fica fora do bloco, mesmo com o marcador na linha 1.
+  // A leading BOM stays outside the block, even with the marker on line 1.
   const start = Math.max(text.lastIndexOf('\n', open.index - 1) + 1, text.startsWith(BOM) ? 1 : 0);
   const lineEnd = text.indexOf('\n', close.index);
   const end = lineEnd === -1 ? text.length : lineEnd + 1;
@@ -112,7 +112,7 @@ export function detectLang(text) {
   return score > 0 ? 'pt-BR' : 'en';
 }
 
-// ---- modelos ----
+// ---- templates ----
 
 export function loadTemplates(dir = TEMPLATES_DIR) {
   return Object.fromEntries(LANGS.map((lang) => [lang, readFileSync(join(dir, `keel-block.${lang}.md`), 'utf8')]));
@@ -125,20 +125,20 @@ function blockSize(content) {
   return { lines: content.split('\n').length - 2, bytes: Buffer.byteLength(inner) };
 }
 
-// ---- bloco keel ----
+// ---- keel block ----
 
 export function applyBlock(text, { lang, templates = loadTemplates() }) {
-  if (!templates[lang]) throw new Error(`idioma "${lang}" sem modelo; use ${LANGS.join(' ou ')}`);
+  if (!templates[lang]) throw new Error(`language "${lang}" has no template; use ${LANGS.join(' or ')}`);
   const nl = newlineFor(text);
   const block = templateBlock(templates[lang]).split('\n').join(nl) + nl;
   const found = findBlock(text);
   if (found.state === 'malformed') {
-    throw new Error('marcadores keel desbalanceados, duplicados, aninhados ou fora de linha própria; nada foi escrito');
+    throw new Error('keel markers unbalanced, duplicated, nested or not on a line of their own; nothing was written');
   }
   if (found.state === 'ok') return text.slice(0, found.start) + block + text.slice(found.end);
   const bom = text.startsWith(BOM) ? BOM : '';
   if (text.slice(bom.length) === '') return bom + block;
-  // Sempre uma linha em branco própria antes do bloco: é o que remove desfaz.
+  // Always a blank line of its own before the block: that is what remove undoes.
   const out = text.endsWith('\n') ? text : text + nl;
   return out + nl + block;
 }
@@ -146,14 +146,14 @@ export function applyBlock(text, { lang, templates = loadTemplates() }) {
 export function removeBlock(text) {
   const found = findBlock(text);
   if (found.state === 'malformed') {
-    throw new Error('marcadores keel desbalanceados, duplicados, aninhados ou fora de linha própria; nada foi escrito');
+    throw new Error('keel markers unbalanced, duplicated, nested or not on a line of their own; nothing was written');
   }
   if (found.state === 'none') return text;
   const nl = newlineFor(text);
   let before = text.slice(0, found.start);
   const after = text.slice(found.end);
-  // Desfaz a linha em branco que o apply acrescenta antes do bloco no fim do arquivo. A quebra
-  // de linha final que o apply põe num arquivo que não a tinha fica: não há como distingui-la.
+  // Undoes the blank line that apply adds before the block at the end of the file. The final
+  // line break that apply adds to a file without one stays: there is no way to tell it apart.
   if (after === '' && before.endsWith(nl + nl)) before = before.slice(0, -nl.length);
   return before + after;
 }
@@ -220,7 +220,7 @@ export function scan(root) {
   return { files, claudeImportsAgents, bothInstructionsSetting, otherAgents };
 }
 
-// Um arquivo por conteúdo: um CLAUDE.md que é symlink para o AGENTS.md conta uma vez.
+// One file per content: a CLAUDE.md that is a symlink to AGENTS.md counts once.
 function distinctFiles(root, files) {
   const seen = new Set();
   return files.filter((file) => {
@@ -242,27 +242,27 @@ function visibility(root, facts) {
   const has = (path) => facts.files.some((file) => file.path === path && !file.broken);
   const agents = has('AGENTS.md');
   const claude = CLAUDE_FILES.find(has);
-  const kind = 'visibilidade';
+  const kind = 'visibility';
   const claudeLink = facts.files.find((file) => file.path === 'CLAUDE.md')?.symlink;
   if (agents && claudeLink && realpath(join(root, 'CLAUDE.md')) === realpath(join(root, 'AGENTS.md'))) {
-    return finding(kind, 'aviso', 'CLAUDE.md', null, null, 'CLAUDE.md é symlink para AGENTS.md: o Claude Code pode '
-      + 'carregar o mesmo texto duas vezes (carga dupla). Sugestão: trocar o symlink por um CLAUDE.md com a linha `@AGENTS.md`.');
+    return finding(kind, 'warning', 'CLAUDE.md', null, null, 'CLAUDE.md is a symlink to AGENTS.md: Claude Code may '
+      + 'load the same text twice (double load). Suggestion: replace the symlink with a CLAUDE.md holding the line `@AGENTS.md`.');
   }
   if (agents && claude) {
-    if (facts.claudeImportsAgents) return finding(kind, 'info', claude, null, null, `${claude} importa o AGENTS.md; o Claude vê os dois.`);
+    if (facts.claudeImportsAgents) return finding(kind, 'info', claude, null, null, `${claude} imports AGENTS.md; Claude sees both.`);
     if (facts.bothInstructionsSetting) {
-      return finding(kind, 'info', claude, null, null, 'A configuração claude-md-and-agents-md faz o Claude ler os dois arquivos.');
+      return finding(kind, 'info', claude, null, null, 'The claude-md-and-agents-md setting makes Claude read both files.');
     }
-    return finding(kind, 'aviso', claude, 1, null, `o Claude não vê o AGENTS.md: com ${claude} presente, o Claude Code só `
-      + `lê o AGENTS.md se ${claude} o importar. Sugestão: acrescentar a linha \`${importLine(claude)}\` no topo de `
-      + `${claude} (o Keel só aplica com aprovação do diff exato).`);
+    return finding(kind, 'warning', claude, 1, null, `Claude does not see AGENTS.md: with ${claude} present, Claude Code only `
+      + `reads AGENTS.md if ${claude} imports it. Suggestion: add the line \`${importLine(claude)}\` at the top of `
+      + `${claude} (Keel applies it only with approval of the exact diff).`);
   }
   if (agents) {
-    return finding(kind, 'info', 'AGENTS.md', null, null, 'Só há AGENTS.md: o Claude Code o lê nativamente quando não há '
-      + 'CLAUDE.md. O Keel não cria CLAUDE.md.');
+    return finding(kind, 'info', 'AGENTS.md', null, null, 'Only AGENTS.md exists: Claude Code reads it natively when there is no '
+      + 'CLAUDE.md. Keel does not create CLAUDE.md.');
   }
-  if (claude) return finding(kind, 'info', claude, null, null, `Só há ${claude}; o Claude o lê.`);
-  return finding(kind, 'info', null, null, null, 'Não há AGENTS.md nem CLAUDE.md. O Keel pode oferecer o modelo templates/agents.md.');
+  if (claude) return finding(kind, 'info', claude, null, null, `Only ${claude} exists; Claude reads it.`);
+  return finding(kind, 'info', null, null, null, 'There is no AGENTS.md or CLAUDE.md. Keel can offer the templates/agents.md template.');
 }
 
 function readPackageScripts(dirs) {
@@ -272,7 +272,7 @@ function readPackageScripts(dirs) {
     const path = join(dir, 'package.json');
     if (!existsSync(path)) continue;
     found = true;
-    try { for (const name of Object.keys(JSON.parse(readFileSync(path, 'utf8')).scripts ?? {})) scripts.add(name); } catch { /* inválido */ }
+    try { for (const name of Object.keys(JSON.parse(readFileSync(path, 'utf8')).scripts ?? {})) scripts.add(name); } catch { /* invalid */ }
   }
   return { found, scripts };
 }
@@ -291,7 +291,7 @@ function makeTargets(dirs) {
   return targets;
 }
 
-// Trechos de código de um arquivo: linhas dentro de cercas e spans `inline`, com o número da linha.
+// Code snippets of a file: lines inside fences and `inline` spans, with the line number.
 function codeSnippets(text) {
   const snippets = [];
   let fence = null;
@@ -346,8 +346,8 @@ function deadCommands(root, path, text) {
     for (const part of code.split(/&&|\|\||;|\|/)) {
       const command = part.trim().replace(/^\$\s+/, '');
       if (command && deadCommand(command, context)) {
-        findings.push(finding('comando-morto', 'aviso', path, line, command,
-          `comando morto: \`${command}\` não existe mais neste projeto (script, alvo ou arquivo ausente).`));
+        findings.push(finding('dead-command', 'warning', path, line, command,
+          `dead command: \`${command}\` no longer exists in this project (missing script, target or file).`));
       }
     }
   }
@@ -358,25 +358,25 @@ function keelBlockFinding(file, text, templates) {
   const found = findBlock(text);
   if (found.state === 'none') return [];
   if (found.state === 'malformed') {
-    return [finding('bloco-keel', 'aviso', file, null, null, 'Marcadores keel malformados (desbalanceados, duplicados ou aninhados).')];
+    return [finding('keel-block', 'warning', file, null, null, 'Malformed keel markers (unbalanced, duplicated or nested).')];
   }
   if (Object.values(templates).some((template) => templateBlock(template) === found.content)) return [];
   const line = text.slice(0, found.start).split('\n').length;
-  return [finding('bloco-keel', 'aviso', file, line, null, 'O bloco keel difere dos modelos (pt-BR e en): foi editado à mão.')];
+  return [finding('keel-block', 'warning', file, line, null, 'The keel block differs from the templates (pt-BR and en): it was edited by hand.')];
 }
 
 export function review(root, { templates = loadTemplates() } = {}) {
   const facts = scan(root);
   const findings = [visibility(root, facts)];
   if (facts.otherAgents.length) {
-    findings.push(finding('outros-agentes', 'info', null, null, null, `Outros agentes leem este repositório `
-      + `(${facts.otherAgents.join(', ')}). O bloco keel opcional pode orientá-los (padrão: não).`));
+    findings.push(finding('other-agents', 'info', null, null, null, `Other agents read this repository `
+      + `(${facts.otherAgents.join(', ')}). The optional keel block can guide them (default: no).`));
   }
   for (const file of distinctFiles(root, facts.files)) {
     const text = readFileSync(join(root, file.path), 'utf8');
     if (file.lines > MAX_FILE_LINES) {
-      findings.push(finding('tamanho', 'aviso', file.path, null, null, `${file.lines} linhas: o modelo vai até cerca de `
-        + `${MAX_FILE_LINES} e a Anthropic recomenda menos de 200. Detalhe longo vai para um doc linkado.`));
+      findings.push(finding('size', 'warning', file.path, null, null, `${file.lines} lines: the template goes up to about `
+        + `${MAX_FILE_LINES} and Anthropic recommends under 200. Long detail goes to a linked doc.`));
     }
     const block = findBlock(text);
     const blockLines = block.state === 'ok'
@@ -385,13 +385,13 @@ export function review(root, { templates = loadTemplates() } = {}) {
     splitLines(text).forEach((line, index) => {
       if (index + 1 >= blockLines[0] && index + 1 <= blockLines[1]) return;
       if (CONFLICTS.some((pattern) => pattern.test(line))) {
-        findings.push(finding('conflito', 'conflito', file.path, index + 1, line.trim(), CONFLICT_MESSAGE));
+        findings.push(finding('conflict', 'conflict', file.path, index + 1, line.trim(), CONFLICT_MESSAGE));
       }
     });
     findings.push(...deadCommands(root, file.path, text));
     for (const name of file.otherBlocks) {
-      findings.push(finding('outra-ferramenta', 'info', file.path, null, null,
-        `Bloco ${name}: fluxo de outra ferramenta; decidir qual conduz as histórias. O Keel não toca nele.`));
+      findings.push(finding('other-tool', 'info', file.path, null, null,
+        `Block ${name}: another tool's flow; decide which one drives the stories. Keel does not touch it.`));
     }
     findings.push(...keelBlockFinding(file.path, text, templates));
   }
@@ -404,23 +404,23 @@ export function check(root, { templates = loadTemplates() } = {}) {
   const facts = scan(root);
   const errors = [];
   const withBlock = distinctFiles(root, facts.files).filter((file) => file.keelBlock !== 'none');
-  if (withBlock.length > 1) errors.push(`bloco keel em mais de um arquivo: ${withBlock.map((file) => file.path).join(', ')}`);
+  if (withBlock.length > 1) errors.push(`keel block in more than one file: ${withBlock.map((file) => file.path).join(', ')}`);
   for (const file of withBlock) {
     const found = findBlock(readFileSync(join(root, file.path), 'utf8'));
     if (found.state !== 'ok') {
-      errors.push(`${file.path}: marcadores keel malformados`);
+      errors.push(`${file.path}: malformed keel markers`);
       continue;
     }
     const size = blockSize(found.content);
     if (size.lines > MAX_BLOCK_LINES || size.bytes > MAX_BLOCK_BYTES) {
-      errors.push(`${file.path}: bloco keel com ${size.lines} linhas e ${size.bytes} bytes (máximo ${MAX_BLOCK_LINES} e ${MAX_BLOCK_BYTES})`);
+      errors.push(`${file.path}: keel block with ${size.lines} lines and ${size.bytes} bytes (maximum ${MAX_BLOCK_LINES} and ${MAX_BLOCK_BYTES})`);
     }
     if (!Object.values(templates).some((template) => templateBlock(template) === found.content)) {
-      errors.push(`${file.path}: bloco keel difere do modelo (pt-BR ou en); refaça com block apply`);
+      errors.push(`${file.path}: keel block differs from the template (pt-BR or en); redo it with block apply`);
     }
   }
   const warnings = review(root, { templates }).findings
-    .filter((item) => item.severity === 'aviso' && ['visibilidade', 'tamanho'].includes(item.kind));
+    .filter((item) => item.severity === 'warning' && ['visibility', 'size'].includes(item.kind));
   return { ok: errors.length === 0, errors, warnings };
 }
 
@@ -460,7 +460,7 @@ export function restructureCheck(original, proposed, { headings = allowedHeading
   return { ok: added.length === 0, added, removed };
 }
 
-// ---- escrita (só depois da aprovação do dev) ----
+// ---- writing (only after the dev's approval) ----
 
 function insideRoot(root, path) {
   const rel = relative(root, path);
@@ -470,23 +470,23 @@ function insideRoot(root, path) {
 function readExact(path) {
   const raw = readFileSync(path);
   const text = raw.toString('utf8');
-  if (!Buffer.from(text, 'utf8').equals(raw)) throw new Error(`${path} não é UTF-8 válido; nada foi escrito`);
+  if (!Buffer.from(text, 'utf8').equals(raw)) throw new Error(`${path} is not valid UTF-8; nothing was written`);
   return text;
 }
 
 function target(root, file) {
-  if (!file) throw new Error('informe o arquivo: --file <caminho>');
+  if (!file) throw new Error('give the file: --file <path>');
   const full = resolve(root, file);
   const path = toPosix(relative(root, full));
-  if (!BLOCK_TARGETS.includes(path)) throw new Error(`o bloco keel só vai em ${BLOCK_TARGETS.join(', ')}; recebi ${path}`);
+  if (!BLOCK_TARGETS.includes(path)) throw new Error(`the keel block only goes in ${BLOCK_TARGETS.join(', ')}; got ${path}`);
   const stat = lstat(full);
   const warnings = [];
   if (stat?.isSymbolicLink()) {
     const real = realpath(full);
-    if (!real) throw new Error(`${path} é um symlink quebrado; nada foi escrito`);
-    if (!insideRoot(realpath(root), real)) throw new Error(`${path} é symlink para fora do projeto; nada foi escrito`);
-    warnings.push(`${path} é symlink para ${toPosix(relative(realpath(root), real))}: a escrita vai no alvo e o symlink `
-      + 'fica. O Claude Code pode carregar o texto duas vezes (carga dupla).');
+    if (!real) throw new Error(`${path} is a broken symlink; nothing was written`);
+    if (!insideRoot(realpath(root), real)) throw new Error(`${path} is a symlink to outside the project; nothing was written`);
+    warnings.push(`${path} is a symlink to ${toPosix(relative(realpath(root), real))}: the write goes to the target and the `
+      + 'symlink stays. Claude Code may load the text twice (double load).');
   }
   return { full, path, exists: Boolean(stat), warnings };
 }
@@ -495,14 +495,14 @@ function blockApply(root, values, templates) {
   const { full, path, exists, warnings } = target(root, values.file);
   if (!exists) {
     if (CLAUDE_FILES.includes(path) && lstat(join(root, 'AGENTS.md'))) {
-      throw new Error(`não crio ${path}: com AGENTS.md presente, criar ${path} faria o Claude Code deixar de ler o AGENTS.md`);
+      throw new Error(`not creating ${path}: with AGENTS.md present, creating ${path} would make Claude Code stop reading AGENTS.md`);
     }
-    if (!values.create) throw new Error(`${path} não existe; criar o arquivo exige --create (segundo consentimento do dev)`);
+    if (!values.create) throw new Error(`${path} does not exist; creating the file requires --create (second consent from the dev)`);
   }
   const real = exists ? realpath(full) : null;
   const other = distinctFiles(root, scan(root).files)
     .find((file) => file.keelBlock !== 'none' && realpath(join(root, file.path)) !== real);
-  if (other) throw new Error(`${other.path} já tem o bloco keel; o bloco vai em um arquivo só`);
+  if (other) throw new Error(`${other.path} already has the keel block; the block goes in a single file`);
   const text = exists ? readExact(full) : '';
   const lang = values.lang ?? detectLang(text);
   const updated = applyBlock(text, { lang, templates });
@@ -516,7 +516,7 @@ function blockApply(root, values, templates) {
 
 function blockRemove(root, values) {
   const { full, path, exists, warnings } = target(root, values.file);
-  if (!exists) throw new Error(`${path} não existe`);
+  if (!exists) throw new Error(`${path} does not exist`);
   const text = readExact(full);
   const updated = removeBlock(text);
   if (updated !== text) writeFileSync(full, updated);
@@ -525,14 +525,14 @@ function blockRemove(root, values) {
 
 function importAgents(root, file = 'CLAUDE.md') {
   const path = toPosix(relative(root, resolve(root, file)));
-  if (!CLAUDE_FILES.includes(path)) throw new Error(`import-agents só vale para ${CLAUDE_FILES.join(' ou ')}; recebi ${path}`);
+  if (!CLAUDE_FILES.includes(path)) throw new Error(`import-agents only applies to ${CLAUDE_FILES.join(' or ')}; got ${path}`);
   const full = join(root, path);
   const stat = lstat(full);
-  if (!stat) throw new Error(`${path} não existe; o Keel não cria CLAUDE.md`);
-  if (stat.isSymbolicLink()) throw new Error(`${path} é symlink; troque o symlink por um arquivo antes de importar`);
-  if (!existsSync(join(root, 'AGENTS.md'))) throw new Error('não há AGENTS.md para importar');
+  if (!stat) throw new Error(`${path} does not exist; Keel does not create CLAUDE.md`);
+  if (stat.isSymbolicLink()) throw new Error(`${path} is a symlink; replace the symlink with a file before importing`);
+  if (!existsSync(join(root, 'AGENTS.md'))) throw new Error('there is no AGENTS.md to import');
   const text = readExact(full);
-  if (importsAgents(text, path)) throw new Error(`${path} já importa o AGENTS.md`);
+  if (importsAgents(text, path)) throw new Error(`${path} already imports AGENTS.md`);
   const bom = text.startsWith(BOM) ? BOM : '';
   const line = importLine(path);
   writeFileSync(full, `${bom}${line}${newlineFor(text)}${text.slice(bom.length)}`);
@@ -540,9 +540,9 @@ function importAgents(root, file = 'CLAUDE.md') {
 }
 
 function quote(root, [file, line, text]) {
-  if (!file || !line || text === undefined) throw new Error('uso: quote <arquivo> <linha> <texto>');
+  if (!file || !line || text === undefined) throw new Error('usage: quote <file> <line> <text>');
   const full = resolve(root, file);
-  if (!existsSync(full)) throw new Error(`${file} não existe`);
+  if (!existsSync(full)) throw new Error(`${file} does not exist`);
   const actual = splitLines(readFileSync(full, 'utf8'))[Number(line) - 1];
   const ok = Number.isInteger(Number(line)) && actual !== undefined && text.trim() !== '' && actual.trim().includes(text.trim());
   return { output: { ok, file, line: Number(line), actual: actual ?? null }, code: ok ? 0 : 1 };
@@ -550,25 +550,25 @@ function quote(root, [file, line, text]) {
 
 // ---- CLI ----
 
-const USAGE = `uso: keel-context.mjs <comando>
-  scan                                   fatos dos arquivos de instrução (JSON)
-  review                                 achados (conflito, aviso, info); não escreve nada
-  quote <arquivo> <linha> <texto>        confere uma citação (exit 0 se a linha contém o texto)
-  block apply --file <caminho> [--lang pt-BR|en] [--create]
-  block remove --file <caminho>
-  import-agents [--file .claude/CLAUDE.md]   põe @AGENTS.md (ou @../AGENTS.md) no topo do CLAUDE.md
-  restructure-check <original> <proposto>
-  check                                  deriva do bloco keel (exit 1 se houver)`;
+const USAGE = `usage: keel-context.mjs <command>
+  scan                                   facts about the instruction files (JSON)
+  review                                 findings (conflict, warning, info); writes nothing
+  quote <file> <line> <text>             checks a quote (exit 0 if the line contains the text)
+  block apply --file <path> [--lang pt-BR|en] [--create]
+  block remove --file <path>
+  import-agents [--file .claude/CLAUDE.md]   puts @AGENTS.md (or @../AGENTS.md) at the top of CLAUDE.md
+  restructure-check <original> <proposed>
+  check                                  keel block drift (exit 1 if any)`;
 
 export function run(argv, root, { templates } = {}) {
-  // A citação pode começar com "-" (item de lista): quote não passa pelo parseArgs.
+  // The quote may start with "-" (list item): quote does not go through parseArgs.
   if (argv[0] === 'quote') return quote(root, argv.slice(1));
   const { values, positionals } = parseArgs({
     args: argv, allowPositionals: true,
     options: { file: { type: 'string' }, lang: { type: 'string' }, create: { type: 'boolean' } },
   });
   const [command, ...rest] = positionals;
-  if (values.lang && !LANGS.includes(values.lang)) throw new Error(`--lang deve ser ${LANGS.join(' ou ')}`);
+  if (values.lang && !LANGS.includes(values.lang)) throw new Error(`--lang must be ${LANGS.join(' or ')}`);
   const loaded = () => (templates ??= loadTemplates());
   switch (command) {
     case 'scan': return { output: scan(root), code: 0 };
@@ -580,7 +580,7 @@ export function run(argv, root, { templates } = {}) {
     case 'import-agents': return { output: importAgents(root, values.file), code: 0 };
     case 'restructure-check': {
       const [original, proposed] = rest;
-      if (!original || !proposed) throw new Error('uso: restructure-check <original> <proposto>');
+      if (!original || !proposed) throw new Error('usage: restructure-check <original> <proposed>');
       const output = restructureCheck(readFileSync(resolve(root, original), 'utf8'),
         readFileSync(resolve(root, proposed), 'utf8'), { templates: loaded() });
       return { output, code: output.ok ? 0 : 1 };
@@ -589,7 +589,7 @@ export function run(argv, root, { templates } = {}) {
       const output = check(root, { templates: loaded() });
       return { output, code: output.ok ? 0 : 1 };
     }
-    default: throw new Error(command ? `comando "${command}" desconhecido\n${USAGE}` : USAGE);
+    default: throw new Error(command ? `unknown command "${command}"\n${USAGE}` : USAGE);
   }
 }
 
@@ -604,7 +604,7 @@ function main() {
   }
 }
 
-// realpath dos dois lados: chamado por um symlink do script, a CLI ainda roda.
+// realpath on both sides: called through a symlink to the script, the CLI still runs.
 if (process.argv[1] && realpath(process.argv[1]) === realpath(fileURLToPath(import.meta.url))) {
   process.exitCode = main();
 }

@@ -14,7 +14,7 @@ function project(setup) {
   const dir = mkdtempSync(join(tmpdir(), 'keel-session-'));
   mkdirSync(join(dir, '.git'));
   writeFileSync(join(dir, '.git', 'HEAD'), 'ref: refs/heads/feat/x\n');
-  writeFileSync(join(dir, 'AGENTS.md'), '# App\nRegra-unica-do-agents-md: commite direto na main.\n');
+  writeFileSync(join(dir, 'AGENTS.md'), '# App\nUnique-agents-md-rule: commit straight to main.\n');
   setup(dir);
   return dir;
 }
@@ -28,7 +28,7 @@ function run(dir) {
   return { status: result.status, context };
 }
 
-test('SessionStart injeta história, fase, o que falta, skill e precedência, sem o AGENTS.md', () => {
+test('SessionStart injects story, phase, what is missing, skill and precedence, without AGENTS.md', () => {
   const dir = project((d) => {
     const folder = join(d, 'keel', 'features', 'APP-1-login');
     mkdirSync(folder, { recursive: true });
@@ -41,23 +41,23 @@ test('SessionStart injeta história, fase, o que falta, skill e precedência, se
     assert.equal(status, 0);
     assert.match(context, /APP-1/);
     assert.match(context, /keel\/features\/APP-1-login/);
-    assert.match(context, /fase triage/);
+    assert.match(context, /phase triage/);
     assert.match(context, /approval:level/);
     assert.match(context, /keel:story/);
-    assert.match(context, /Comandos, estilo e convenções vêm do AGENTS\.md ou CLAUDE\.md/);
-    assert.ok(context.length <= 1500, `${context.length} caracteres`);
-    assert.ok(!context.includes('Regra-unica-do-agents-md'));
+    assert.match(context, /Commands, style and conventions come from the project's AGENTS\.md or CLAUDE\.md/);
+    assert.ok(context.length <= 1500, `${context.length} characters`);
+    assert.ok(!context.includes('Unique-agents-md-rule'));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test('SessionStart sem história ativa dá uma linha; sem keel/ fica calado; erro não bloqueia', () => {
+test('SessionStart with no active story gives one line; without keel/ it stays quiet; an error does not block', () => {
   const idle = project((d) => mkdirSync(join(d, 'keel')));
   const none = project(() => {});
   const broken = project((d) => {
     mkdirSync(join(d, 'keel', 'features', 'APP-1-login'), { recursive: true });
-    writeFileSync(join(d, 'keel', 'features', 'APP-1-login', 'state.json'), '{ quebrado');
+    writeFileSync(join(d, 'keel', 'features', 'APP-1-login', 'state.json'), '{ broken');
   });
   try {
     const quiet = run(idle);
@@ -67,13 +67,13 @@ test('SessionStart sem história ativa dá uma linha; sem keel/ fica calado; err
     assert.deepEqual(run(none), { status: 0, context: '' });
     const failed = run(broken);
     assert.equal(failed.status, 0);
-    assert.match(failed.context, /ilegível/);
+    assert.match(failed.context, /unreadable/);
   } finally {
     for (const dir of [idle, none, broken]) rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test('hooks.json registra o SessionStart em início, retomada, clear e compactação', () => {
+test('hooks.json registers SessionStart on startup, resume, clear and compact', () => {
   const entry = readJson('hooks/hooks.json').hooks.SessionStart[0];
   assert.equal(entry.matcher, 'startup|resume|clear|compact');
   assert.match(entry.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/hooks\/session-start\.mjs/);
