@@ -74,6 +74,15 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 - Não deve copiar para o product.md o que o código já diz.
 - Não deve começar uma história sem product.md; sem ele, oferece criar.
 
+**AGENTS.md e CLAUDE.md do projeto** (Miguel, 2026-11-20; base em `AGENTS.md e CLAUDE.md no Keel.md`)
+- O Keel funciona sem tocar nesses arquivos. As instruções dele ficam na skill, nos hooks e num `SessionStart` curto (até 1.500 caracteres: história ativa, fase, o que falta, skill a usar e precedência), nunca no arquivo do dev.
+- Deve sempre revisar sem alterar (`keel-context.mjs review`): conflito com o fluxo com arquivo, linha e citação conferida por script, comando morto, tamanho acima de ~150 linhas, visibilidade e blocos de outras ferramentas. Para cada conflito o dev escolhe mudar o arquivo, valer só fora das histórias ou manter sabendo que o hook bloqueia.
+- Visibilidade: só AGENTS.md está certo e o Keel nunca cria CLAUDE.md nesse caso; com os dois, o CLAUDE.md precisa de `@AGENTS.md` (o Keel avisa e só aplica com aprovação); symlink gera aviso de carga dupla.
+- Sem AGENTS.md, oferece `templates/agents.md`, que o dev preenche. Com AGENTS.md, pode propor no próprio setup uma reestruturação nas seções do modelo que só move e remove linhas (`restructure-check` confere) e só aplica com aprovação.
+- Bloco do Keel opcional, padrão "não", num arquivo só, até 6 linhas entre `<!-- keel:start -->` e `<!-- keel:end -->`, no idioma do arquivo; nada fora dele muda e `keel-context.mjs check` confere a deriva.
+- Precedência: durante uma história ativa, ordem do fluxo e portões vêm do Keel e são garantidos por hook; comandos, estilo e convenções vêm do AGENTS.md ou CLAUDE.md.
+- `arch-check.mjs` é o varredor próprio (JS/TS e Python, aproximado); o hook `PostToolUse` devolve ao modelo a violação nova do arquivo editado e a deriva do bloco.
+
 **Práticas:** product.md curto e sempre relevante (Anthropic, Radar Spec Kit); ADR no formato Nygard com seção de confirmação (MADR); regra de dependência (Martin, Cockburn, Fowler); arquitetura proporcional à complexidade (Fowler PoEAA, Evans, Vernon); testes de arquitetura como fitness functions com mensagem de correção e baseline (ArchUnit, import-linter); restrição arquitetural obrigatória reduz sucesso funcional (Constraint Decay, preprint).
 
 **Portão:** dev aprova product.md e as ADRs iniciais.
@@ -361,7 +370,7 @@ Cada critério tem o formato `<tipo>[:<alvo>][?]`. O `?` final faz o critério v
 | `approval:<doc>` | o dev aprovou e o hash do documento ainda é o aprovado |
 | `coverage:rules->tasks->tests` | toda regra tem task com teste e toda task cobre regra existente |
 | `tasks:all-done` | toda task do tasks.md está com `Status: feita` |
-| `convergence`, `approval:deltas`, `arch` | ainda sem verificador (partes 6 e 7): o script recusa avançar e diz isso |
+| `convergence`, `approval:deltas`, `arch` | ainda sem verificador (parte 6, que usa o `arch-check.mjs` da parte 7): o script recusa avançar e diz isso |
 
 O `taskExit` da implementação é conferido pelo loop da task, na parte 5. O hash da aprovação cobre só o bloco entre `<!-- congelado após aprovação: início -->` e `<!-- congelado após aprovação: fim -->`, como o `<frozen-after-approval>` do BMAD. No tasks.md o plano das tasks fica dentro do bloco, e o andamento (`## Andamento` com Status, evidências e review de cada task), as notas e a convergência ficam fora; assim marcar uma task como feita não vence a aprovação. No requirements.md e no design.md o cabeçalho com `Status:` fica fora e o resto dentro, inclusive "Mudanças após a confirmação", que pede reaprovação.
 
@@ -388,6 +397,7 @@ keel/                                  # repo novo
 │   ├── repo-map.mjs                   # mapa do código com orçamento de tokens
 │   ├── task-metrics.mjs               # linhas, arquivos, abstrações e dependências novas, complexidade
 │   ├── arch-check.mjs                 # lê architecture.json, chama a ferramenta nativa ou o varredor
+│   ├── keel-context.mjs               # revisa AGENTS.md/CLAUDE.md, bloco opcional e deriva
 │   ├── check-feature.mjs              # conferência de ponta a ponta de uma história
 │   └── hooks/*.mjs                    # implementação dos hooks
 ├── test/                              # node --test dos scripts e hooks

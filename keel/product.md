@@ -51,7 +51,7 @@ pergunte antes de escolher.
 3. Lógica de decisão (validação, transição de fase, cobertura) fica em funções puras que
    recebem dados; leitura de arquivo, processo e relógio ficam na borda do script. [review]
 4. Só `scripts/keel-state.mjs` escreve `state.json`. [hook]
-5. Sem ciclos entre módulos de `scripts/`. [review]
+5. Sem ciclos entre módulos de `scripts/`; `scripts/` não importa hooks nem testes. [hook]
 6. Nada para requisito hipotético: opção, parâmetro ou ponto de extensão só se uma regra
    ou um teste atual o usa. [review]
 7. Antes de escrever um helper, procure e reutilize o existente. Extraia código compartilhado
@@ -76,4 +76,4 @@ Siga: os modelos em `templates/` e o fluxo de `workflow/workflow.json`. Não cop
 (Keel 1), exceto o que a especificação mandar reaproveitar, como o revisor e o commit.
 
 ### Checagem
-Arquitetura: não se aplica ainda (parte 7) · Lint/complexidade: não se aplica ainda · Testes: `npm test`
+Arquitetura: `node scripts/arch-check.mjs` (regras em `keel/architecture.json`) · Lint/complexidade: não se aplica ainda · Testes: `npm test`
