@@ -5,13 +5,14 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { root, read, listFiles } from './helpers.mjs';
-import { validateRequirements, validateTasks, checkCoverage, openQuestions } from '../scripts/validate-feature.mjs';
-import { requirementsDoc, tasksDoc } from './fixtures.mjs';
+import { validateRequirements, validateDesign, validateTasks, checkCoverage, openQuestions } from '../scripts/validate-feature.mjs';
+import { requirementsDoc, tasksDoc, designDoc } from './fixtures.mjs';
 
 const script = join(root, 'scripts', 'validate-feature.mjs');
 
 test('requirements.md e tasks.md completos passam', () => {
   assert.deepEqual(validateRequirements(requirementsDoc()), []);
+  assert.deepEqual(validateDesign(designDoc()), []);
   assert.deepEqual(validateTasks(tasksDoc()), []);
   assert.deepEqual(checkCoverage(tasksDoc(), requirementsDoc()), []);
 });
@@ -65,6 +66,23 @@ test('tasks.md: Cobre, teste e comando, status', () => {
   assert.match(errors, /T4: Status "quase" inválido/);
   const noTest = tasksDoc().replace(/Teste primeiro: .*\n/, '');
   assert.match(validateTasks(noTest).join('\n'), /T1 sem Teste primeiro: nem Sem teste:/);
+});
+
+test('todo documento tem um bloco congelado após aprovação, aberto e fechado', () => {
+  const open = '<!-- congelado após aprovação: início -->\n';
+  const close = '<!-- congelado após aprovação: fim -->\n';
+  assert.match(validateRequirements(requirementsDoc().replace(open, '')).join('\n'), /bloco congelado/);
+  assert.match(validateDesign(designDoc().replace(close, '')).join('\n'), /bloco congelado/);
+  assert.match(validateTasks(tasksDoc().replace(open, '').replace(close, '')).join('\n'), /bloco congelado/);
+});
+
+test('tasks.md: plano dentro do bloco, andamento fora', () => {
+  const statusInPlan = tasksDoc().replace('Depende de: —\n', 'Depende de: —\nStatus: green\n');
+  assert.match(validateTasks(statusInPlan).join('\n'), /T1: Status: fica em "Andamento", fora do bloco congelado/);
+  const taskOutside = tasksDoc().replace('## Andamento', '## T5 — Fora do plano\nCobre: R1\nSem teste: x\n\n## Andamento');
+  assert.match(validateTasks(taskOutside).join('\n'), /T5 fora do bloco congelado/);
+  const noProgress = tasksDoc().replace('### T3\nStatus: pendente\n', '');
+  assert.match(validateTasks(noProgress).join('\n'), /T3 sem entrada em "Andamento"/);
 });
 
 test('tasks.md: dependência inexistente e ciclo', () => {

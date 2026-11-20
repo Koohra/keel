@@ -51,8 +51,8 @@ O `state.json` diz à IA em que etapa a história está e o que já foi gerado e
 
 - **Quem escreve:** só o script de estado (`keel-state.mjs`), chamado pela skill com comandos como `next`, `advance` ou `approve requirements.md --by <dev>`. O modelo não edita o JSON diretamente.
 - **Aprovação presa ao conteúdo:** ao aprovar um documento, o script grava o hash dele. Se o arquivo mudar depois, a aprovação vence e a história volta para a confirmação daquele documento.
-- **Uma fonte de verdade por assunto:** o state.json guarda fase, portões e a task atual. O status de cada task continua no tasks.md, e o script confere que os dois batem.
-- **Garantia por hook:** um `PreToolUse` lê o state.json e bloqueia edição de código-fonte enquanto a história não chegou na fase de implementação. Isso garante "nenhum código antes da aprovação".
+- **Uma fonte de verdade por assunto:** o state.json guarda fase, portões e a task atual. O status de cada task continua no tasks.md, na seção "Andamento", fora do bloco congelado, e o script confere que os dois batem.
+- **Garantia por hook:** um `PreToolUse` lê o state.json e bloqueia edição de código-fonte enquanto a história não chegou na fase de implementação, e bloqueia escrita no state.json por edição ou por comando de terminal. Isso garante "nenhum código antes da aprovação".
 - **Fases:** `triage` → `reading` → `requirements` → `confirmation` → `design` (pulada se não houver gatilho) → `tasks` → `implementation` → `closing` → `done`.
 
 Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até cerca de 1 página, design.md até cerca de 2 páginas. Seção sem conteúdo diz "não se aplica" em uma linha e não é removida, para o script achar a estrutura.
@@ -363,7 +363,9 @@ Cada critério tem o formato `<tipo>[:<alvo>][?]`. O `?` final faz o critério v
 | `tasks:all-done` | toda task do tasks.md está com `Status: feita` |
 | `convergence`, `approval:deltas`, `arch` | ainda sem verificador (partes 6 e 7): o script recusa avançar e diz isso |
 
-O `taskExit` da implementação é conferido pelo loop da task, na parte 5. O hash da aprovação ignora as linhas de andamento (`Status:`, `Aprovado por`, `Evidência RED:`, `Evidência GREEN:`, `Review:`) e as seções "Notas de implementação" e "Convergência", para que marcar uma task como feita não vença a aprovação do tasks.md.
+O `taskExit` da implementação é conferido pelo loop da task, na parte 5. O hash da aprovação cobre só o bloco entre `<!-- congelado após aprovação: início -->` e `<!-- congelado após aprovação: fim -->`, como o `<frozen-after-approval>` do BMAD. No tasks.md o plano das tasks fica dentro do bloco, e o andamento (`## Andamento` com Status, evidências e review de cada task), as notas e a convergência ficam fora; assim marcar uma task como feita não vence a aprovação. No requirements.md e no design.md o cabeçalho com `Status:` fica fora e o resto dentro, inclusive "Mudanças após a confirmação", que pede reaprovação.
+
+A cada comando, e no hook, o script confere que toda fase anterior à atual cumpre os critérios de saída; se não cumpre, a história volta para a primeira que falta. Assim um state.json alterado por fora do script não pula portão. O hook também bloqueia comando de terminal que grava `state.json` (redirecionamento, `tee`, `cp`, `mv`, `rm`, `sed -i`, `writeFile`, `Set-Content`), exceto o `keel-state.mjs` e o `git`.
 
 ## Arquitetura do plugin
 
@@ -467,6 +469,7 @@ Cada parte é desenvolvida com TDD e, desde a parte 1, usando o próprio fluxo d
 Fonte: <link da história> · Pasta: keel/features/<CHAVE>-<descricao>/ · Nível: trivial | padrão | com design
 Status: rascunho | confirmado por <dev> em <AAAA-MM-DD>
 
+<!-- congelado após aprovação: início -->
 ## História original
 > Texto da história copiado sem edição.
 
@@ -498,6 +501,7 @@ R3. WHILE <estado> THE <sistema> SHALL <resposta>. [fonte: ...]
 
 ## Mudanças após a confirmação
 - <AAAA-MM-DD> <o que mudou, por quê, quem reaprovou>
+<!-- congelado após aprovação: fim -->
 ```
 
 ### design.md
@@ -506,6 +510,8 @@ R3. WHILE <estado> THE <sistema> SHALL <resposta>. [fonte: ...]
 # Design — <CHAVE>
 
 Requisitos: requirements.md · Status: rascunho | aprovado por <dev> em <data>
+
+<!-- congelado após aprovação: início -->
 Gatilho: <trade-off | contrato | dados/migração | dependência nova | transversal | quebra de padrão>
 
 ## Abordagem
@@ -535,6 +541,7 @@ Segurança: <ou "não se aplica"> · Privacidade: · Desempenho: · Observabilid
 
 ## Candidata a ADR?
 Sim | Não — <motivo>
+<!-- congelado após aprovação: fim -->
 ```
 
 ### tasks.md
@@ -545,6 +552,7 @@ Sim | Não — <motivo>
 Requisitos: requirements.md · Design: design.md | não há
 Aprovado por <dev> em <data>
 
+<!-- congelado após aprovação: início -->
 ## T1 — Esqueleto andante: <caminho mínimo de ponta a ponta>
 Cobre: R1 (AC-1.1)
 Arquivos: <caminhos>
@@ -552,10 +560,6 @@ Teste primeiro: <nome do teste> — <o que verifica>
 Verificação: `<comando>`
 Pronto quando: <condição observável>
 Depende de: —
-Status: pendente | red | green | em revisão | feita (<hash>)
-Evidência RED: <comando e trecho da falha>
-Evidência GREEN: <comando e resultado>
-Review: <ok | achados e o que foi feito | review unavailable>
 
 ## T2 — <uma regra ou variação por vez>
 Cobre: R2 (AC-2.1)
@@ -565,6 +569,18 @@ Cobre: R2 (AC-2.1)
 Cobre: R1
 Sem teste: <motivo>
 ...
+<!-- congelado após aprovação: fim -->
+
+## Andamento
+### T1
+Status: pendente | red | green | em revisão | feita (<hash>)
+Evidência RED: <comando e trecho da falha>
+Evidência GREEN: <comando e resultado>
+Review: <ok | achados e o que foi feito | review unavailable>
+### T2
+Status: pendente
+### T3
+Status: pendente
 
 ## Notas de implementação
 - <aprendizado que vale para as próximas tasks>

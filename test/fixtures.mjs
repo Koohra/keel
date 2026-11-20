@@ -6,6 +6,7 @@ export function requirementsDoc() {
 Fonte: APP-1 · Pasta: keel/features/APP-1-login/ · Nível: padrão
 Status: rascunho
 
+<!-- congelado após aprovação: início -->
 ## História original
 > Quero entrar com Google.
 
@@ -34,6 +35,7 @@ R3. WHILE offline THE app SHALL mostrar aviso. [fonte: APP-1]
 
 ## Mudanças após a confirmação
 - Nenhuma.
+<!-- congelado após aprovação: fim -->
 `;
 }
 
@@ -43,6 +45,7 @@ export function tasksDoc() {
 Requisitos: requirements.md · Design: não há
 Aprovado por Ana em 2026-11-20
 
+<!-- congelado após aprovação: início -->
 ## T1 — Esqueleto andante: botão até o consentimento
 Cobre: R1 (AC-1.1)
 Arquivos: \`src/login.js\`
@@ -50,10 +53,6 @@ Teste primeiro: \`login.test.js\` — abre o consentimento
 Verificação: \`npm test\`
 Pronto quando: teste passa
 Depende de: —
-Status: pendente
-Evidência RED: —
-Evidência GREEN: —
-Review: —
 
 ## T2 — Sessão expirada
 Cobre: R2 (AC-2.1)
@@ -61,7 +60,6 @@ Teste primeiro: \`session.test.js\` — pede login
 Verificação: \`npm test\`
 Pronto quando: expira e pede login
 Depende de: T1
-Status: pendente
 
 ## T3 — Aviso offline
 Cobre: R3
@@ -69,12 +67,24 @@ Teste primeiro: \`offline.test.js\` — mostra aviso
 Verificação: \`npm test\`
 Pronto quando: aviso aparece
 Depende de: T1
-Status: pendente
 
 ## T4 — Configuração do provedor
 Cobre: R1
 Sem teste: só configuração
 Depende de: T1
+<!-- congelado após aprovação: fim -->
+
+## Andamento
+### T1
+Status: pendente
+Evidência RED: —
+Evidência GREEN: —
+Review: —
+### T2
+Status: pendente
+### T3
+Status: pendente
+### T4
 Status: pendente
 
 ## Notas de implementação
@@ -90,6 +100,8 @@ export function designDoc() {
   return `# Design — APP-1
 
 Requisitos: requirements.md · Status: rascunho
+
+<!-- congelado após aprovação: início -->
 Gatilho: dependência nova
 
 ## Abordagem
@@ -115,5 +127,6 @@ Segurança: token no servidor.
 
 ## Candidata a ADR?
 Não — local à história.
+<!-- congelado após aprovação: fim -->
 `;
 }

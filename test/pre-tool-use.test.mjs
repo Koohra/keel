@@ -5,13 +5,28 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { root, readJson } from './helpers.mjs';
-import { checkEdit, newState } from '../scripts/keel-state.mjs';
+import {
+  checkEdit, checkCommand, newState, setLevel, recordGenerated, recordReview, approve, advance,
+} from '../scripts/keel-state.mjs';
+import { requirementsDoc, tasksDoc } from './fixtures.mjs';
 
 const workflow = readJson('workflow/workflow.json');
 const hook = join(root, 'scripts', 'hooks', 'pre-tool-use.mjs');
 
 function storyIn(phase) {
   return { ...newState({ key: 'APP-1', slug: 'login', title: 'Login', branch: 'feat/x', now: 'x' }), phase };
+}
+
+// História real em implementation: portões cumpridos pelo caminho válido.
+function implementationState(docs) {
+  const now = 'x';
+  let state = setLevel(storyIn('triage'), 'padrao', 'Ana', now);
+  state = advance(state, workflow, docs, now).state;
+  state = advance(recordGenerated(state, 'repo-map', now), workflow, docs, now).state;
+  state = advance(state, workflow, docs, now).state;
+  state = recordReview(state, 'requirements', 'ok', now);
+  state = advance(approve(state, 'requirements.md', 'Ana', docs, workflow, now), workflow, docs, now).state;
+  return advance(approve(state, 'tasks.md', 'Ana', docs, workflow, now), workflow, docs, now).state;
 }
 
 test('checkEdit bloqueia state.json em qualquer fase', () => {
@@ -31,31 +46,58 @@ test('checkEdit libera código só na fase que permite', () => {
   assert.equal(checkEdit('src/app.js', null, workflow).block, false);
 });
 
+test('checkCommand bloqueia comando de terminal que grava state.json', () => {
+  for (const command of [
+    'echo \'{"phase":"implementation"}\' > keel/features/X/state.json',
+    'cat a >> keel/features/X/State.json',
+    'cp /tmp/s.json keel/features/X/state.json',
+    "sed -i 's/tasks/implementation/' keel/features/X/state.json",
+    'node -e "fs.writeFileSync(\'keel/features/X/state.json\', x)"',
+    'Set-Content keel\\features\\X\\state.json $x',
+  ]) assert.equal(checkCommand(command).block, true, command);
+  for (const command of [
+    'cat keel/features/X/state.json',
+    'node scripts/keel-state.mjs next 2>&1',
+    'git checkout -- keel/features/X/state.json',
+    'npm test > out.txt',
+  ]) assert.equal(checkCommand(command).block, false, command);
+});
+
 test('hook lê o evento, acha a história da branch e sai com 2 ao bloquear', () => {
   const dir = mkdtempSync(join(tmpdir(), 'keel-hook-'));
   try {
     mkdirSync(join(dir, '.git'));
     writeFileSync(join(dir, '.git', 'HEAD'), 'ref: refs/heads/feat/x\n');
     mkdirSync(join(dir, 'keel', 'features', 'APP-1-login'), { recursive: true });
-    writeFileSync(join(dir, 'keel', 'features', 'APP-1-login', 'state.json'), JSON.stringify(storyIn('tasks')));
+    const folder = join(dir, 'keel', 'features', 'APP-1-login');
+    const docs = { 'requirements.md': requirementsDoc(), 'tasks.md': tasksDoc(), 'design.md': null };
+    writeFileSync(join(folder, 'requirements.md'), docs['requirements.md']);
+    writeFileSync(join(folder, 'tasks.md'), docs['tasks.md']);
+    writeFileSync(join(folder, 'state.json'), JSON.stringify(storyIn('implementation')));
     const run = (file) => spawnSync(process.execPath, [hook], {
       input: JSON.stringify({ tool_name: 'Edit', tool_input: { file_path: join(dir, file) }, cwd: dir }),
       encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: dir },
     });
-    const blocked = run('src/app.js');
-    assert.equal(blocked.status, 2);
-    assert.match(blocked.stderr, /APP-1 está na fase tasks/);
+    // state.json com phase "implementation" escrito à mão, sem portões: o hook usa a fase real.
+    const forged = run('src/app.js');
+    assert.equal(forged.status, 2);
+    assert.match(forged.stderr, /APP-1 está na fase triage/);
     assert.equal(run('keel/features/APP-1-login/requirements.md').status, 0);
-    const stale = storyIn('implementation');
-    stale.steps.requirements = { ...stale.steps.requirements, approved: true, approvedBy: 'Ana', hash: 'antigo' };
-    writeFileSync(join(dir, 'keel', 'features', 'APP-1-login', 'state.json'), JSON.stringify(stale));
-    writeFileSync(join(dir, 'keel', 'features', 'APP-1-login', 'requirements.md'), 'mudou depois da aprovação\n');
-    assert.match(run('src/app.js').stderr, /fase confirmation/);
+    writeFileSync(join(folder, 'state.json'), JSON.stringify(implementationState(docs)));
+    assert.equal(run('src/app.js').status, 0);
+    writeFileSync(join(folder, 'requirements.md'), docs['requirements.md'].replace('mostrar aviso', 'mostrar banner'));
+    assert.match(run('src/app.js').stderr, /APP-1 está na fase confirmation/);
     mkdirSync(join(dir, 'keel', 'features', 'OLD-1-x'));
     writeFileSync(join(dir, 'keel', 'features', 'OLD-1-x', 'state.json'), '{ conflito');
     assert.match(run('src/app.js').stderr, /fase confirmation/);
     writeFileSync(join(dir, '.git', 'HEAD'), 'ref: refs/heads/main\n');
     assert.equal(run('keel/features/APP-1-login/tasks.md').status, 0);
+    const bash = spawnSync(process.execPath, [hook], {
+      input: JSON.stringify({ tool_name: 'Bash', tool_input: { command: 'echo {} > keel/features/APP-1-login/state.json' }, cwd: dir }),
+      encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: dir },
+    });
+    assert.equal(bash.status, 2);
+    assert.match(bash.stderr, /keel-state\.mjs/);
     const unreadable = run('src/app.js');
     assert.equal(unreadable.status, 2);
     assert.match(unreadable.stderr, /ilegível.*OLD-1-x/s);
@@ -64,8 +106,8 @@ test('hook lê o evento, acha a história da branch e sai com 2 ao bloquear', ()
   }
 });
 
-test('hooks.json registra o PreToolUse nas ferramentas de edição', () => {
+test('hooks.json registra o PreToolUse nas ferramentas de edição e no Bash', () => {
   const entry = readJson('hooks/hooks.json').hooks.PreToolUse[0];
-  assert.equal(entry.matcher, 'Write|Edit|MultiEdit|NotebookEdit');
+  assert.equal(entry.matcher, 'Write|Edit|MultiEdit|NotebookEdit|Bash');
   assert.match(entry.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/hooks\/pre-tool-use\.mjs/);
 });

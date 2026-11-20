@@ -11,7 +11,7 @@ import { isAbsolute, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
-  checkCoverage, openQuestions, readDocs, tasksDone, validateDesign, validateRequirements, validateTasks,
+  checkCoverage, frozenBlock, openQuestions, readDocs, tasksDone, validateDesign, validateRequirements, validateTasks,
 } from './validate-feature.mjs';
 
 export const LEVELS = ['trivial', 'padrao', 'com-design'];
@@ -20,18 +20,10 @@ const VALIDATORS = { 'requirements.md': validateRequirements, 'design.md': valid
 const REVIEW_RESULTS = ['ok', 'achados', 'unavailable'];
 const PENDING_PARTS = { convergence: 6, 'approval:deltas': 6, arch: 7 };
 
-// Linhas e seções que mudam com o andamento sem mudar o que foi combinado.
-const VOLATILE_LINE = /^(Status:|Aprovado por |Aprovação:|Evidência RED:|Evidência GREEN:|Review:)|· Status: /;
-const VOLATILE_SECTION = /^## (Notas de implementação|Convergência)/;
-
+// Só o bloco congelado entra no hash: andamento, notas e cabeçalho mudam sem vencer a aprovação.
 export function approvalHash(text) {
-  const kept = [];
-  let skipping = false;
-  for (const line of text.replace(/\r\n/g, '\n').split('\n')) {
-    if (line.startsWith('## ')) skipping = VOLATILE_SECTION.test(line);
-    if (!skipping && !VOLATILE_LINE.test(line)) kept.push(line);
-  }
-  return createHash('sha256').update(kept.join('\n')).digest('hex');
+  const content = frozenBlock(text).content ?? text.replace(/\r\n/g, '\n');
+  return createHash('sha256').update(content).digest('hex');
 }
 
 const approvalStep = () => ({ approved: false, approvedBy: null, approvedAt: null, hash: null });
@@ -145,10 +137,14 @@ export function reconcile(state, workflow, docs) {
     const step = next.steps[stepName];
     if (!step.approved || (docs[doc] != null && step.hash === approvalHash(docs[doc]))) continue;
     expired.push(doc);
-    const gate = gatePhase(workflow, doc);
-    const phase = phaseIndex(workflow, next.phase) > phaseIndex(workflow, gate.id) ? gate.id : next.phase;
-    next = { ...next, phase, steps: { ...next.steps, [stepName]: { ...step, ...approvalStep() } } };
+    next = { ...next, steps: { ...next.steps, [stepName]: { ...step, ...approvalStep() } } };
   }
+  // A fase atual só vale se toda fase anterior que se aplica cumpre os critérios de saída.
+  // Isso cobre aprovação vencida e state.json alterado por fora do script.
+  const current = phaseIndex(workflow, next.phase);
+  const failing = workflow.phases.slice(0, current)
+    .find((phase) => applies(phase, next) && missingFor(phase, next, docs).length > 0);
+  if (failing) next = { ...next, phase: failing.id };
   return { state: next, expired };
 }
 
@@ -221,6 +217,14 @@ export function approve(state, doc, by, docs, workflow, now) {
 }
 
 const STATE_FILE = /^keel\/features\/[^/]+\/state\.json$/i;
+const SHELL_WRITE = /(>>?\s*["']?[^\s|;&]*state\.json|\b(tee|cp|mv|rm|dd|sed\s+-i|writeFile\w*|Set-Content|Out-File|Add-Content)\b[^|;&]*state\.json)/i;
+
+// Decide se o hook PreToolUse deixa a IA rodar um comando de terminal: bloqueia o que grava
+// state.json, exceto o próprio keel-state.mjs e o git (restaurar o arquivo).
+export function checkCommand(command) {
+  if (/^\s*git\s/.test(command) || command.includes('keel-state.mjs') || !SHELL_WRITE.test(command)) return { block: false };
+  return { block: true, reason: 'state.json só é escrito por scripts/keel-state.mjs; use node scripts/keel-state.mjs <comando>.' };
+}
 
 // Arquivo do projeto que a fase controla: dentro da raiz e fora de keel/.
 export function isProjectSource(relPath) {

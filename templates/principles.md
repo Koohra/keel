@@ -39,4 +39,3 @@ Siga: <caminho> (<por quê>). Não copie: <caminho/**> (<por quê>).
 
 ### Checagem
 Arquitetura: `<comando>` · Lint/complexidade: `<comando>` · Testes: `<comando>`
-```

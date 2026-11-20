@@ -131,7 +131,7 @@ test('aprovação vencida volta a história para a fase do portão', () => {
   assert.deepEqual(nextStep(state, workflow, changed).expired, ['requirements.md']);
 });
 
-test('status, evidência, notas e CRLF não vencem a aprovação', () => {
+test('só o bloco congelado conta para o hash: andamento, notas e CRLF não vencem a aprovação', () => {
   const docs = docsFor('padrao');
   const state = walkTo('implementation', 'padrao', docs);
   const progressed = docs['tasks.md']
@@ -144,6 +144,18 @@ test('status, evidência, notas e CRLF não vencem a aprovação', () => {
   const { expired } = reconcile(state, workflow, { ...docs, 'tasks.md': progressed });
   assert.deepEqual(expired, []);
   assert.notEqual(approvalHash(docs['tasks.md']), approvalHash(docs['tasks.md'].replace('T2 — Sessão', 'T2 — Logout')));
+  const confirmed = docs['requirements.md'].replace('Status: rascunho', 'Status: confirmado por Ana em 2026-11-20');
+  assert.equal(approvalHash(confirmed), approvalHash(docs['requirements.md']));
+});
+
+test('fase gravada à mão sem os portões volta para o primeiro portão que falta', () => {
+  const docs = docsFor('padrao');
+  const forged = { ...newState({ ...story, now }), phase: 'implementation' };
+  assert.equal(reconcile(forged, workflow, docs).state.phase, 'triage');
+  const leveled = { ...setLevel(newState({ ...story, now }), 'padrao', 'Ana', now), phase: 'implementation' };
+  const { state } = reconcile({ ...leveled, steps: { ...leveled.steps, reading: { repoMap: true } } }, workflow, docs);
+  assert.equal(state.phase, 'confirmation');
+  assert.equal(reconcile(walkTo('implementation', 'padrao', docs), workflow, docs).state.phase, 'implementation');
 });
 
 test('todo critério do workflow.json tem verificador ou parte futura declarada', () => {

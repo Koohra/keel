@@ -3,6 +3,7 @@
 Fonte: https://github.com/Koohra/keel/issues/2 · Pasta: keel/features/KEEL-2-validacao-estado/ · Nível: padrão
 Status: rascunho (aprovação no review do PR)
 
+<!-- congelado após aprovação: início -->
 ## História original
 > `validate-feature.mjs`, `keel-state.mjs` (next, advance, approve, hash) e hook `PreToolUse` que bloqueia escrita em `state.json` e edição de código fora da fase. Define o formato exato dos critérios do `workflow.json`. Pronto quando: a camada 0 (`node --test`) cobre transições válidas e inválidas; a camada 0 cobre aprovação vencida (arquivo mudou depois do hash).
 
@@ -14,7 +15,6 @@ Tirar da IA a decisão de qual é o próximo passo e a checagem mecânica dos do
 - Critérios de fechamento (`convergence`, `arch`, `approval:deltas`): partes 6 e 7. Até lá o script recusa avançar de `closing` dizendo que o verificador ainda não existe.
 - `repo-map.mjs`: parte 3. Aqui só o registro `generated repo-map`.
 - Skill que chama os scripts e `phases/*.md`: parte 3.
-- Bloquear escrita em `state.json` feita por comando de shell: o hook cobre as ferramentas de edição.
 
 ## Regras e critérios de aceite
 R1. WHEN o validador recebe uma pasta de história THE validador SHALL apontar seção ausente ou vazia, regra fora de EARS, regra sem critério de aceite, ID repetido e task sem `Cobre:`, sem teste e comando ou com dependência inexistente ou em ciclo. [fonte: docs/especificacao.md#etapa-3, #etapa-6]
@@ -32,14 +32,18 @@ R5. WHEN o dev aprova um documento THE keel-state.mjs SHALL gravar quem aprovou,
   - AC-5.1 GIVEN a fase `requirements` WHEN rodo `approve requirements.md` THEN ele recusa porque o portão é da fase `confirmation`.
 R6. IF um documento aprovado muda depois da aprovação THEN THE keel-state.mjs SHALL vencer a aprovação e voltar a história para a fase do portão daquele documento. [fonte: docs/especificacao.md#estado-da-história-statejson]
   - AC-6.1 GIVEN a história em `implementation` WHEN uma regra do requirements.md muda e rodo `next` THEN a fase volta para `confirmation` e `requirements.md` aparece como aprovação vencida.
-  - AC-6.2 GIVEN a história em `implementation` WHEN só `Status:`, evidências ou notas do tasks.md mudam THEN a aprovação do tasks.md continua valendo.
-R7. IF a IA tenta escrever um `state.json` de história THEN THE hook PreToolUse SHALL bloquear e indicar o keel-state.mjs. [fonte: docs/especificacao.md#estado-da-história-statejson]
+  - AC-6.2 GIVEN a história em `implementation` WHEN só o "Andamento", as notas ou o cabeçalho do tasks.md mudam THEN a aprovação do tasks.md continua valendo, porque o hash cobre só o bloco congelado após aprovação.
+R7. IF a IA tenta escrever um `state.json` de história, por ferramenta de edição ou comando de terminal, THEN THE hook PreToolUse SHALL bloquear e indicar o keel-state.mjs. [fonte: docs/especificacao.md#estado-da-história-statejson]
   - AC-7.1 GIVEN qualquer fase WHEN chega um Write em `keel/features/X/state.json` THEN o hook sai com código 2.
+  - AC-7.2 GIVEN qualquer fase WHEN chega um Bash `echo {} > keel/features/X/state.json` THEN o hook sai com código 2; `cat`, `git checkout` e o keel-state.mjs passam.
 R8. WHILE a história da branch atual não está numa fase com `allowSourceEdits` THE hook PreToolUse SHALL bloquear edição de arquivos do projeto fora de `keel/`. [fonte: docs/especificacao.md#estado-da-história-statejson]
   - AC-8.1 GIVEN a história em `tasks` WHEN chega um Edit em `src/app.js` THEN o hook sai com código 2 citando a fase.
   - AC-8.2 GIVEN a mesma história WHEN chega um Edit em `keel/features/X/tasks.md` THEN o hook libera.
 R9. THE workflow.json SHALL usar só critérios no formato `<tipo>[:<alvo>][?]` com tipo conhecido pelo keel-state.mjs. [fonte: issue #2]
   - AC-9.1 GIVEN o workflow.json WHEN rodo `npm test` THEN todo critério tem verificador ou está marcado como pendente de uma parte futura.
+
+R10. IF o state.json diz uma fase cujos portões anteriores não estão cumpridos THEN THE keel-state.mjs SHALL voltar a história para a primeira fase que falta, a cada comando e no hook. [fonte: review do PR #10, Miguel em 2026-11-20]
+  - AC-10.1 GIVEN um state.json com `phase: implementation` gravado à mão e nenhum portão cumprido WHEN o hook recebe um Edit em `src/app.js` THEN ele bloqueia citando a fase `triage`.
 
 ## Obrigações explícitas
 - Casos de borda: história sem branch correspondente à atual não bloqueia nada; caminho fora do projeto não é bloqueado; arquivo com CRLF tem o mesmo hash que com LF.
@@ -48,8 +52,8 @@ R9. THE workflow.json SHALL usar só critérios no formato `<tipo>[:<alvo>][?]` 
 - Erros e respostas esperadas: comando ou argumento inválido sai com código 1 e mensagem do que corrigir; state.json ilegível bloqueia a edição de código e diz como restaurar.
 
 ## Perguntas e suposições
-- [SUPOSIÇÃO] O hash da aprovação ignora as linhas que mudam sem mudar o combinado: `Status:`, `Aprovado por`, `Evidência RED:`, `Evidência GREEN:`, `Review:` e as seções "Notas de implementação" e "Convergência". Sem isso, marcar uma task como feita venceria a aprovação do tasks.md. Aceite pendente no review do PR.
-- [SUPOSIÇÃO] O state.json não guarda o que o arquivo já diz (contagem de perguntas, `generated` dos documentos, `design.required`): o script lê os arquivos. Aceite pendente no review do PR.
+- O hash da aprovação cobre só o bloco `<!-- congelado após aprovação -->`, como o BMAD; o andamento das tasks fica na seção "Andamento", fora dele. Escolhido por Miguel em 2026-11-20 no review do PR #10.
+- O state.json não guarda o que o arquivo já diz (contagem de perguntas, `generated` dos documentos, `design.required`): o script lê os arquivos. Aceito por Miguel em 2026-11-20 no review do PR #10, assim como `closing` recusar avançar até as partes 6 e 7.
 - Fluxo da história trivial: Miguel escolheu em 2026-11-20 pular requirements e confirmação; o critério fica no `Cobre:` da task.
 
 ## Conflitos encontrados
@@ -58,3 +62,4 @@ R9. THE workflow.json SHALL usar só critérios no formato `<tipo>[:<alvo>][?]` 
 
 ## Mudanças após a confirmação
 - Nenhuma.
+<!-- congelado após aprovação: fim -->

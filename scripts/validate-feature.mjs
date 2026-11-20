@@ -16,12 +16,31 @@ const DESIGN_SECTIONS = [
   'Alternativas consideradas', 'Preocupações transversais', 'Riscos e quebras de padrão',
   'Candidata a ADR?',
 ];
-const TASKS_SECTIONS = ['Notas de implementação', 'Convergência (preenchida no fim, conferida por script)'];
+const TASKS_SECTIONS = ['Andamento', 'Notas de implementação', 'Convergência (preenchida no fim, conferida por script)'];
 
 const EARS = /^(?:(?:WHEN|WHILE|WHERE) .+ |IF .+ THEN )?THE .+ SHALL /;
 const GHERKIN = /GIVEN .+ WHEN .+ THEN /;
 const TASK_HEADING = /^T(\d+) [—-] /;
 const STATUS = /^(pendente|red|green|em revisão|feita)( \(.+\))?$/;
+
+export const FROZEN_START = '<!-- congelado após aprovação: início -->';
+export const FROZEN_END = '<!-- congelado após aprovação: fim -->';
+
+// Trecho entre os marcadores: é o que o dev aprova e o que entra no hash da aprovação.
+export function frozenBlock(text) {
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const start = lines.flatMap((line, i) => (line.trim() === FROZEN_START ? [i] : []));
+  const end = lines.flatMap((line, i) => (line.trim() === FROZEN_END ? [i] : []));
+  if (start.length !== 1 || end.length !== 1 || start[0] > end[0]) {
+    return { content: null, error: `precisa de um bloco congelado: uma linha "${FROZEN_START}" e, depois, uma "${FROZEN_END}"` };
+  }
+  return { content: lines.slice(start[0] + 1, end[0]).join('\n'), error: null };
+}
+
+function frozenErrors(text) {
+  const { error } = frozenBlock(text);
+  return error ? [error] : [];
+}
 
 // Separa o markdown em seções de nível 2: [{ title, body }].
 function sections(text) {
@@ -69,7 +88,7 @@ export function parseRules(text) {
 }
 
 export function validateRequirements(text) {
-  const errors = checkSections(sections(text), REQUIREMENTS_SECTIONS);
+  const errors = [...frozenErrors(text), ...checkSections(sections(text), REQUIREMENTS_SECTIONS)];
   const rules = parseRules(text);
   if (rules.length === 0) errors.push('nenhuma regra R# em "Regras e critérios de aceite"');
   for (const line of rules.malformed) {
@@ -93,25 +112,45 @@ export function openQuestions(text) {
 }
 
 export function validateDesign(text) {
-  const errors = checkSections(sections(text), DESIGN_SECTIONS);
+  const errors = [...frozenErrors(text), ...checkSections(sections(text), DESIGN_SECTIONS)];
   if (!/^Gatilho: \S/m.test(text)) errors.push('falta a linha "Gatilho:" com o motivo do design');
   return errors;
 }
 
+function fieldsOf(body) {
+  const fields = {};
+  for (const line of body.split('\n')) {
+    const field = line.match(/^([A-Za-zÀ-ú ]+): ?(.*)$/);
+    if (field) fields[field[1]] = field[2].trim();
+  }
+  return fields;
+}
+
+// Andamento: "### T1" seguido de Status, evidências e review de cada task.
+function parseProgress(text) {
+  const body = sections(text).find((s) => s.title === 'Andamento')?.body ?? '';
+  const progress = {};
+  for (const chunk of body.split(/^(?=### T\d+\s*$)/m)) {
+    const id = chunk.match(/^### (T\d+)\s*$/m)?.[1];
+    if (id) progress[id] = fieldsOf(chunk);
+  }
+  return progress;
+}
+
 export function parseTasks(text) {
+  const frozen = new Set(sections(frozenBlock(text).content ?? '').map((s) => s.title));
+  const progress = parseProgress(text);
   return sections(text).filter((s) => TASK_HEADING.test(s.title)).map((s) => {
-    const fields = {};
-    for (const line of s.body.split('\n')) {
-      const field = line.match(/^([A-Za-zÀ-ú ]+): ?(.*)$/);
-      if (field) fields[field[1]] = field[2].trim();
-    }
-    const deps = fields['Depende de'] ?? '';
+    const fields = fieldsOf(s.body);
+    const id = `T${s.title.match(TASK_HEADING)[1]}`;
     return {
-      id: `T${s.title.match(TASK_HEADING)[1]}`,
+      id,
       fields,
+      frozen: frozen.has(s.title),
+      progress: progress[id] ?? null,
       covers: fields.Cobre?.match(/\bR\d+\b/g) ?? [],
       tested: 'Teste primeiro' in fields,
-      deps: deps.match(/\bT\d+\b/g) ?? [],
+      deps: (fields['Depende de'] ?? '').match(/\bT\d+\b/g) ?? [],
     };
   });
 }
@@ -137,18 +176,24 @@ function findCycle(tasks) {
 }
 
 export function validateTasks(text) {
-  const errors = checkSections(sections(text), TASKS_SECTIONS);
+  const errors = [...frozenErrors(text), ...checkSections(sections(text), TASKS_SECTIONS)];
   const tasks = parseTasks(text);
+  const hasBlock = frozenErrors(text).length === 0;
   if (tasks.length === 0) errors.push('nenhuma task "## T1 — ..."');
   errors.push(...duplicates(tasks.map((t) => t.id), 'repetida'));
   const ids = new Set(tasks.map((t) => t.id));
-  for (const { id, fields, deps } of tasks) {
+  for (const { id, fields, deps, frozen, progress } of tasks) {
+    if (hasBlock && !frozen) errors.push(`${id} fora do bloco congelado; o plano da task fica dentro dele`);
+    for (const name of ['Status', 'Evidência RED', 'Evidência GREEN', 'Review']) {
+      if (name in fields) errors.push(`${id}: ${name}: fica em "Andamento", fora do bloco congelado`);
+    }
+    if (!progress) errors.push(`${id} sem entrada em "Andamento" (### ${id} com Status:)`);
+    else if (!STATUS.test(progress.Status ?? '')) errors.push(`${id}: Status "${progress.Status ?? ''}" inválido`);
     if (!fields.Cobre) errors.push(`${id} sem Cobre:`);
     const noTest = 'Sem teste' in fields;
     if (noTest && 'Teste primeiro' in fields) errors.push(`${id} tem Teste primeiro: e Sem teste: ao mesmo tempo`);
     if (!noTest && !('Teste primeiro' in fields)) errors.push(`${id} sem Teste primeiro: nem Sem teste:`);
     if (!noTest && !/`[^`]+`/.test(fields['Verificação'] ?? '')) errors.push(`${id}: Verificação sem comando entre crases`);
-    if (fields.Status !== undefined && !STATUS.test(fields.Status)) errors.push(`${id}: Status "${fields.Status}" inválido`);
     for (const dep of deps) if (!ids.has(dep)) errors.push(`${id} depende de ${dep}, que não existe`);
   }
   const cycle = findCycle(tasks);
@@ -174,7 +219,7 @@ export function checkCoverage(tasksText, requirementsText) {
 
 export function tasksDone(text) {
   const tasks = parseTasks(text);
-  return tasks.length > 0 && tasks.every((t) => /^feita\b/.test(t.fields.Status ?? ''));
+  return tasks.length > 0 && tasks.every((t) => /^feita\b/.test(t.progress?.Status ?? ''));
 }
 
 // Valida os documentos presentes numa pasta: { arquivo: [erros] }.

@@ -37,7 +37,18 @@ test('modelo de tasks.md traz esqueleto andante, campos da task e convergência'
     'Depende de:', 'Status:', 'Evidência RED:', 'Evidência GREEN:', 'Review:', 'Sem teste:']) {
     assert.ok(text.includes(`\n${field}`), `falta o campo ${field}`);
   }
-  assertHeadings('templates/tasks.md', ['## Notas de implementação', '## Convergência (preenchida no fim, conferida por script)']);
+  assertHeadings('templates/tasks.md', ['## Andamento', '## Notas de implementação', '## Convergência (preenchida no fim, conferida por script)']);
+});
+
+test('modelos de requirements, design e tasks marcam o bloco congelado após aprovação', () => {
+  for (const path of ['templates/requirements.md', 'templates/design.md', 'templates/tasks.md']) {
+    const text = read(path);
+    const start = text.indexOf('\n<!-- congelado após aprovação: início -->\n');
+    const end = text.indexOf('\n<!-- congelado após aprovação: fim -->\n');
+    assert.ok(start > 0 && end > start, path);
+  }
+  const plan = read('templates/tasks.md').split('<!-- congelado após aprovação: fim -->')[0];
+  assert.ok(!plan.includes('\nStatus:'), 'Status fica fora do bloco congelado');
 });
 
 test('modelo de princípios tem no máximo 10 regras, cada uma [hook] ou [review]', () => {
