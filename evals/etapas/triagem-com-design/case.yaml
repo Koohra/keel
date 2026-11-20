@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: triagem-com-design
+description: Etapa 1. História com migração de dados; o Keel propõe com-design e espera o dev.
+tags: [etapa-1]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 15
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Edit, Agent]
+  prompt: |
+    Vamos seguir com a história APP-9 no Keel. Texto da história: "Como admin, quero que todo usuário tenha telefone. Novos cadastros exigem telefone, e os usuários já cadastrados precisam receber o campo: os antigos ficam com telefone pendente até atualizarem."
