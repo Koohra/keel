@@ -18,7 +18,7 @@ Dar ao Keel 2 a base sobre a qual as partes 2 a 8 são construídas: um plugin i
 ## Regras e critérios de aceite
 R1. THE plugin SHALL ter manifesto e catálogo de marketplace válidos na raiz do repo. [fonte: issue #1]
   - AC-1.1 GIVEN o repo WHEN rodo `claude plugin validate .` THEN o resultado é "Validation passed".
-R2. THE repo SHALL ter `docs/product.md` com até 200 linhas e seção de princípios de engenharia, e ADRs iniciais no formato Nygard com seção de confirmação. [fonte: docs/especificacao.md#etapa-0]
+R2. THE repo SHALL ter `keel/product.md` com até 200 linhas e seção de princípios de engenharia, e ADRs iniciais no formato Nygard com seção de confirmação. [fonte: docs/especificacao.md#etapa-0]
   - AC-2.1 GIVEN o repo WHEN rodo `npm test` THEN os testes de product.md e ADRs passam.
 R3. THE repo SHALL ter os modelos de requirements, design, tasks, princípios e architecture.json com as seções do anexo da especificação. [fonte: docs/especificacao.md#anexo-modelos]
   - AC-3.1 GIVEN um modelo sem uma seção obrigatória WHEN rodo `npm test` THEN o teste do modelo falha nomeando a seção.
@@ -36,11 +36,11 @@ R6. IF um arquivo do repo tem CR ou BOM THEN THE suíte SHALL falhar. [fonte: AD
 - Erros e respostas esperadas: nenhum além de R3 e R6.
 
 ## Perguntas e suposições
-- [SUPOSIÇÃO] product.md e ADRs ficam em `docs/` (ADR-005) — aguarda aceite do Miguel no PR.
+- product.md e ADRs ficam em `keel/` (ADR-005), escolhido por Miguel em 2026-11-20 no review do PR #9.
 - Sequência por script (ADR-002) e testes em quatro camadas (ADR-003) aceitos por Miguel em 2026-11-20 no review do PR #9.
 
 ## Conflitos encontrados
-- Nenhum.
+- A história original cita `docs/product.md`; a ADR-005 (2026-11-20) decidiu por `keel/product.md`.
 
 ## Mudanças após a confirmação
 - Nenhuma.

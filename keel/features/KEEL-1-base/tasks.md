@@ -29,7 +29,7 @@ Review: pendente (review do PR)
 
 ## T3 — product.md, ADRs e regra de bytes
 Cobre: R2 (AC-2.1), R6 (AC-6.1)
-Arquivos: `docs/product.md`, `docs/adrs/*`, `test/repo.test.mjs`, `.gitattributes`
+Arquivos: `keel/product.md`, `keel/adrs/*`, `test/repo.test.mjs`, `.gitattributes`
 Teste primeiro: `test/repo.test.mjs` — orçamento e princípios do product.md, formato das ADRs, LF e sem BOM
 Verificação: `npm test`
 Pronto quando: os testes de repo passam

@@ -1,14 +1,14 @@
 # Keel — produto
 
-Versão 2 · Responsável: Miguel · Fonte detalhada: [especificacao.md](especificacao.md)
+Versão 2 · Responsável: Miguel · Fonte detalhada: [docs/especificacao.md](../docs/especificacao.md)
 
 ## Visão
-O Keel é um plugin do Claude Code que transforma documentação mínima e cuidadosa em código bom, uma história e uma task pequena por vez, com TDD em cada task e evidência verificável em cada passo. [fonte: especificacao.md#propósito]
+O Keel é um plugin do Claude Code que transforma documentação mínima e cuidadosa em código bom, uma história e uma task pequena por vez, com TDD em cada task e evidência verificável em cada passo. [fonte: docs/especificacao.md#propósito]
 
 Para quem: devs que usam o Claude Code em projetos reais e querem que a IA siga um processo de engenharia sem gerar volume de texto para revisar.
 
 ## O que o Keel faz
-- Prepara o projeto uma vez: `docs/product.md` e `docs/adrs/`.
+- Prepara o projeto uma vez: `keel/product.md` e `keel/adrs/`.
 - Conduz cada história pelo fluxo: triagem, leitura das fontes, requisitos, confirmação, design (só com gatilho), tasks, implementação em TDD, review isolado, commit aprovado e fechamento.
 - Decide a ordem do fluxo por script (`workflow/workflow.json` e `state.json` por história), não pela IA.
 - Bloqueia por hook o que estiver fora da fase.
@@ -38,7 +38,7 @@ As decisões que afetam o projeto inteiro estão em [adrs/](adrs/):
 - [ADR-002](adrs/ADR-002-sequencia-por-script.md) Sequência do fluxo controlada por script.
 - [ADR-003](adrs/ADR-003-testes-em-quatro-camadas.md) Testes enxutos em quatro camadas.
 - [ADR-004](adrs/ADR-004-scripts-node-sem-dependencias.md) Scripts em Node sem dependências.
-- [ADR-005](adrs/ADR-005-documentos-do-projeto-em-docs.md) Documentos do projeto em `docs/`.
+- [ADR-005](adrs/ADR-005-documentos-do-projeto-em-keel.md) Documentos que o Keel lê ficam em `keel/`.
 
 ## Princípios de engenharia
 

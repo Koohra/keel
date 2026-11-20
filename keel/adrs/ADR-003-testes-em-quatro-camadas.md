@@ -4,7 +4,7 @@
 Aceita por Miguel em 2026-11-20 (review do PR #9).
 
 ## Contexto
-O Keel 1 versionou cerca de 292 mil linhas de resultados, manteve cinco runners próprios e uma matriz de qualificação que nunca rodou, e os defeitos reais vieram de fontes baratas. [fonte: especificacao.md#estratégia-de-testes]
+O Keel 1 versionou cerca de 292 mil linhas de resultados, manteve cinco runners próprios e uma matriz de qualificação que nunca rodou, e os defeitos reais vieram de fontes baratas. [fonte: docs/especificacao.md#estratégia-de-testes]
 
 ## Decisão
 Quatro camadas:

@@ -4,7 +4,7 @@
 Aceita por Miguel em 2026-11-20.
 
 ## Contexto
-O Keel roda na máquina do dev, inclusive no Windows, e os scripts precisam funcionar sem instalação. O Keel 1 teve testes intermitentes que só apareciam no Windows. [fonte: especificacao.md#arquitetura-do-plugin]
+O Keel roda na máquina do dev, inclusive no Windows, e os scripts precisam funcionar sem instalação. O Keel 1 teve testes intermitentes que só apareciam no Windows. [fonte: docs/especificacao.md#arquitetura-do-plugin]
 
 ## Decisão
 Scripts e hooks são Node.js `.mjs` que usam só módulos `node:`. Arquivos são gravados com LF e sem BOM, e o Git guarda os bytes exatos (`* -text`), porque aprovações dependem do hash do conteúdo. Os testes passam no Windows desde o primeiro dia.

@@ -35,8 +35,8 @@ O Keel transforma documentação mínima e cuidadosa em código bom, uma histór
 
 | Arquivo | Nível | Quem escreve | Versionado |
 | --- | --- | --- | --- |
-| `docs/product.md` | Projeto | Dev, opcionalmente com o agente de documentação | Sim |
-| `docs/adrs/ADR-NNN-*.md` | Projeto, decisões que afetam o projeto inteiro | Dev | Sim |
+| `keel/product.md` | Projeto | Dev, opcionalmente com o agente de documentação | Sim |
+| `keel/adrs/ADR-NNN-*.md` | Projeto, decisões que afetam o projeto inteiro | Dev | Sim |
 | `keel/features/<CHAVE>-<descricao>/requirements.md` | História, sempre | Dev, opcionalmente com o agente; o Keel completa obrigações, perguntas e conflitos | Sim |
 | `keel/features/<CHAVE>-<descricao>/design.md` | História, só com gatilho de design | Dev ou Keel, aprovado pelo dev | Sim |
 | `keel/features/<CHAVE>-<descricao>/tasks.md` | História | Keel, aprovado pelo dev | Sim |
@@ -66,7 +66,7 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 **Entradas:** repositório novo ou existente; documentação existente, se houver.
 
 **Comportamentos**
-- Deve verificar se `docs/product.md` e `docs/adrs/` existem e estão dentro do orçamento de tamanho.
+- Deve verificar se `keel/product.md` e `keel/adrs/` existem e estão dentro do orçamento de tamanho.
 - Deve, se houver documentação antiga, propor a migração para product.md e ADRs com uma linha de destino ou descarte para cada fonte (agente de documentação).
 - Deve registrar no product.md a seção "Princípios de engenharia" (no máximo 10 regras, cada uma marcada `[hook]` ou `[review]`), o degrau de arquitetura de cada módulo, os exemplares a seguir, o que não copiar e os comandos de checagem do projeto (teste, lint com complexidade, arquitetura). O modelo está no anexo.
 - Deve propor testes de arquitetura na ferramenta nativa da linguagem (ArchUnit, Konsist, NetArchTest/ArchUnitNET, dependency-cruiser, import-linter, go-arch-lint), a partir de `keel/architecture.json`. Instala só com autorização explícita e prova que cada regra falha contra uma violação plantada antes de removê-la. Em código existente, gera uma baseline para que só violações novas falhem.
@@ -78,7 +78,7 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 
 **Portão:** dev aprova product.md e as ADRs iniciais.
 
-**Saídas:** `docs/product.md`, `docs/adrs/`.
+**Saídas:** `keel/product.md`, `keel/adrs/`.
 
 ## Etapa 1. Triagem da história
 
@@ -376,7 +376,7 @@ keel/                                  # repo novo
 ├── test/                              # node --test dos scripts e hooks
 ├── evals/                             # casos do claude plugin eval
 ├── fixtures/node-mini/                # projeto mínimo para casos e ponta a ponta
-└── docs/product.md, docs/adrs/        # o próprio Keel usando o fluxo
+└── keel/product.md, keel/adrs/        # o próprio Keel usando o fluxo
 ```
 
 As instruções por fase ficam em arquivos separados para que cada fase carregue só o que precisa, em vez de uma skill enorme sempre no contexto.
@@ -417,9 +417,9 @@ Cada parte é desenvolvida com TDD e, desde a parte 1, usando o próprio fluxo d
 
 ## Pendências antes de começar
 
-- [ ] Criar o repo novo e adicionar ao projeto.
-- [ ] product.md e ADRs ficam em `docs/` ou vão para `keel/`?
-- [ ] Confirmar `workflow.json` (sequência por script) e a estratégia de testes.
+- [x] Criar o repo novo e adicionar ao projeto.
+- [x] product.md e ADRs ficam em `keel/` (ADR-005, 2026-11-20).
+- [x] `workflow.json` e estratégia de testes confirmados (ADR-002 e ADR-003, 2026-11-20).
 
 ## Decisões tomadas
 
@@ -428,14 +428,15 @@ Cada parte é desenvolvida com TDD e, desde a parte 1, usando o próprio fluxo d
 | Arquivos por história | requirements.md sempre; design.md só com gatilho; tasks.md | 2026-11-20 |
 | Pasta | `keel/features/<CHAVE>-<descricao>/` | 2026-11-20 |
 | Versionamento | requirements.md, design.md e tasks.md versionados | 2026-11-20 |
+| Documentos do projeto | `keel/product.md` e `keel/adrs/`, junto de `keel/features/`; o Keel só lê fontes de `keel/` (ADR-005) | 2026-11-20 |
 | research.md | Não existe; pesquisa entra nas alternativas do design.md | 2026-11-20 |
 | Princípios de design | Seção no product.md, rubrica de review, testes de arquitetura e hooks | 2026-11-20 |
 | EARS e critérios | Palavras-chave em inglês (WHEN/IF/THEN/WHILE/WHERE ... SHALL) e Given/When/Then; IDs R# e AC-#.# | 2026-11-18 |
 | TDD | Obrigatório por task: RED, GREEN, REFACTOR | 2026-11-18 |
 | Hook que protege o teste do RED | Versão futura; o review cobre na versão 1 | 2026-11-20 |
 | Estado da história | `state.json` por história, escrito só por script, aprovações presas a hash | 2026-11-20 |
-| Sequência do fluxo | `workflow.json` no plugin; a IA pergunta o próximo passo ao script em vez de decidir (recomendado, a confirmar) | 2026-11-20 |
-| Testes | Quatro camadas enxutas, sem qualificação por hash nem resultados no repo (recomendado, a confirmar) | 2026-11-20 |
+| Sequência do fluxo | `workflow.json` no plugin; a IA pergunta o próximo passo ao script em vez de decidir | 2026-11-20 |
+| Testes | Quatro camadas enxutas, sem qualificação por hash nem resultados no repo | 2026-11-20 |
 | Hosts | Só Claude Code; Codex adiado | 2026-11-18 |
 | Repo | Repo novo, do zero, com o nome Keel; keel-dev depreciado, sem tag rc.1 | 2026-11-18 |
 

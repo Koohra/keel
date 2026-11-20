@@ -4,7 +4,7 @@
 Aceita por Miguel em 2026-11-20.
 
 ## Contexto
-O Keel 1 fazia coisas demais: muitas skills, pacotes por stack e avaliações caras, sem um fluxo central claro. A pesquisa de SDD (Spec Kit, Kiro, BMAD, OpenSpec) mostrou que o ganho vem de obrigações explícitas e testáveis por história, com cerimônia proporcional ao risco. [fonte: especificacao.md#propósito]
+O Keel 1 fazia coisas demais: muitas skills, pacotes por stack e avaliações caras, sem um fluxo central claro. A pesquisa de SDD (Spec Kit, Kiro, BMAD, OpenSpec) mostrou que o ganho vem de obrigações explícitas e testáveis por história, com cerimônia proporcional ao risco. [fonte: docs/especificacao.md#propósito]
 
 ## Decisão
 O Keel 2 conduz uma história por vez. Cada história tem a pasta `keel/features/<CHAVE>-<descricao>/` com:

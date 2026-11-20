@@ -4,7 +4,7 @@
 Aceita por Miguel em 2026-11-20 (review do PR #9).
 
 ## Contexto
-No Keel 1, portões e ordem do fluxo viviam em prosa de skill, e o modelo às vezes pulava etapas. Regras sem exceção pertencem a hooks e scripts, não à prosa. [fonte: especificacao.md#sequência-controlada-por-script-workflowjson]
+No Keel 1, portões e ordem do fluxo viviam em prosa de skill, e o modelo às vezes pulava etapas. Regras sem exceção pertencem a hooks e scripts, não à prosa. [fonte: docs/especificacao.md#sequência-controlada-por-script-workflowjson]
 
 ## Decisão
 A IA não decide o próximo passo. Ela pergunta ao script:
