@@ -307,6 +307,9 @@ function loadStory(root, story) {
   return active;
 }
 
+// Comandos da CLI; a skill só usa estes (conferido em test/story-skill.test.mjs).
+export const COMMANDS = ['init', 'next', 'advance', 'level', 'generated', 'review', 'approve', 'hash'];
+
 const USAGE = `uso: node scripts/keel-state.mjs <comando> [--story <pasta>]
   init --key <CHAVE> --slug <descricao> --title <título> [--source <link>] [--branch <branch>]
   next | advance
