@@ -11,12 +11,11 @@ import { isAbsolute, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
-  checkCoverage, frozenBlock, openQuestions, readDocs, tasksDone, validateDesign, validateRequirements, validateTasks,
+  checkCoverage, frozenBlock, openQuestions, readDocs, tasksDone, validateDoc,
 } from './validate-feature.mjs';
 
 export const LEVELS = ['trivial', 'standard', 'with-design'];
 const DOC_STEPS = { 'requirements.md': 'requirements', 'design.md': 'design', 'tasks.md': 'tasks' };
-const VALIDATORS = { 'requirements.md': validateRequirements, 'design.md': validateDesign, 'tasks.md': validateTasks };
 const REVIEW_RESULTS = ['ok', 'findings', 'unavailable'];
 const PENDING_PARTS = { convergence: 6, 'approval:deltas': 6, arch: 6 };
 
@@ -57,9 +56,10 @@ function result(met, reason) {
   return met ? { met: true } : { met: false, reason };
 }
 
+// The document on its own and against the others (rules, ACs, structure): see validateDoc.
 function docErrors(doc, docs) {
   if (docs[doc] == null) return [`${doc} does not exist`];
-  return VALIDATORS[doc](docs[doc]);
+  return validateDoc(doc, docs);
 }
 
 const CRITERIA = {
@@ -72,7 +72,7 @@ const CRITERIA = {
     return result(step.hash === approvalHash(docs[target]), `${target} changed after approval`);
   },
   valid: (target, { docs }) => {
-    if (!VALIDATORS[target]) return null;
+    if (!DOC_STEPS[target]) return null;
     const errors = docErrors(target, docs);
     return result(errors.length === 0, errors.join('; '));
   },

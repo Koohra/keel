@@ -7,6 +7,7 @@ Approval: in the PR review
 ## T1 — Walking skeleton: validador dos documentos da história
 Covers: R1 (AC-1.1, AC-1.2), R2 (AC-2.1)
 Files: `scripts/validate-feature.mjs`, `test/validate-feature.test.mjs`, `test/fixtures.mjs`
+New structure: `scripts/validate-feature.mjs` (module)
 Test first: `test/validate-feature.test.mjs` — seções, EARS, AC, IDs, campos da task, ciclo, cobertura e as histórias do próprio repo
 Verification: `node --test test/validate-feature.test.mjs`
 Done when: os 10 testes passam, inclusive KEEL-1 e KEEL-2 validados pelo script
@@ -15,6 +16,7 @@ Depends on: —
 ## T2 — Estado: next, advance, approve, hash e aprovação vencida
 Covers: R3 (AC-3.1), R4 (AC-4.1, AC-4.2, AC-4.3), R5 (AC-5.1), R6 (AC-6.1, AC-6.2), R9 (AC-9.1)
 Files: `scripts/keel-state.mjs`, `workflow/workflow.json`, `test/keel-state.test.mjs`, `test/workflow.test.mjs`
+New structure: `scripts/keel-state.mjs` (module)
 Test first: `test/keel-state.test.mjs` — transições válidas e inválidas, portões, níveis, hash e aprovação vencida, critérios conhecidos e CLI
 Verification: `node --test test/keel-state.test.mjs test/workflow.test.mjs`
 Done when: os testes passam e todo critério do workflow.json tem verificador ou parte futura
@@ -23,6 +25,7 @@ Depends on: T1
 ## T3 — Hook PreToolUse
 Covers: R7 (AC-7.1), R8 (AC-8.1, AC-8.2)
 Files: `scripts/hooks/pre-tool-use.mjs`, `hooks/hooks.json`, `test/pre-tool-use.test.mjs`
+New structure: `scripts/hooks/pre-tool-use.mjs` (module)
 Test first: `test/pre-tool-use.test.mjs` — state.json bloqueado, código só em implementation, história achada pela branch, registro no hooks.json
 Verification: `node --test test/pre-tool-use.test.mjs`
 Done when: os 4 testes passam e `claude plugin validate .` aceita o hooks.json
@@ -30,13 +33,17 @@ Depends on: T2
 
 ## T4 — Formato dos critérios na especificação
 Covers: R9
+Files: `docs/specification.md`
+New structure: none
 No test: documentação; o formato é conferido pelo teste de critérios da T2.
+Done when: a especificação descreve o formato `<kind>[:<target>][?]`
 Depends on: T2
 
 ## T5 — Ajustes do review do PR: bloco congelado e portões não pulados
 Covers: R6 (AC-6.2), R7 (AC-7.2), R10 (AC-10.1)
 Files: `templates/*.md`, `scripts/validate-feature.mjs`, `scripts/keel-state.mjs`, `scripts/hooks/pre-tool-use.mjs`, `hooks/hooks.json`, `test/*.test.mjs`, `docs/specification.md`
-Test first: bloco congelado nos três documentos, plano dentro e andamento fora, hash só do bloco, `checkCommand`, fase forjada volta ao primeiro portão, hook no Bash
+New structure: none
+Test first: `test/*.test.mjs` — bloco congelado nos três documentos, plano dentro e andamento fora, hash só do bloco, `checkCommand`, fase forjada volta ao primeiro portão, hook no Bash
 Verification: `npm test`
 Done when: `npm test` e `claude plugin validate .` passam
 Depends on: T3

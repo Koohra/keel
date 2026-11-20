@@ -522,7 +522,7 @@ R3. WHILE <state> THE <system> SHALL <response>. [source: ...]
 Requirements: requirements.md · Status: draft | approved by <dev> on <date>
 
 <!-- frozen after approval: start -->
-Trigger: <trade-off | contract | data/migration | new dependency | cross-cutting | pattern break>
+Trigger: <trade-off | contract | data/migration | new dependency | cross-cutting | pattern break | new structure | rung change> — <why>
 
 ## Approach
 Um parágrafo; cite as regras atendidas (R1, R2).
@@ -535,6 +535,8 @@ Um parágrafo; cite as regras atendidas (R1, R2).
 Só a parte relevante.
 
 ## New structure and rationale
+none — a resposta esperada na maioria das histórias. Senão, uma linha por elemento; cada um vai no `New structure:` de uma task.
+
 | Element | Kind (interface, layer, mapper/DTO, module, helper, dependency) | Rationale (R#, 2nd implementation, external port, published boundary, 3rd occurrence) | Simpler alternative and why not |
 |---|---|---|---|
 
@@ -566,6 +568,7 @@ Approved by <dev> on <date>
 ## T1 — Walking skeleton: <minimal end-to-end path>
 Covers: R1 (AC-1.1)
 Files: <paths>
+New structure: none | <element> (<kind>)
 Test first: <test name> — <what it checks>
 Verification: `<command>`
 Done when: <observable condition>

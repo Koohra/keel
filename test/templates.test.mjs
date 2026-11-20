@@ -33,7 +33,7 @@ test('design.md template has every section', () => {
 test('tasks.md template has walking skeleton, task fields and convergence', () => {
   const text = read('templates/tasks.md');
   assert.match(text, /^## T1 — Walking skeleton/m);
-  for (const field of ['Covers:', 'Files:', 'Test first:', 'Verification:', 'Done when:',
+  for (const field of ['Covers:', 'Files:', 'New structure:', 'Test first:', 'Verification:', 'Done when:',
     'Depends on:', 'Status:', 'RED evidence:', 'GREEN evidence:', 'Review:', 'No test:']) {
     assert.ok(text.includes(`\n${field}`), `missing field ${field}`);
   }

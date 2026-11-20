@@ -94,12 +94,22 @@ test('with-design level goes through design and requires approving design.md', (
 });
 
 test('trivial level skips requirements, confirmation and design; tasks carry the criterion in Covers:', () => {
-  const tasks = tasksDoc().replace('Covers: R1 (AC-1.1)', 'Covers: GIVEN deslogado WHEN clica THEN vê o consentimento');
+  const tasks = tasksDoc().replace(/^Covers: .*$/gm, 'Covers: GIVEN deslogado WHEN clica THEN vê o consentimento');
   const docs = { 'requirements.md': null, 'design.md': null, 'tasks.md': tasks };
   const state = walkTo('tasks', 'trivial', docs);
   assert.equal(state.steps.requirements.approved, false);
   const approved = approve(state, 'tasks.md', 'Ana', docs, workflow, now);
   assert.equal(advance(approved, workflow, docs, now).state.phase, 'implementation');
+});
+
+test('approve uses the cross-checks: design citing a missing rule or task structure outside the design (AC-6.1)', () => {
+  const docs = docsFor('with-design');
+  const state = walkTo('tasks', 'with-design', docs);
+  const badDesign = { ...docs, 'design.md': docs['design.md'].replace('(R1)', '(R1, R9)') };
+  assert.throws(() => approve(state, 'design.md', 'Ana', badDesign, workflow, now), /R9, which does not exist/);
+  const badTasks = { ...docs, 'tasks.md': docs['tasks.md'].replace('Files: `src/login.js`\nNew structure: none', 'Files: `src/login.js`\nNew structure: Cache (module)') };
+  assert.throws(() => approve(state, 'tasks.md', 'Ana', badTasks, workflow, now), /Cache" is not justified in design\.md/);
+  assert.match(evaluate('valid:design.md', { state, docs: badDesign }).reason, /R9/);
 });
 
 test('approve only in the gate phase and with a valid document', () => {

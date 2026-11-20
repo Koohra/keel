@@ -49,6 +49,7 @@ Approved by Ana on 2026-11-20
 ## T1 — Walking skeleton: botão até o consentimento
 Covers: R1 (AC-1.1)
 Files: \`src/login.js\`
+New structure: none
 Test first: \`login.test.js\` — abre o consentimento
 Verification: \`npm test\`
 Done when: teste passa
@@ -56,6 +57,8 @@ Depends on: —
 
 ## T2 — Sessão expirada
 Covers: R2 (AC-2.1)
+Files: \`src/session.js\`
+New structure: none
 Test first: \`session.test.js\` — pede login
 Verification: \`npm test\`
 Done when: expira e pede login
@@ -63,6 +66,8 @@ Depends on: T1
 
 ## T3 — Aviso offline
 Covers: R3
+Files: \`src/offline.js\`
+New structure: none
 Test first: \`offline.test.js\` — mostra aviso
 Verification: \`npm test\`
 Done when: aviso aparece
@@ -70,7 +75,10 @@ Depends on: T1
 
 ## T4 — Configuração do provedor
 Covers: R1
+Files: \`config/google.json\`
+New structure: none
 No test: só configuração
+Done when: arquivo de configuração existe
 Depends on: T1
 <!-- frozen after approval: end -->
 

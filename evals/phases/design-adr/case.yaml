@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: design-adr
+description: Etapa 5. A história troca o armazenamento da ADR-001; o design declara o gatilho de dados, marca candidata a ADR, não toca no código e chega às tasks.
+tags: [phase-5]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 40
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Edit, Agent]
+  prompt: Continua a história APP-10 no Keel.

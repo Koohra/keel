@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: tasks-plan
+description: Etapa 6. Com os requisitos confirmados, escreve o tasks.md com esqueleto andante e fatias, e para no portão sem aprovar sozinho.
+tags: [phase-6]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 40
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Edit, Agent]
+  prompt: Continua a história APP-8 no Keel.
