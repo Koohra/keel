@@ -1,0 +1,14 @@
+{
+  "name": "keel",
+  "description": "Keel: spec-driven development for Claude Code.",
+  "owner": {
+    "name": "Miguel Pereira de Sousa"
+  },
+  "plugins": [
+    {
+      "name": "keel",
+      "source": "./",
+      "description": "Spec-driven development, one story and one small TDD task at a time."
+    }
+  ]
+}
