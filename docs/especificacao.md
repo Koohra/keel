@@ -49,7 +49,7 @@ O Keel transforma documentação mínima e cuidadosa em código bom, uma histór
 
 O `state.json` diz à IA em que etapa a história está e o que já foi gerado e aprovado. O Keel lê esse arquivo no início de toda interação, inclusive ao retomar uma história em outra sessão, e só avança de etapa se o estado permitir.
 
-- **Quem escreve:** só o script de estado (`keel-state.mjs`), chamado pela skill com comandos como `generated requirements` ou `approve requirements --by <dev>`. O modelo não edita o JSON diretamente.
+- **Quem escreve:** só o script de estado (`keel-state.mjs`), chamado pela skill com comandos como `next`, `advance` ou `approve requirements.md --by <dev>`. O modelo não edita o JSON diretamente.
 - **Aprovação presa ao conteúdo:** ao aprovar um documento, o script grava o hash dele. Se o arquivo mudar depois, a aprovação vence e a história volta para a confirmação daquele documento.
 - **Uma fonte de verdade por assunto:** o state.json guarda fase, portões e a task atual. O status de cada task continua no tasks.md, e o script confere que os dois batem.
 - **Garantia por hook:** um `PreToolUse` lê o state.json e bloqueia edição de código-fonte enquanto a história não chegou na fase de implementação. Isso garante "nenhum código antes da aprovação".
@@ -327,12 +327,12 @@ A IA continua usando julgamento dentro de cada fase: que regras escrever, como q
   "schema": 1,
   "phases": [
     { "id": "triage", "instructions": "phases/triage.md",
-      "exit": ["state.level", "approval:level"] },
+      "exit": ["approval:level"] },
     { "id": "reading", "instructions": "phases/reading.md",
-      "exit": ["file:repo-map"] },
-    { "id": "requirements", "instructions": "phases/requirements.md",
+      "exit": ["generated:repo-map"] },
+    { "id": "requirements", "instructions": "phases/requirements.md", "skipUnless": "level=padrao,com-design",
       "exit": ["valid:requirements.md", "noOpenQuestions"] },
-    { "id": "confirmation", "instructions": "phases/confirmation.md",
+    { "id": "confirmation", "instructions": "phases/confirmation.md", "skipUnless": "level=padrao,com-design",
       "exit": ["review:requirements", "approval:requirements.md"] },
     { "id": "design", "instructions": "phases/design.md", "skipUnless": "level=com-design",
       "exit": ["valid:design.md"] },
@@ -340,6 +340,7 @@ A IA continua usando julgamento dentro de cada fase: que regras escrever, como q
       "exit": ["valid:tasks.md", "coverage:rules->tasks->tests", "approval:tasks.md", "approval:design.md?"] },
     { "id": "implementation", "instructions": "phases/implementation.md",
       "allowSourceEdits": true, "loop": "tasks",
+      "exit": ["tasks:all-done"],
       "taskExit": ["evidence:red", "evidence:green", "checks:passed", "review:task", "approval:commit"] },
     { "id": "closing", "instructions": "phases/closing.md",
       "exit": ["convergence:all-rules", "arch:baseline-not-grown", "approval:deltas?"] },
@@ -348,7 +349,21 @@ A IA continua usando julgamento dentro de cada fase: que regras escrever, como q
 }
 ```
 
-O formato exato dos critérios é definido na parte 2 do desenvolvimento; o exemplo mostra a forma.
+Cada critério tem o formato `<tipo>[:<alvo>][?]`. O `?` final faz o critério valer só quando o documento é exigido pelo nível (design.md só em `com-design`). `skipUnless: level=a,b` pula a fase quando o nível não está na lista: o trivial vai da leitura direto para as tasks, com o critério escrito no `Cobre:` da task (Miguel, 2026-11-20).
+
+| Critério | Passa quando |
+| --- | --- |
+| `approval:level` | o dev confirmou o nível (`level <nível> --by <dev>`) |
+| `generated:repo-map` | o repo map foi registrado (`generated repo-map`) |
+| `valid:<doc>` | o `validate-feature.mjs` não acha erro no documento |
+| `noOpenQuestions` | nenhum `[PERGUNTA]` no requirements.md |
+| `review:requirements` | o resultado do revisor isolado foi registrado (`ok`, `achados` ou `unavailable`) |
+| `approval:<doc>` | o dev aprovou e o hash do documento ainda é o aprovado |
+| `coverage:rules->tasks->tests` | toda regra tem task com teste e toda task cobre regra existente |
+| `tasks:all-done` | toda task do tasks.md está com `Status: feita` |
+| `convergence`, `approval:deltas`, `arch` | ainda sem verificador (partes 6 e 7): o script recusa avançar e diz isso |
+
+O `taskExit` da implementação é conferido pelo loop da task, na parte 5. O hash da aprovação ignora as linhas de andamento (`Status:`, `Aprovado por`, `Evidência RED:`, `Evidência GREEN:`, `Review:`) e as seções "Notas de implementação" e "Convergência", para que marcar uma task como feita não vença a aprovação do tasks.md.
 
 ## Arquitetura do plugin
 
@@ -666,10 +681,11 @@ O Keel traduz esse arquivo para a ferramenta nativa (ArchUnit, Konsist, NetArchT
   "level": "padrao",
   "phase": "confirmation",
   "steps": {
-    "triage":       { "done": true,  "confirmedBy": "Miguel", "at": "2026-11-20T11:30:00Z" },
-    "requirements": { "generated": true,  "openQuestions": 0, "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
-    "design":       { "required": false, "generated": false, "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
-    "tasks":        { "generated": false, "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
+    "triage":       { "done": true, "confirmedBy": "Miguel", "at": "2026-11-20T11:30:00Z" },
+    "reading":      { "repoMap": true },
+    "requirements": { "review": { "result": "ok", "at": "2026-11-20T11:40:00Z" }, "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
+    "design":       { "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
+    "tasks":        { "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
     "implementation": { "currentTask": null, "blocked": null },
     "closing":      { "convergence": false, "deltasApproved": false, "pullRequest": null }
   },
@@ -677,4 +693,4 @@ O Keel traduz esse arquivo para a ferramenta nativa (ArchUnit, Konsist, NetArchT
 }
 ```
 
-Valores de `level`: `trivial`, `padrao`, `com-design`. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente).
+Valores de `level`: `trivial`, `padrao`, `com-design`. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente). O state.json não repete o que os arquivos já dizem (perguntas abertas, documento gerado, design exigido): o script lê os arquivos.

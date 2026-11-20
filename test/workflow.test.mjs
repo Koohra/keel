@@ -21,9 +21,11 @@ test('toda fase antes de done tem instruções e critério de saída', () => {
   }
 });
 
-test('só design é condicional e só implementation libera edição de código', () => {
+test('trivial pula requisitos e confirmação, design só em com-design, só implementation edita código', () => {
   const conditional = workflow.phases.filter((p) => 'skipUnless' in p).map((p) => p.id);
-  assert.deepEqual(conditional, ['design']);
+  assert.deepEqual(conditional, ['requirements', 'confirmation', 'design']);
+  assert.equal(byId.requirements.skipUnless, 'level=padrao,com-design');
+  assert.equal(byId.confirmation.skipUnless, 'level=padrao,com-design');
   assert.equal(byId.design.skipUnless, 'level=com-design');
   const editable = workflow.phases.filter((p) => p.allowSourceEdits === true).map((p) => p.id);
   assert.deepEqual(editable, ['implementation']);
