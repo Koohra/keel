@@ -3,6 +3,7 @@
 Fonte: <link da história> · Pasta: keel/features/<CHAVE>-<descricao>/ · Nível: trivial | padrão | com design
 Status: rascunho | confirmado por <dev> em <AAAA-MM-DD>
 
+<!-- congelado após aprovação: início -->
 ## História original
 > Texto da história copiado sem edição.
 
@@ -34,4 +35,4 @@ R3. WHILE <estado> THE <sistema> SHALL <resposta>. [fonte: ...]
 
 ## Mudanças após a confirmação
 - <AAAA-MM-DD> <o que mudou, por quê, quem reaprovou>
-```
+<!-- congelado após aprovação: fim -->

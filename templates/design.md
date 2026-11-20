@@ -1,6 +1,8 @@
 # Design — <CHAVE>
 
 Requisitos: requirements.md · Status: rascunho | aprovado por <dev> em <data>
+
+<!-- congelado após aprovação: início -->
 Gatilho: <trade-off | contrato | dados/migração | dependência nova | transversal | quebra de padrão>
 
 ## Abordagem
@@ -30,4 +32,4 @@ Segurança: <ou "não se aplica"> · Privacidade: · Desempenho: · Observabilid
 
 ## Candidata a ADR?
 Sim | Não — <motivo>
-```
+<!-- congelado após aprovação: fim -->

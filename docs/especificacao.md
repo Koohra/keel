@@ -49,10 +49,10 @@ O Keel transforma documentação mínima e cuidadosa em código bom, uma histór
 
 O `state.json` diz à IA em que etapa a história está e o que já foi gerado e aprovado. O Keel lê esse arquivo no início de toda interação, inclusive ao retomar uma história em outra sessão, e só avança de etapa se o estado permitir.
 
-- **Quem escreve:** só o script de estado (`keel-state.mjs`), chamado pela skill com comandos como `generated requirements` ou `approve requirements --by <dev>`. O modelo não edita o JSON diretamente.
+- **Quem escreve:** só o script de estado (`keel-state.mjs`), chamado pela skill com comandos como `next`, `advance` ou `approve requirements.md --by <dev>`. O modelo não edita o JSON diretamente.
 - **Aprovação presa ao conteúdo:** ao aprovar um documento, o script grava o hash dele. Se o arquivo mudar depois, a aprovação vence e a história volta para a confirmação daquele documento.
-- **Uma fonte de verdade por assunto:** o state.json guarda fase, portões e a task atual. O status de cada task continua no tasks.md, e o script confere que os dois batem.
-- **Garantia por hook:** um `PreToolUse` lê o state.json e bloqueia edição de código-fonte enquanto a história não chegou na fase de implementação. Isso garante "nenhum código antes da aprovação".
+- **Uma fonte de verdade por assunto:** o state.json guarda fase, portões e a task atual. O status de cada task continua no tasks.md, na seção "Andamento", fora do bloco congelado, e o script confere que os dois batem.
+- **Garantia por hook:** um `PreToolUse` lê o state.json e bloqueia edição de código-fonte enquanto a história não chegou na fase de implementação, e bloqueia escrita no state.json por edição ou por comando de terminal. Isso garante "nenhum código antes da aprovação".
 - **Fases:** `triage` → `reading` → `requirements` → `confirmation` → `design` (pulada se não houver gatilho) → `tasks` → `implementation` → `closing` → `done`.
 
 Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até cerca de 1 página, design.md até cerca de 2 páginas. Seção sem conteúdo diz "não se aplica" em uma linha e não é removida, para o script achar a estrutura.
@@ -327,12 +327,12 @@ A IA continua usando julgamento dentro de cada fase: que regras escrever, como q
   "schema": 1,
   "phases": [
     { "id": "triage", "instructions": "phases/triage.md",
-      "exit": ["state.level", "approval:level"] },
+      "exit": ["approval:level"] },
     { "id": "reading", "instructions": "phases/reading.md",
-      "exit": ["file:repo-map"] },
-    { "id": "requirements", "instructions": "phases/requirements.md",
+      "exit": ["generated:repo-map"] },
+    { "id": "requirements", "instructions": "phases/requirements.md", "skipUnless": "level=padrao,com-design",
       "exit": ["valid:requirements.md", "noOpenQuestions"] },
-    { "id": "confirmation", "instructions": "phases/confirmation.md",
+    { "id": "confirmation", "instructions": "phases/confirmation.md", "skipUnless": "level=padrao,com-design",
       "exit": ["review:requirements", "approval:requirements.md"] },
     { "id": "design", "instructions": "phases/design.md", "skipUnless": "level=com-design",
       "exit": ["valid:design.md"] },
@@ -340,6 +340,7 @@ A IA continua usando julgamento dentro de cada fase: que regras escrever, como q
       "exit": ["valid:tasks.md", "coverage:rules->tasks->tests", "approval:tasks.md", "approval:design.md?"] },
     { "id": "implementation", "instructions": "phases/implementation.md",
       "allowSourceEdits": true, "loop": "tasks",
+      "exit": ["tasks:all-done"],
       "taskExit": ["evidence:red", "evidence:green", "checks:passed", "review:task", "approval:commit"] },
     { "id": "closing", "instructions": "phases/closing.md",
       "exit": ["convergence:all-rules", "arch:baseline-not-grown", "approval:deltas?"] },
@@ -348,7 +349,23 @@ A IA continua usando julgamento dentro de cada fase: que regras escrever, como q
 }
 ```
 
-O formato exato dos critérios é definido na parte 2 do desenvolvimento; o exemplo mostra a forma.
+Cada critério tem o formato `<tipo>[:<alvo>][?]`. O `?` final faz o critério valer só quando o documento é exigido pelo nível (design.md só em `com-design`). `skipUnless: level=a,b` pula a fase quando o nível não está na lista: o trivial vai da leitura direto para as tasks, com o critério escrito no `Cobre:` da task (Miguel, 2026-11-20).
+
+| Critério | Passa quando |
+| --- | --- |
+| `approval:level` | o dev confirmou o nível (`level <nível> --by <dev>`) |
+| `generated:repo-map` | o repo map foi registrado (`generated repo-map`) |
+| `valid:<doc>` | o `validate-feature.mjs` não acha erro no documento |
+| `noOpenQuestions` | nenhum `[PERGUNTA]` no requirements.md |
+| `review:requirements` | o resultado do revisor isolado foi registrado (`ok`, `achados` ou `unavailable`) |
+| `approval:<doc>` | o dev aprovou e o hash do documento ainda é o aprovado |
+| `coverage:rules->tasks->tests` | toda regra tem task com teste e toda task cobre regra existente |
+| `tasks:all-done` | toda task do tasks.md está com `Status: feita` |
+| `convergence`, `approval:deltas`, `arch` | ainda sem verificador (partes 6 e 7): o script recusa avançar e diz isso |
+
+O `taskExit` da implementação é conferido pelo loop da task, na parte 5. O hash da aprovação cobre só o bloco entre `<!-- congelado após aprovação: início -->` e `<!-- congelado após aprovação: fim -->`, como o `<frozen-after-approval>` do BMAD. No tasks.md o plano das tasks fica dentro do bloco, e o andamento (`## Andamento` com Status, evidências e review de cada task), as notas e a convergência ficam fora; assim marcar uma task como feita não vence a aprovação. No requirements.md e no design.md o cabeçalho com `Status:` fica fora e o resto dentro, inclusive "Mudanças após a confirmação", que pede reaprovação.
+
+A cada comando, e no hook, o script confere que toda fase anterior à atual cumpre os critérios de saída; se não cumpre, a história volta para a primeira que falta. Assim um state.json alterado por fora do script não pula portão. O hook também bloqueia comando de terminal que grava `state.json` (redirecionamento, `tee`, `cp`, `mv`, `rm`, `sed -i`, `writeFile`, `Set-Content`), exceto o `keel-state.mjs` e o `git`.
 
 ## Arquitetura do plugin
 
@@ -452,6 +469,7 @@ Cada parte é desenvolvida com TDD e, desde a parte 1, usando o próprio fluxo d
 Fonte: <link da história> · Pasta: keel/features/<CHAVE>-<descricao>/ · Nível: trivial | padrão | com design
 Status: rascunho | confirmado por <dev> em <AAAA-MM-DD>
 
+<!-- congelado após aprovação: início -->
 ## História original
 > Texto da história copiado sem edição.
 
@@ -483,6 +501,7 @@ R3. WHILE <estado> THE <sistema> SHALL <resposta>. [fonte: ...]
 
 ## Mudanças após a confirmação
 - <AAAA-MM-DD> <o que mudou, por quê, quem reaprovou>
+<!-- congelado após aprovação: fim -->
 ```
 
 ### design.md
@@ -491,6 +510,8 @@ R3. WHILE <estado> THE <sistema> SHALL <resposta>. [fonte: ...]
 # Design — <CHAVE>
 
 Requisitos: requirements.md · Status: rascunho | aprovado por <dev> em <data>
+
+<!-- congelado após aprovação: início -->
 Gatilho: <trade-off | contrato | dados/migração | dependência nova | transversal | quebra de padrão>
 
 ## Abordagem
@@ -520,6 +541,7 @@ Segurança: <ou "não se aplica"> · Privacidade: · Desempenho: · Observabilid
 
 ## Candidata a ADR?
 Sim | Não — <motivo>
+<!-- congelado após aprovação: fim -->
 ```
 
 ### tasks.md
@@ -530,6 +552,7 @@ Sim | Não — <motivo>
 Requisitos: requirements.md · Design: design.md | não há
 Aprovado por <dev> em <data>
 
+<!-- congelado após aprovação: início -->
 ## T1 — Esqueleto andante: <caminho mínimo de ponta a ponta>
 Cobre: R1 (AC-1.1)
 Arquivos: <caminhos>
@@ -537,10 +560,6 @@ Teste primeiro: <nome do teste> — <o que verifica>
 Verificação: `<comando>`
 Pronto quando: <condição observável>
 Depende de: —
-Status: pendente | red | green | em revisão | feita (<hash>)
-Evidência RED: <comando e trecho da falha>
-Evidência GREEN: <comando e resultado>
-Review: <ok | achados e o que foi feito | review unavailable>
 
 ## T2 — <uma regra ou variação por vez>
 Cobre: R2 (AC-2.1)
@@ -550,6 +569,18 @@ Cobre: R2 (AC-2.1)
 Cobre: R1
 Sem teste: <motivo>
 ...
+<!-- congelado após aprovação: fim -->
+
+## Andamento
+### T1
+Status: pendente | red | green | em revisão | feita (<hash>)
+Evidência RED: <comando e trecho da falha>
+Evidência GREEN: <comando e resultado>
+Review: <ok | achados e o que foi feito | review unavailable>
+### T2
+Status: pendente
+### T3
+Status: pendente
 
 ## Notas de implementação
 - <aprendizado que vale para as próximas tasks>
@@ -666,10 +697,11 @@ O Keel traduz esse arquivo para a ferramenta nativa (ArchUnit, Konsist, NetArchT
   "level": "padrao",
   "phase": "confirmation",
   "steps": {
-    "triage":       { "done": true,  "confirmedBy": "Miguel", "at": "2026-11-20T11:30:00Z" },
-    "requirements": { "generated": true,  "openQuestions": 0, "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
-    "design":       { "required": false, "generated": false, "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
-    "tasks":        { "generated": false, "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
+    "triage":       { "done": true, "confirmedBy": "Miguel", "at": "2026-11-20T11:30:00Z" },
+    "reading":      { "repoMap": true },
+    "requirements": { "review": { "result": "ok", "at": "2026-11-20T11:40:00Z" }, "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
+    "design":       { "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
+    "tasks":        { "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
     "implementation": { "currentTask": null, "blocked": null },
     "closing":      { "convergence": false, "deltasApproved": false, "pullRequest": null }
   },
@@ -677,4 +709,4 @@ O Keel traduz esse arquivo para a ferramenta nativa (ArchUnit, Konsist, NetArchT
 }
 ```
 
-Valores de `level`: `trivial`, `padrao`, `com-design`. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente).
+Valores de `level`: `trivial`, `padrao`, `com-design`. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente). O state.json não repete o que os arquivos já dizem (perguntas abertas, documento gerado, design exigido): o script lê os arquivos.

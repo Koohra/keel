@@ -3,6 +3,7 @@
 Fonte: https://github.com/Koohra/keel/issues/1 · Pasta: keel/features/KEEL-1-base/ · Nível: padrão
 Status: rascunho (aprovação no review do PR)
 
+<!-- congelado após aprovação: início -->
 ## História original
 > Repo, manifesto do plugin (`.claude-plugin/plugin.json` e `marketplace.json`), `docs/product.md` e ADRs iniciais do próprio Keel, modelos (requirements, design, tasks, seção de princípios, architecture.json), `workflow.json` inicial e CI com `node --test`. Pronto quando: `claude plugin validate` passa; CI verde.
 
@@ -44,3 +45,4 @@ R6. IF um arquivo do repo tem CR ou BOM THEN THE suíte SHALL falhar. [fonte: AD
 
 ## Mudanças após a confirmação
 - Nenhuma.
+<!-- congelado após aprovação: fim -->
