@@ -1,0 +1,17 @@
+{
+  "components": {
+    "dominio": ["src/cobranca/dominio/**"],
+    "aplicacao": ["src/cobranca/aplicacao/**"],
+    "infra": ["src/cobranca/infra/**", "src/cobranca/web/**"]
+  },
+  "rules": [
+    {
+      "name": "dominio-nao-depende-de-fora",
+      "from": "dominio",
+      "forbid": ["aplicacao", "infra", "external:web", "external:db", "external:http"],
+      "fix": "Declare uma porta no domínio e implemente-a em infra; passe-a por parâmetro."
+    }
+  ],
+  "noCycles": ["src/*"],
+  "baseline": "keel/arch-baseline.txt"
+}

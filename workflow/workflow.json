@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "phases": [
+    { "id": "triage", "instructions": "phases/triage.md",
+      "exit": ["state.level", "approval:level"] },
+    { "id": "reading", "instructions": "phases/reading.md",
+      "exit": ["file:repo-map"] },
+    { "id": "requirements", "instructions": "phases/requirements.md",
+      "exit": ["valid:requirements.md", "noOpenQuestions"] },
+    { "id": "confirmation", "instructions": "phases/confirmation.md",
+      "exit": ["review:requirements", "approval:requirements.md"] },
+    { "id": "design", "instructions": "phases/design.md", "skipUnless": "level=com-design",
+      "exit": ["valid:design.md"] },
+    { "id": "tasks", "instructions": "phases/tasks.md",
+      "exit": ["valid:tasks.md", "coverage:rules->tasks->tests", "approval:tasks.md", "approval:design.md?"] },
+    { "id": "implementation", "instructions": "phases/implementation.md",
+      "allowSourceEdits": true, "loop": "tasks",
+      "taskExit": ["evidence:red", "evidence:green", "checks:passed", "review:task", "approval:commit"] },
+    { "id": "closing", "instructions": "phases/closing.md",
+      "exit": ["convergence:all-rules", "arch:baseline-not-grown", "approval:deltas?"] },
+    { "id": "done" }
+  ]
+}

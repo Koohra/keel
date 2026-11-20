@@ -1,0 +1,11 @@
+{
+  "name": "keel",
+  "version": "2.0.0-alpha.0",
+  "description": "Spec-driven development, one story and one small TDD task at a time, with verifiable evidence at every step.",
+  "author": {
+    "name": "Miguel Pereira de Sousa"
+  },
+  "repository": "https://github.com/Koohra/keel",
+  "license": "UNLICENSED",
+  "keywords": ["sdd", "tdd", "spec-driven", "workflow"]
+}
