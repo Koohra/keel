@@ -21,6 +21,7 @@ const TASKS_SECTIONS = ['Progress', 'Implementation notes', 'Convergence (filled
 const EARS = /^(?:(?:WHEN|WHILE|WHERE) .+ |IF .+ THEN )?THE .+ SHALL /;
 const GHERKIN = /GIVEN .+ WHEN .+ THEN /;
 const TASK_HEADING = /^T(\d+) [—-] /;
+const REQUIRED_TASK_FIELDS = ['Covers', 'Files', 'New structure', 'Done when', 'Depends on'];
 const STATUS = /^(pending|red|green|in review|done)( \(.+\))?$/;
 
 export const FROZEN_START = '<!-- frozen after approval: start -->';
@@ -111,9 +112,63 @@ export function openQuestions(text) {
   return (text.match(/\[QUESTION\]/g) ?? []).length;
 }
 
-export function validateDesign(text) {
+const TRIGGERS = ['trade-off', 'contract', 'data/migration', 'new dependency', 'cross-cutting', 'pattern break', 'new structure', 'rung change'];
+const STRUCTURE_KINDS = ['interface', 'layer', 'mapper/DTO', 'module', 'helper', 'dependency'];
+const KIND_WORDS = ['interface', 'layer', 'mapper', 'dto', 'module', 'helper', 'dependency'];
+const HEURISTIC = /\bR\d+\b|2nd implementation|external port|published boundary|3rd occurrence/i;
+const EMPTY_CELL = /^[\s—–-]*$/;
+// "No new structure" in the design section or in a task's New structure: field.
+const NO_VALUE = /^\s*(none|nenhuma|not applicable|[—–-])\s*\.?\s*$/i;
+
+function tableRows(body) {
+  const rows = body.split('\n').filter((l) => l.trim().startsWith('|'))
+    .map((l) => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim()));
+  return rows.slice(1).filter((cells) => !cells.every((c) => /^:?-+:?$/.test(c)));
+}
+
+// Rows of "New structure and rationale": [{ element, kind, rationale, simpler }].
+export function parseNewStructure(text) {
+  const body = sections(text).find((s) => s.title === 'New structure and rationale')?.body ?? '';
+  return tableRows(body).map(([element = '', kind = '', rationale = '', simpler = '']) => ({ element, kind, rationale, simpler }));
+}
+
+function ruleIds(text) {
+  return [...new Set(text.match(/\bR\d+\b/g) ?? [])];
+}
+
+export function validateDesign(text, requirementsText = null) {
   const errors = [...frozenErrors(text), ...checkSections(sections(text), DESIGN_SECTIONS)];
-  if (!/^Trigger: \S/m.test(text)) errors.push('missing the "Trigger:" line with the reason for the design');
+  const trigger = text.match(/^Trigger: (.*)$/m)?.[1];
+  if (trigger == null) errors.push('missing the "Trigger:" line with the reason for the design');
+  else if (!TRIGGERS.some((kind) => trigger.toLowerCase().startsWith(kind))) {
+    errors.push(`Trigger: must start with one of: ${TRIGGERS.join(', ')}`);
+  }
+  const all = sections(text);
+  const structure = all.find((s) => s.title === 'New structure and rationale');
+  const rows = parseNewStructure(text);
+  if (structure && structure.body.trim() && rows.length === 0 && !structure.body.split('\n').some((line) => NO_VALUE.test(line))) {
+    errors.push('New structure and rationale: fill the table or write "none"');
+  }
+  for (const { element, kind, rationale, simpler } of rows) {
+    const name = element.replace(/`/g, '');
+    if (!KIND_WORDS.some((k) => kind.toLowerCase().includes(k))) {
+      errors.push(`New structure "${name}": Kind must be one of: ${STRUCTURE_KINDS.join(', ')}`);
+    }
+    if (!HEURISTIC.test(rationale)) {
+      errors.push(`New structure "${name}": Rationale needs R# or a heuristic (2nd implementation, external port, published boundary, 3rd occurrence)`);
+    }
+    if (EMPTY_CELL.test(simpler)) errors.push(`New structure "${name}": write the simpler alternative and why not`);
+  }
+  const adr = all.find((s) => s.title === 'ADR candidate?')?.body.trim().split('\n')[0] ?? '';
+  if (adr && !/^(Yes|No) [—-] \S/.test(adr)) errors.push('ADR candidate?: write "Yes — <reason>" or "No — <reason>"');
+  const approach = all.find((s) => s.title === 'Approach')?.body ?? '';
+  if (approach.trim() && ruleIds(approach).length === 0) errors.push('Approach: cite the rules it meets (R1, R2)');
+  if (requirementsText != null) {
+    const rules = parseRules(requirementsText).map((r) => r.id);
+    for (const id of ruleIds(frozenBlock(text).content ?? text)) {
+      if (!rules.includes(id)) errors.push(`design.md cites ${id}, which does not exist in requirements.md`);
+    }
+  }
   return errors;
 }
 
@@ -181,6 +236,10 @@ export function validateTasks(text) {
   const hasBlock = frozenErrors(text).length === 0;
   if (tasks.length === 0) errors.push('no task "## T1 — ..."');
   errors.push(...duplicates(tasks.map((t) => t.id), 'duplicated'));
+  const first = sections(text).find((s) => /^T1 [—-] /.test(s.title));
+  if (tasks.length && !/^T1 [—-] Walking skeleton: \S/.test(first?.title ?? '')) {
+    errors.push('T1 must be the walking skeleton: "## T1 — Walking skeleton: <minimal end-to-end path>"');
+  }
   const ids = new Set(tasks.map((t) => t.id));
   for (const { id, fields, deps, frozen, progress } of tasks) {
     if (hasBlock && !frozen) errors.push(`${id} is outside the frozen block; the task plan goes inside it`);
@@ -189,7 +248,10 @@ export function validateTasks(text) {
     }
     if (!progress) errors.push(`${id} has no entry in "Progress" (### ${id} with Status:)`);
     else if (!STATUS.test(progress.Status ?? '')) errors.push(`${id}: invalid Status "${progress.Status ?? ''}"`);
-    if (!fields.Covers) errors.push(`${id} has no Covers:`);
+    for (const name of REQUIRED_TASK_FIELDS) if (!fields[name]) errors.push(`${id} has no ${name}:`);
+    if (fields['Test first'] && !/\S\s+[—-]\s+\S/.test(fields['Test first'])) {
+      errors.push(`${id}: Test first: needs "<test name> — <what it checks>"`);
+    }
     const noTest = 'No test' in fields;
     if (noTest && 'Test first' in fields) errors.push(`${id} has both Test first: and No test:`);
     if (!noTest && !('Test first' in fields)) errors.push(`${id} has neither Test first: nor No test:`);
@@ -202,17 +264,53 @@ export function validateTasks(text) {
 }
 
 // Every rule needs at least one task with a test; every task covers only existing rules.
-// Without requirements.md (trivial level) the criterion lives in the task itself and there is nothing to cross-check.
+// Without requirements.md (trivial level) the criterion lives in the task's Covers: as GIVEN/WHEN/THEN.
 export function checkCoverage(tasksText, requirementsText) {
-  if (requirementsText == null) return [];
-  const rules = parseRules(requirementsText).map((r) => r.id);
   const tasks = parseTasks(tasksText);
+  if (requirementsText == null) {
+    return tasks.filter((t) => !GHERKIN.test(t.fields.Covers ?? ''))
+      .map((t) => `${t.id}: without requirements.md, Covers: needs the criterion as GIVEN ... WHEN ... THEN ...`);
+  }
+  const parsed = parseRules(requirementsText);
+  const rules = parsed.map((r) => r.id);
+  const acs = parsed.flatMap((r) => r.acs.map((a) => a.id));
   const errors = [];
   for (const task of tasks) {
     for (const rule of task.covers) if (!rules.includes(rule)) errors.push(`${task.id} covers ${rule}, which does not exist`);
+    for (const ac of task.fields.Covers?.match(/\bAC-\d+\.\d+\b/g) ?? []) {
+      if (!acs.includes(ac)) errors.push(`${task.id} covers ${ac}, which does not exist`);
+      else if (!task.covers.includes(`R${ac.match(/\d+/)[0]}`)) errors.push(`${task.id} covers ${ac} without covering R${ac.match(/\d+/)[0]}`);
+    }
   }
   for (const rule of rules) {
     if (!tasks.some((t) => t.tested && t.covers.includes(rule))) errors.push(`${rule} has no task with a test`);
+  }
+  return errors;
+}
+
+const plainElement = (text) => text.replace(/`/g, '').replace(/\s*\(.*\)\s*$/, '').trim();
+
+// "New structure: none" or "A (interface), `B` (helper)" → ['A', 'B'].
+function declaredStructure(field = '') {
+  if (!field.trim() || NO_VALUE.test(field)) return [];
+  return field.split(/,(?![^(]*\))/).map(plainElement).filter(Boolean);
+}
+
+// With design.md, structure is planned there and declared by the tasks: each one matches the other.
+// Without design.md (trivial and standard levels) the task only declares.
+export function checkStructure(tasksText, designText) {
+  if (designText == null) return [];
+  const designed = parseNewStructure(designText).map((r) => plainElement(r.element));
+  const same = (a) => (b) => a.toLowerCase() === b.toLowerCase();
+  const tasks = parseTasks(tasksText).map((t) => ({ id: t.id, declared: declaredStructure(t.fields['New structure']) }));
+  const errors = [];
+  for (const { id, declared } of tasks) {
+    for (const name of declared) {
+      if (!designed.some(same(name))) errors.push(`${id}: New structure "${name}" is not justified in design.md; add it to "New structure and rationale" or drop it`);
+    }
+  }
+  for (const name of designed) {
+    if (!tasks.some((t) => t.declared.some(same(name)))) errors.push(`${name} from design.md is not declared in any task's New structure:`);
   }
   return errors;
 }
@@ -222,16 +320,22 @@ export function tasksDone(text) {
   return tasks.length > 0 && tasks.every((t) => /^done\b/.test(t.progress?.Status ?? ''));
 }
 
+// One document checked on its own and against the others in the folder (rules, ACs, structure).
+// Rule → task → test coverage is separate: keel-state.mjs has its own criterion for it.
+export function validateDoc(name, docs) {
+  if (name === 'requirements.md') return validateRequirements(docs[name]);
+  if (name === 'design.md') return validateDesign(docs[name], docs['requirements.md']);
+  if (name === 'tasks.md') return [...validateTasks(docs[name]), ...checkStructure(docs[name], docs['design.md'])];
+  throw new Error(`unknown document ${name}`);
+}
+
 // Validates the documents present in a folder: { file: [errors] }.
 export function validateFeature(docs) {
   const result = {};
-  if (docs['requirements.md'] != null) {
-    result['requirements.md'] = validateRequirements(docs['requirements.md']);
+  for (const name of ['requirements.md', 'design.md', 'tasks.md']) {
+    if (docs[name] != null) result[name] = validateDoc(name, docs);
   }
-  if (docs['design.md'] != null) result['design.md'] = validateDesign(docs['design.md']);
-  if (docs['tasks.md'] != null) {
-    result['tasks.md'] = [...validateTasks(docs['tasks.md']), ...checkCoverage(docs['tasks.md'], docs['requirements.md'])];
-  }
+  if (docs['tasks.md'] != null) result['tasks.md'].push(...checkCoverage(docs['tasks.md'], docs['requirements.md']));
   return result;
 }
 

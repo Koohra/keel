@@ -7,6 +7,7 @@ Approval: in the PR review
 ## T1 — Walking skeleton: varredor de arquitetura em JS/TS
 Covers: R5 (AC-5.1), R6 (AC-6.1, AC-6.2)
 Files: `scripts/arch-check.mjs`, `test/arch-check.test.mjs`, `keel/architecture.json`, `keel/product.md`
+New structure: `scripts/arch-check.mjs` (module)
 Test first: `test/arch-check.test.mjs` — imports JS/TS, violação plantada com correção, ciclo, regra sem arquivos, baseline, o próprio Keel
 Verification: `node --test test/arch-check.test.mjs`
 Done when: os testes passam e `node scripts/arch-check.mjs` passa no próprio Keel
@@ -15,6 +16,7 @@ Depends on: —
 ## T2 — Segunda linguagem: Python
 Covers: R5 (AC-5.2)
 Files: `scripts/arch-check.mjs`, `test/arch-check.test.mjs`
+New structure: none
 Test first: `test/arch-check.test.mjs` — domínio Python que importa sqlalchemy e infra
 Verification: `node --test test/arch-check.test.mjs`
 Done when: a fixture Python sai com 1 e a limpa com 0
@@ -23,6 +25,7 @@ Depends on: T1
 ## T3 — Revisão de AGENTS.md e CLAUDE.md, bloco e reestruturação
 Covers: R1 (AC-1.1, AC-1.2), R2 (AC-2.1), R3 (AC-3.1, AC-3.2), R4 (AC-4.1)
 Files: `scripts/keel-context.mjs`, `test/keel-context.test.mjs`, `templates/keel-block.pt-BR.md`, `templates/keel-block.en.md`, `templates/agents.md`, `test/templates.test.mjs`
+New structure: `scripts/keel-context.mjs` (module)
 Test first: `test/keel-context.test.mjs` — conflito com linha e hash intacto, visibilidade, comando morto, bloco com CRLF e BOM, marcadores malformados, CLAUDE.md nunca criado, restructure-check, check
 Verification: `node --test test/keel-context.test.mjs test/templates.test.mjs`
 Done when: os testes passam
@@ -31,14 +34,18 @@ Depends on: —
 ## T4 — Hooks PostToolUse e SessionStart
 Covers: R7 (AC-7.1), R8 (AC-8.1)
 Files: `scripts/hooks/post-tool-use.mjs`, `scripts/hooks/session-start.mjs`, `hooks/hooks.json`, `test/post-tool-use.test.mjs`, `test/session-start.test.mjs`
-Test first: `test/post-tool-use.test.mjs` e `test/session-start.test.mjs`
+New structure: `scripts/hooks/post-tool-use.mjs` (module), `scripts/hooks/session-start.mjs` (module)
+Test first: `test/post-tool-use.test.mjs` e `test/session-start.test.mjs` — PostToolUse barra violação nova; SessionStart injeta o contexto curto
 Verification: `node --test test/post-tool-use.test.mjs test/session-start.test.mjs`
 Done when: os testes passam e `claude plugin validate .` aceita o hooks.json
 Depends on: T1, T3
 
 ## T5 — Skill setup e especificação
 Covers: R1, R4
+Files: `skills/setup/SKILL.md`, `test/setup-skill.test.mjs`, `docs/specification.md`
+New structure: none
 No test: instruções em markdown; `test/setup-skill.test.mjs` só confere frontmatter, scripts citados e as garantias combinadas.
+Done when: `node --test test/setup-skill.test.mjs` passa
 Depends on: T3, T4
 <!-- frozen after approval: end -->
 

@@ -1,6 +1,6 @@
 ---
 name: story
-description: Conduz uma história (ticket do Jira ou de outra ferramenta) pelo fluxo do Keel, uma fase por vez, perguntando ao script qual é o próximo passo. Use quando o dev pedir para começar, retomar, continuar ou destravar uma história, feature ou ticket com o Keel, ou falar de requirements.md, tasks.md ou state.json em keel/features/. Não use para dúvidas gerais, explicar código ou mudanças fora de uma história.
+description: Conduz uma história (ticket do Jira ou de outra ferramenta) pelo fluxo do Keel, uma fase por vez, perguntando ao script qual é o próximo passo. Use quando o dev pedir para começar, retomar, continuar ou destravar uma história, feature ou ticket com o Keel, ou falar de requirements.md, design.md, tasks.md ou state.json em keel/features/. Não use para dúvidas gerais, explicar código ou mudanças fora de uma história.
 allowed-tools: Bash(node "${CLAUDE_PLUGIN_ROOT}/scripts/*)
 ---
 

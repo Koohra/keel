@@ -7,6 +7,7 @@ Approval: in the PR review
 ## T1 — Walking skeleton: plugin válido com teste rodando no CI
 Covers: R1 (AC-1.1), R5 (AC-5.1)
 Files: `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `package.json`, `test/helpers.mjs`, `test/manifest.test.mjs`, `.github/workflows/ci.yml`
+New structure: `test/helpers.mjs` (helper)
 Test first: `test/manifest.test.mjs` — plugin `keel` com versão semver e catálogo apontando para `./`
 Verification: `npm test` e `claude plugin validate .`
 Done when: os dois comandos passam e o CI roda os três jobs
@@ -15,6 +16,7 @@ Depends on: —
 ## T2 — Modelos e workflow.json
 Covers: R3 (AC-3.1), R4 (AC-4.1)
 Files: `templates/*`, `workflow/workflow.json`, `test/templates.test.mjs`, `test/workflow.test.mjs`
+New structure: none
 Test first: `test/templates.test.mjs` e `test/workflow.test.mjs` — seções dos modelos, EARS, IDs, fases e portões
 Verification: `npm test`
 Done when: os testes de modelos e workflow passam
@@ -23,6 +25,7 @@ Depends on: T1
 ## T3 — product.md, ADRs e regra de bytes
 Covers: R2 (AC-2.1), R6 (AC-6.1)
 Files: `keel/product.md`, `keel/adrs/*`, `test/repo.test.mjs`, `.gitattributes`
+New structure: none
 Test first: `test/repo.test.mjs` — orçamento e princípios do product.md, formato das ADRs, LF e sem BOM
 Verification: `npm test`
 Done when: os testes de repo passam
@@ -30,7 +33,11 @@ Depends on: T1
 
 ## T4 — README, AGENTS.md e especificação no repo
 Covers: R1
+Files: `README.md`, `AGENTS.md`, `CLAUDE.md`, `docs/specification.md`
+New structure: none
 No test: documentação sem comportamento; o `claude plugin validate .` pediu a linha de instalação no README.
+Done when: `claude plugin validate .` passa sem pedir a linha de instalação
+Depends on: T1
 <!-- frozen after approval: end -->
 
 ## Progress

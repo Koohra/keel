@@ -23,3 +23,9 @@ test('every case has a grader and every cited scaffold exists', () => {
     if (scaffold) assert.ok(existsSync(join(root, c, scaffold)), `${c}: missing ${scaffold}`);
   }
 });
+
+test('stages 5 and 6 have cases: design, plan without approval and approval of design and tasks', () => {
+  const tagged = (tag) => cases.filter((c) => existsSync(join(root, c, 'case.yaml')) && read(`${c}/case.yaml`).includes(`tags: [${tag}]`));
+  assert.ok(tagged('phase-5').length >= 1, 'phase-5');
+  assert.ok(tagged('phase-6').length >= 2, 'phase-6');
+});

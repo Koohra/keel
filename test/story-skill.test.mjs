@@ -19,9 +19,9 @@ test('a skill story declara nome, descrição e só pré-autoriza os scripts do 
   assert.match(meta['allowed-tools'], /^Bash\(node "?\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/\*/);
 });
 
-test('cada fase da triagem à confirmação tem instruções na skill', () => {
+test('cada fase da triagem às tasks tem instruções na skill', () => {
   const phases = readJson('workflow/workflow.json').phases;
-  for (const id of ['triage', 'reading', 'requirements', 'confirmation']) {
+  for (const id of ['triage', 'reading', 'requirements', 'confirmation', 'design', 'tasks']) {
     const phase = phases.find((p) => p.id === id);
     assert.ok(existsSync(join(root, 'skills/story', phase.instructions)), `${id}: falta ${phase.instructions}`);
   }

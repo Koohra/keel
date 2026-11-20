@@ -7,6 +7,7 @@ Approved by <dev> on <date>
 ## T1 — Walking skeleton: <minimal end-to-end path>
 Covers: R1 (AC-1.1)
 Files: <paths>
+New structure: none | <element> (<kind>)
 Test first: <test name> — <what it checks>
 Verification: `<command>`
 Done when: <observable condition>

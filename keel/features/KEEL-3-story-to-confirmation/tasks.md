@@ -7,6 +7,7 @@ Approval: in the PR review
 ## T1 — Walking skeleton: repo-map.mjs
 Covers: R4 (AC-4.1, AC-4.2, AC-4.3)
 Files: `scripts/repo-map.mjs`, `test/repo-map.test.mjs`
+New structure: `scripts/repo-map.mjs` (module)
 Test first: `test/repo-map.test.mjs` — assinaturas com linha por linguagem, ordem pelo grafo, orçamento, pastas ignoradas, foco e CLI
 Verification: `node --test test/repo-map.test.mjs`
 Done when: os testes passam no Linux e no Windows
@@ -15,6 +16,7 @@ Depends on: —
 ## T2 — Skill story, fases 1 a 4 e revisor isolado
 Covers: R2 (AC-2.1), R8 (AC-8.1), R3, R5, R6, R7
 Files: `skills/story/SKILL.md`, `skills/story/phases/{triage,reading,requirements,confirmation}.md`, `agents/reviewer.md`, `test/story-skill.test.mjs`
+New structure: none
 Test first: `test/story-skill.test.mjs` — fases com instruções, comandos e scripts citados existem, revisor só leitura
 Verification: `node --test test/story-skill.test.mjs`
 Done when: os testes passam e `claude plugin validate .` aceita a skill e o agente
@@ -23,6 +25,7 @@ Depends on: T1
 ## T3 — Casos de eval: acionamento e etapas 1 a 4
 Covers: R1 (AC-1.1), R3 (AC-3.1), R5 (AC-5.1), R6 (AC-6.1), R7 (AC-7.1)
 Files: `evals/**`, `fixtures/node-mini/**`, `test/evals.test.mjs`
+New structure: none
 Test first: `test/evals.test.mjs` — 8 casos que acionam e 6 que não, todo caso com grader
 Verification: `claude plugin eval . --runs 1 --ablation none --allow-tools Bash Write Edit --scaffold --trust-plugin`
 Done when: os casos passam numa rodada, com custo registrado nas notas
