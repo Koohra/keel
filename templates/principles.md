@@ -1,8 +1,8 @@
-## Princípios de engenharia
+## Engineering principles
 
 Valem para código novo ou alterado. [hook] é checado automaticamente; [review] entra na
 rubrica de design. Se uma regra daqui contradiz o código existente, aponte o conflito e
-pergunte antes de escolher, exceto nos caminhos listados em "Não copiar".
+pergunte antes de escolher, exceto nos caminhos listados em "Do not copy".
 
 1. Regra de negócio (validação de domínio, cálculo, decisão) não fica em handler HTTP,
    componente de UI, consulta SQL ou configuração de ORM. [review]
@@ -23,19 +23,19 @@ pergunte antes de escolher, exceto nos caminhos listados em "Não copiar".
 10. Complexidade cognitiva por função até 15 [hook]; refatoração e mudança de comportamento
     em commits separados. [review]
 
-### Degraus por módulo
-| Módulo | Degrau | Motivo |
+### Rungs per module
+| Module | Rung | Reason |
 |---|---|---|
-| <src/cadastro> | 1 — script de transação | CRUD sem invariantes entre campos |
-| <src/cobranca> | 3 — modelo de domínio | core: regras mudam com frequência |
-| <autenticação> | genérico — <biblioteca> | não diferencia o produto |
+| <src/registration> | 1 — script de transação | CRUD sem invariantes entre campos |
+| <src/billing> | 3 — modelo de domínio | core: regras mudam com frequência |
+| <authentication> | genérico — <library> | não diferencia o produto |
 
 Degraus: 1 script de transação; 2 funções de domínio puras separadas do I/O; 3 modelo de
 domínio (entidades com comportamento, agregados, repositório por raiz); genérico (biblioteca
 pronta); organizacional (vários deployables, só com muitos times).
 
-### Exemplares e o que não copiar
-Siga: <caminho> (<por quê>). Não copie: <caminho/**> (<por quê>).
+### Exemplars and what not to copy
+Follow: <path> (<why>). Do not copy: <path/**> (<why>).
 
-### Checagem
-Arquitetura: `<comando>` · Lint/complexidade: `<comando>` · Testes: `<comando>`
+### Checks
+Architecture: `<command>` · Lint/complexity: `<command>` · Tests: `<command>`

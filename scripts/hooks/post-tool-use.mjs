@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Hook PostToolUse: depois de uma edição, devolve ao modelo a violação de arquitetura nova
-// do arquivo editado (decision: block) e, se o arquivo é AGENTS.md ou CLAUDE.md, a deriva do
-// bloco do Keel (só contexto, sem bloquear). A edição já aconteceu; o hook não desfaz nada.
-// Um keel/architecture.json inválido vira aviso ao modelo, nunca um erro que trava a sessão.
+// PostToolUse hook: after an edit, returns to the model the new architecture violation of
+// the edited file (decision: block) and, if the file is AGENTS.md or CLAUDE.md, the drift of
+// the Keel block (context only, without blocking). The edit already happened; the hook undoes nothing.
+// An invalid keel/architecture.json becomes a warning to the model, never an error that stops the session.
 import { readFileSync } from 'node:fs';
 import { basename, relative, resolve } from 'node:path';
 import { CONFIG_PATH, runCheck } from '../arch-check.mjs';
@@ -17,7 +17,7 @@ function context(text) {
 function instructionFeedback(root) {
   const drift = check(root);
   if (drift.ok) return null;
-  return context(`Keel: deriva no bloco do Keel (${drift.errors.join('; ')}). Rode keel-context.mjs check e, se o dev aprovar, block apply para refazer o bloco.`);
+  return context(`Keel: drift in the Keel block (${drift.errors.join('; ')}). Run keel-context.mjs check and, if the dev approves, block apply to redo the block.`);
 }
 
 function architectureFeedback(root, path) {
@@ -25,11 +25,11 @@ function architectureFeedback(root, path) {
   try {
     result = runCheck(root, { files: [path] });
   } catch (error) {
-    const message = `${CONFIG_PATH} inválido, checagem de arquitetura desligada: ${error.message}`;
+    const message = `${CONFIG_PATH} invalid, architecture check turned off: ${error.message}`;
     return path === CONFIG_PATH ? { decision: 'block', reason: message } : context(`Keel: ${message}`);
   }
   if (result.status !== 'fail') return null;
-  const reason = ['Violação de arquitetura (keel/architecture.json, varredor aproximado):',
+  const reason = ['Architecture violation (keel/architecture.json, approximate scanner):',
     ...result.violations.map((v) => `- ${v.message}`)].join('\n');
   return { decision: 'block', reason };
 }

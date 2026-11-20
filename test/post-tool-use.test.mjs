@@ -9,8 +9,8 @@ import { root, read, readJson } from './helpers.mjs';
 const hook = join(root, 'scripts', 'hooks', 'post-tool-use.mjs');
 
 const architecture = {
-  components: { dominio: ['src/dominio/**'], infra: ['src/infra/**'] },
-  rules: [{ name: 'dominio-isolado', from: 'dominio', forbid: ['infra'], fix: 'Use uma porta no domínio.' }],
+  components: { domain: ['src/domain/**'], infra: ['src/infra/**'] },
+  rules: [{ name: 'domain-isolated', from: 'domain', forbid: ['infra'], fix: 'Use a port in the domain.' }],
   noCycles: [],
   baseline: 'keel/arch-baseline.txt',
 };
@@ -28,30 +28,30 @@ function run(dir, file) {
   return { status: result.status, output: result.stdout ? JSON.parse(result.stdout) : null };
 }
 
-test('PostToolUse devolve a violação nova do arquivo editado e cala no resto', () => {
+test('PostToolUse returns the new violation of the edited file and stays quiet otherwise', () => {
   const dir = mkdtempSync(join(tmpdir(), 'keel-post-'));
   try {
     write(dir, 'src/infra/repo.js', 'export const repo = {};\n');
-    write(dir, 'src/dominio/fatura.js', "import { repo } from '../infra/repo.js';\n");
-    write(dir, 'src/dominio/limpo.js', 'export const x = 1;\n');
-    assert.deepEqual(run(dir, 'src/dominio/fatura.js'), { status: 0, output: null }, 'sem architecture.json não checa');
+    write(dir, 'src/domain/invoice.js', "import { repo } from '../infra/repo.js';\n");
+    write(dir, 'src/domain/clean.js', 'export const x = 1;\n');
+    assert.deepEqual(run(dir, 'src/domain/invoice.js'), { status: 0, output: null }, 'without architecture.json it does not check');
     write(dir, 'keel/architecture.json', JSON.stringify(architecture));
-    const planted = run(dir, 'src/dominio/fatura.js');
+    const planted = run(dir, 'src/domain/invoice.js');
     assert.equal(planted.status, 0);
     assert.equal(planted.output.decision, 'block');
-    assert.match(planted.output.reason, /src\/dominio\/fatura\.js:1.*Correção: Use uma porta no domínio\./s);
-    assert.deepEqual(run(dir, 'src/dominio/limpo.js'), { status: 0, output: null });
+    assert.match(planted.output.reason, /src\/domain\/invoice\.js:1.*Fix: Use a port in the domain\./s);
+    assert.deepEqual(run(dir, 'src/domain/clean.js'), { status: 0, output: null });
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test('PostToolUse avisa architecture.json inválido sem quebrar a sessão', () => {
+test('PostToolUse warns about an invalid architecture.json without breaking the session', () => {
   const dir = mkdtempSync(join(tmpdir(), 'keel-post-'));
   try {
-    write(dir, 'src/dominio/a.js', 'export const a = 1;\n');
-    write(dir, 'keel/architecture.json', '{ quebrado');
-    const edit = run(dir, 'src/dominio/a.js');
+    write(dir, 'src/domain/a.js', 'export const a = 1;\n');
+    write(dir, 'keel/architecture.json', '{ broken');
+    const edit = run(dir, 'src/domain/a.js');
     assert.equal(edit.status, 0);
     assert.match(edit.output.hookSpecificOutput.additionalContext, /architecture\.json/);
     const config = run(dir, 'keel/architecture.json');
@@ -63,7 +63,7 @@ test('PostToolUse avisa architecture.json inválido sem quebrar a sessão', () =
   }
 });
 
-test('PostToolUse avisa deriva do bloco do Keel ao editar AGENTS.md, sem bloquear', () => {
+test('PostToolUse warns about Keel block drift when editing AGENTS.md, without blocking', () => {
   const dir = mkdtempSync(join(tmpdir(), 'keel-post-'));
   try {
     const block = read('templates/keel-block.pt-BR.md').replace('à mão', 'como quiser');
@@ -79,7 +79,7 @@ test('PostToolUse avisa deriva do bloco do Keel ao editar AGENTS.md, sem bloquea
   }
 });
 
-test('hooks.json registra o PostToolUse nas ferramentas de edição', () => {
+test('hooks.json registers PostToolUse on the edit tools', () => {
   const entry = readJson('hooks/hooks.json').hooks.PostToolUse[0];
   assert.equal(entry.matcher, 'Write|Edit|MultiEdit');
   assert.match(entry.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/hooks\/post-tool-use\.mjs/);

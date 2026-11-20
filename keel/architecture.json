@@ -2,20 +2,20 @@
   "components": {
     "scripts": ["scripts/*.mjs"],
     "hooks": ["scripts/hooks/**"],
-    "testes": ["test/**"]
+    "tests": ["test/**"]
   },
   "rules": [
     {
-      "name": "scripts-nao-dependem-de-hooks-nem-testes",
+      "name": "scripts-do-not-depend-on-hooks-or-tests",
       "from": "scripts",
-      "forbid": ["hooks", "testes"],
-      "fix": "Mova a lógica para uma função exportada em scripts/ e chame-a do hook ou do teste."
+      "forbid": ["hooks", "tests"],
+      "fix": "Move the logic to an exported function in scripts/ and call it from the hook or the test."
     },
     {
-      "name": "hooks-nao-dependem-de-testes",
+      "name": "hooks-do-not-depend-on-tests",
       "from": "hooks",
-      "forbid": ["testes"],
-      "fix": "Leve o que o hook precisa para scripts/; testes só importam scripts."
+      "forbid": ["tests"],
+      "fix": "Move what the hook needs to scripts/; tests only import scripts."
     }
   ],
   "noCycles": ["scripts/*"],

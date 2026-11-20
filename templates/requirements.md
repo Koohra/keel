@@ -1,38 +1,38 @@
-# <CHAVE> — <título curto>
+# <KEY> — <short title>
 
-Fonte: <link da história> · Pasta: keel/features/<CHAVE>-<descricao>/ · Nível: trivial | padrão | com design
-Status: rascunho | confirmado por <dev> em <AAAA-MM-DD>
+Source: <story link> · Folder: keel/features/<KEY>-<slug>/ · Level: trivial | standard | with-design
+Status: draft | confirmed by <dev> on <YYYY-MM-DD>
 
-<!-- congelado após aprovação: início -->
-## História original
+<!-- frozen after approval: start -->
+## Original story
 > Texto da história copiado sem edição.
 
-## Objetivo
-Para quem, o que muda e por quê, em até três frases. [fonte: ...]
+## Goal
+Para quem, o que muda e por quê, em até três frases. [source: ...]
 
-## Fora de escopo
-- <o que esta história não faz, mesmo parecendo próximo>
+## Out of scope
+- <what this story does not do, even if it looks close>
 
-## Regras e critérios de aceite
-R1. WHEN <gatilho> THE <sistema> SHALL <resposta>. [fonte: ...]
-  - AC-1.1 GIVEN <estado> WHEN <ação> THEN <resultado observável>.
-R2. IF <condição indesejada> THEN THE <sistema> SHALL <resposta>. [fonte: ...]
+## Rules and acceptance criteria
+R1. WHEN <trigger> THE <system> SHALL <response>. [source: ...]
+  - AC-1.1 GIVEN <state> WHEN <action> THEN <observable result>.
+R2. IF <unwanted condition> THEN THE <system> SHALL <response>. [source: ...]
   - AC-2.1 GIVEN ... WHEN ... THEN ...
-R3. WHILE <estado> THE <sistema> SHALL <resposta>. [fonte: ...]
+R3. WHILE <state> THE <system> SHALL <response>. [source: ...]
 
-## Obrigações explícitas
-- Casos de borda: <...>
-- Invariantes (nunca pode acontecer): <...>
-- Comportamento existente que não pode mudar: <...> [fonte: <arquivo>]
-- Erros e respostas esperadas: <ou "nenhum além de R2">
+## Explicit obligations
+- Edge cases: <...>
+- Invariants (must never happen): <...>
+- Existing behavior that must not change: <...> [source: <file>]
+- Errors and expected responses: <or "none beyond R2">
 
-## Perguntas e suposições
-- [PERGUNTA] <pergunta> — opção recomendada: <...>
-- [SUPOSIÇÃO] <suposição> — aceita por <dev> em <data>.
+## Questions and assumptions
+- [QUESTION] <question> — recommended option: <...>
+- [ASSUMPTION] <assumption> — accepted by <dev> on <date>.
 
-## Conflitos encontrados
-- <fonte A x fonte B, decisão tomada>
+## Conflicts found
+- <source A x source B, decision taken>
 
-## Mudanças após a confirmação
-- <AAAA-MM-DD> <o que mudou, por quê, quem reaprovou>
-<!-- congelado após aprovação: fim -->
+## Changes after confirmation
+- <YYYY-MM-DD> <what changed, why, who re-approved>
+<!-- frozen after approval: end -->

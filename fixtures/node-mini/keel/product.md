@@ -8,9 +8,9 @@ Serviço HTTP de cadastro de usuários para um clube de leitura. Usuários se ca
 ## Glossário
 - Usuário: pessoa cadastrada no clube, identificada pelo e-mail.
 
-## Princípios de engenharia
-1. Regra de negócio fica em `src/usuarios.js`, não no handler HTTP. [review]
-2. Erros de validação respondem 400 com `{ "erro": "<mensagem>" }`. [review]
+## Engineering principles
+1. Regra de negócio fica em `src/users.js`, não no handler HTTP. [review]
+2. Erros de validação respondem 400 com `{ "error": "<mensagem>" }`. [review]
 
-### Checagem
-Testes: `npm test`
+### Checks
+Tests: `npm test`

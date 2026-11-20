@@ -1,42 +1,42 @@
-# Tasks — <CHAVE>
+# Tasks — <KEY>
 
-Requisitos: requirements.md · Design: design.md | não há
-Aprovado por <dev> em <data>
+Requirements: requirements.md · Design: design.md | none
+Approved by <dev> on <date>
 
-<!-- congelado após aprovação: início -->
-## T1 — Esqueleto andante: <caminho mínimo de ponta a ponta>
-Cobre: R1 (AC-1.1)
-Arquivos: <caminhos>
-Teste primeiro: <nome do teste> — <o que verifica>
-Verificação: `<comando>`
-Pronto quando: <condição observável>
-Depende de: —
+<!-- frozen after approval: start -->
+## T1 — Walking skeleton: <minimal end-to-end path>
+Covers: R1 (AC-1.1)
+Files: <paths>
+Test first: <test name> — <what it checks>
+Verification: `<command>`
+Done when: <observable condition>
+Depends on: —
 
-## T2 — <uma regra ou variação por vez>
-Cobre: R2 (AC-2.1)
+## T2 — <one rule or variation at a time>
+Covers: R2 (AC-2.1)
 ...
 
-## T3 — <task sem comportamento>
-Cobre: R1
-Sem teste: <motivo>
+## T3 — <task with no behavior>
+Covers: R1
+No test: <reason>
 ...
-<!-- congelado após aprovação: fim -->
+<!-- frozen after approval: end -->
 
-## Andamento
+## Progress
 ### T1
-Status: pendente | red | green | em revisão | feita (<hash>)
-Evidência RED: <comando e trecho da falha>
-Evidência GREEN: <comando e resultado>
-Review: <ok | achados e o que foi feito | review unavailable>
+Status: pending | red | green | in review | done (<hash>)
+RED evidence: <command and failure excerpt>
+GREEN evidence: <command and result>
+Review: <ok | findings and what was done | review unavailable>
 ### T2
-Status: pendente
+Status: pending
 ### T3
-Status: pendente
+Status: pending
 
-## Notas de implementação
-- <aprendizado que vale para as próximas tasks>
+## Implementation notes
+- <learning that applies to the next tasks>
 
-## Convergência (preenchida no fim, conferida por script)
-| Regra | Evidência | Situação |
+## Convergence (filled at the end, checked by script)
+| Rule | Evidence | Outcome |
 |---|---|---|
-| R1 | <teste> | atendida |
+| R1 | <test> | met |

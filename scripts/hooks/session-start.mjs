@@ -1,15 +1,15 @@
 #!/usr/bin/env node
-// Hook SessionStart: diz ao modelo em que ponto está a história da branch atual e qual skill
-// usar, também depois de compactar o contexto. Nunca copia o AGENTS.md nem o CLAUDE.md.
-// Nunca bloqueia a sessão: um erro vira uma linha de contexto.
+// SessionStart hook: tells the model where the current branch's story stands and which skill
+// to use, also after context compaction. Never copies AGENTS.md or CLAUDE.md.
+// Never blocks the session: an error becomes one line of context.
 import { existsSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { findActiveStory, loadWorkflow, nextStep } from '../keel-state.mjs';
 import { readDocs } from '../validate-feature.mjs';
 
 const MAX_CHARS = 1500;
-const PRECEDENCE = 'Precedência: durante uma história ativa, a ordem do fluxo e os portões vêm do Keel '
-  + '(os hooks bloqueiam o que a fase não permite). Comandos, estilo e convenções vêm do AGENTS.md ou CLAUDE.md do projeto.';
+const PRECEDENCE = 'Precedence: during an active story, the flow order and the gates come from Keel '
+  + '(the hooks block what the phase does not allow). Commands, style and conventions come from the project\'s AGENTS.md or CLAUDE.md.';
 
 function sessionContext(root) {
   if (!existsSync(join(root, 'keel'))) return '';
@@ -19,18 +19,18 @@ function sessionContext(root) {
     active = findActiveStory(root);
     step = active && nextStep(active.state, loadWorkflow(), readDocs(active.folder));
   } catch (error) {
-    return `Keel: não consegui ler o estado da história (${error.message.split('\n')[0]}).`;
+    return `Keel: could not read the story state (${error.message.split('\n')[0]}).`;
   }
   if (!active) {
-    return 'Keel: nenhuma história ativa nesta branch. Produto e decisões em keel/product.md e keel/adrs/; para começar uma história, use a skill keel:story.';
+    return 'Keel: no active story on this branch. Product and decisions in keel/product.md and keel/adrs/; to start a story, use the keel:story skill.';
   }
   const folder = relative(root, active.folder).split('\\').join('/');
   const missing = step.missing.map((m) => `- ${m.criterion}: ${m.reason}`);
   const lines = [
-    `Keel: história ${step.story} em ${folder}, nível ${step.level ?? 'a definir'}, fase ${step.phase}.`,
-    ...(step.expired.length ? [`Aprovação vencida: ${step.expired.join(', ')}.`] : []),
-    ...(missing.length ? ['Falta para sair da fase:', ...missing] : []),
-    'Próximo passo: use a skill keel:story, que pergunta ao keel-state.mjs o que fazer; não edite state.json.',
+    `Keel: story ${step.story} in ${folder}, level ${step.level ?? 'not set'}, phase ${step.phase}.`,
+    ...(step.expired.length ? [`Expired approval: ${step.expired.join(', ')}.`] : []),
+    ...(missing.length ? ['Missing to leave the phase:', ...missing] : []),
+    'Next step: use the keel:story skill, which asks keel-state.mjs what to do; do not edit state.json.',
     PRECEDENCE,
   ];
   const text = lines.join('\n');

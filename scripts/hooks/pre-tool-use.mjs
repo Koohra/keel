@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Hook PreToolUse: bloqueia escrita em state.json (por edição ou terminal) e edição de código
-// fora da fase que permite.
-// Lê o evento do stdin; sai com 2 (bloqueia, motivo no stderr) ou 0 (libera).
+// PreToolUse hook: blocks writes to state.json (by edit or terminal) and code edits
+// outside the phase that allows them.
+// Reads the event from stdin; exits with 2 (block, reason on stderr) or 0 (allow).
 import { readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { checkCommand, checkEdit, findActiveStory, isProjectSource, loadWorkflow, reconcile } from '../keel-state.mjs';
@@ -22,10 +22,10 @@ const workflow = loadWorkflow();
 let state = null;
 try {
   const active = findActiveStory(root);
-  // Aprovação vencida devolve a história ao portão antes de decidir, mesmo sem rodar next.
+  // An expired approval sends the story back to its gate before deciding, even without running next.
   if (active) state = reconcile(active.state, workflow, readDocs(active.folder)).state;
 } catch (error) {
-  // Sem saber a fase, só bloqueia o que dependeria dela: código do projeto.
+  // Without knowing the phase, block only what would depend on it: project code.
   if (checkEdit(path, null, workflow).block || isProjectSource(path)) {
     console.error(error.message);
     process.exit(2);

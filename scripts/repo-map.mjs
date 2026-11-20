@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Repo map: arquivos com classes, funções e assinaturas (com a linha), ordenados pelo grafo de
-// referências entre arquivos e cortados por um orçamento de tokens, no estilo do repo map do
-// Aider. Feito por script, sem passar pelo modelo; regenerado a cada história.
-// Uso: node scripts/repo-map.mjs [pasta] [--budget <tokens>] [--focus <termo1,termo2>]
+// Repo map: files with classes, functions and signatures (with the line), ordered by the graph of
+// references between files and cut by a token budget, in the style of Aider's repo map.
+// Made by script, without going through the model; regenerated for each story.
+// Usage: node scripts/repo-map.mjs [folder] [--budget <tokens>] [--focus <term1,term2>]
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, join, relative, resolve, sep } from 'node:path';
@@ -69,8 +69,8 @@ function walk(root, dir = root) {
   return files;
 }
 
-// Arquivos de código do projeto: os que o git conhece (respeita o .gitignore) ou, fora de um
-// repositório, uma varredura que pula pastas de dependência e de build.
+// The project's code files: the ones git knows (respects .gitignore) or, outside a
+// repository, a scan that skips dependency and build folders.
 function sourceFiles(root) {
   const git = spawnSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8' });
   const files = git.status === 0 ? git.stdout.split('\0').filter(Boolean) : walk(root);
@@ -87,8 +87,8 @@ function readSource(root, file) {
   }
 }
 
-// PageRank com vetor de personalização: um arquivo que define nomes usados por muitos outros
-// sobe; o foco puxa os arquivos cujo caminho ou definição casa com o termo.
+// PageRank with a personalization vector: a file that defines names used by many others
+// rises; the focus pulls up the files whose path or definition matches the term.
 function rank(edges, personal) {
   const total = personal.reduce((a, b) => a + b, 0);
   const p = personal.map((w) => w / total);
@@ -110,13 +110,13 @@ const tokens = (text) => Math.ceil(text.length / 4);
 export const MIN_BUDGET = 50;
 
 export function repoMap(root, { budget = 1500, focus = [] } = {}) {
-  if (budget < MIN_BUDGET) throw new Error(`--budget mínimo é ${MIN_BUDGET} tokens`);
+  if (budget < MIN_BUDGET) throw new Error(`--budget minimum is ${MIN_BUDGET} tokens`);
   const parsed = sourceFiles(root).sort().map((file) => {
     const text = readSource(root, file);
     return text == null ? null : { file, text, defs: definitions(file, text) };
   }).filter(Boolean);
   const withDefs = parsed.filter((f) => f.defs.length);
-  if (!withDefs.length) return `nenhuma definição encontrada em ${parsed.length} arquivos de código\n`;
+  if (!withDefs.length) return `no definitions found in ${parsed.length} code files\n`;
 
   const definers = new Map();
   parsed.forEach((f, i) => f.defs.forEach((d) => definers.set(d.name, (definers.get(d.name) ?? new Set()).add(i))));
@@ -141,18 +141,18 @@ export function repoMap(root, { budget = 1500, focus = [] } = {}) {
     .filter((r) => r.defs.length)
     .sort((a, b) => b.score - a.score || a.file.localeCompare(b.file));
 
-  const footer = (left) => `… ${left} arquivos fora do orçamento de ${budget} tokens\n`;
+  const footer = (left) => `… ${left} files outside the budget of ${budget} tokens\n`;
   const block = (file, defs, cut) => {
     const shown = cut ? defs.slice(0, defs.length - cut) : defs;
-    const more = cut ? `\n  … +${cut} definições` : '';
+    const more = cut ? `\n  … +${cut} definitions` : '';
     return `${file}\n${shown.map((d) => `  ${d.line}: ${d.text}`).join('\n')}${more}\n\n`;
   };
   let map = '';
   let shown = 0;
   for (const { file, defs } of order) {
-    const left = order.length - shown - 1; // pior caso: todos os demais ficam de fora
+    const left = order.length - shown - 1; // worst case: all the others stay out
     const fits = (text) => tokens(map + text + (left ? footer(left) : '')) <= budget;
-    // Arquivo que não cabe inteiro entra com as primeiras definições; só some se nem uma cabe.
+    // A file that does not fit whole goes in with its first definitions; it only drops out if not even one fits.
     let cut = 0;
     while (cut < defs.length && !fits(block(file, defs, cut))) cut += 1;
     if (cut === defs.length) continue;
@@ -169,10 +169,10 @@ function main(argv) {
     options: { budget: { type: 'string' }, focus: { type: 'string' } },
   });
   const budget = Number(values.budget ?? 1500);
-  if (!Number.isInteger(budget) || budget <= 0) throw new Error('--budget precisa ser um número inteiro de tokens maior que zero');
-  if (positionals.length > 1) throw new Error('uma pasta só; separe os termos de --focus por vírgula: --focus termo1,termo2');
+  if (!Number.isInteger(budget) || budget <= 0) throw new Error('--budget must be a whole number of tokens greater than zero');
+  if (positionals.length > 1) throw new Error('one folder only; separate the --focus terms with a comma: --focus term1,term2');
   const dir = resolve(positionals[0] ?? '.');
-  if (!existsSync(dir)) throw new Error(`a pasta ${positionals[0]} não existe`);
+  if (!existsSync(dir)) throw new Error(`the folder ${positionals[0]} does not exist`);
   const focus = (values.focus ?? '').split(',').map((t) => t.trim());
   process.stdout.write(repoMap(dir, { budget, focus }));
 }

@@ -38,20 +38,20 @@ function cli(dir, ...args) {
 
 const block = (lang) => read(`templates/keel-block.${lang}.md`);
 
-test('modelos do bloco têm marcadores, LF, no máximo 6 linhas e 700 bytes entre os marcadores', () => {
+test('block templates have markers, LF, at most 6 lines and 700 bytes between the markers', () => {
   for (const lang of ['pt-BR', 'en']) {
     const text = block(lang);
     const lines = text.split('\n');
-    assert.equal(lines.at(-1), '', `${lang}: termina sem quebra de linha`);
+    assert.equal(lines.at(-1), '', `${lang}: ends without a line break`);
     assert.equal(lines[0], '<!-- keel:start -->');
     assert.equal(lines.at(-2), '<!-- keel:end -->');
     const inner = lines.slice(1, -2);
-    assert.ok(inner.length <= 6, `${lang}: ${inner.length} linhas`);
+    assert.ok(inner.length <= 6, `${lang}: ${inner.length} lines`);
     assert.ok(Buffer.byteLength(inner.join('\n')) <= 700, `${lang}: ${Buffer.byteLength(inner.join('\n'))} bytes`);
   }
 });
 
-test('review acha "commit direto" no AGENTS.md com arquivo, linha e citação literal, sem mudar nada', () => {
+test('review finds "commit directly" in AGENTS.md with file, line and literal quote, without changing anything', () => {
   const dir = project({
     'AGENTS.md': '# App\n\n## Rules\n- Use pnpm.\n  - Commit directly to main after small fixes.\n',
     'package.json': '{"scripts":{"test":"node --test"}}\n',
@@ -61,48 +61,48 @@ test('review acha "commit direto" no AGENTS.md com arquivo, linha e citação li
     const result = cli(dir, 'review');
     assert.equal(result.status, 0, result.stderr);
     const { findings } = JSON.parse(result.stdout);
-    const conflict = findings.find((f) => f.severity === 'conflito');
+    const conflict = findings.find((f) => f.severity === 'conflict');
     assert.ok(conflict, result.stdout);
     assert.equal(conflict.file, 'AGENTS.md');
     assert.equal(conflict.line, 5);
     assert.equal(conflict.quote, '- Commit directly to main after small fixes.');
-    assert.match(conflict.message, /fora das histórias/);
+    assert.match(conflict.message, /outside Keel stories/);
     assert.equal(cli(dir, 'quote', 'AGENTS.md', '5', conflict.quote).status, 0);
     assert.equal(cli(dir, 'quote', 'AGENTS.md', '4', conflict.quote).status, 1);
     assert.deepEqual(hashes(dir), before);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('review avisa que o Claude não vê o AGENTS.md só quando falta o @AGENTS.md', () => {
+test('review warns that Claude does not see AGENTS.md only when @AGENTS.md is missing', () => {
   const visibility = (files) => {
     const dir = project(files);
-    try { return review(dir).findings.filter((f) => f.kind === 'visibilidade'); } finally { rmSync(dir, { recursive: true, force: true }); }
+    try { return review(dir).findings.filter((f) => f.kind === 'visibility'); } finally { rmSync(dir, { recursive: true, force: true }); }
   };
   const nested = visibility({ 'AGENTS.md': '# A\n', '.claude/CLAUDE.md': '# C\n' });
-  assert.equal(nested[0].severity, 'aviso');
+  assert.equal(nested[0].severity, 'warning');
   assert.match(nested[0].message, /`@\.\.\/AGENTS\.md`/);
   const missing = visibility({ 'AGENTS.md': '# A\n', 'CLAUDE.md': '# C\n' });
   assert.equal(missing.length, 1);
-  assert.equal(missing[0].severity, 'aviso');
+  assert.equal(missing[0].severity, 'warning');
   assert.match(missing[0].message, /@AGENTS\.md/);
   assert.ok(visibility({ 'AGENTS.md': '# A\n', 'CLAUDE.md': '@AGENTS.md\n# C\n' }).every((f) => f.severity === 'info'));
   assert.ok(visibility({ 'AGENTS.md': '# A\n' }).every((f) => f.severity === 'info'));
 });
 
-test('review aponta comando morto em código e aceita script que existe', () => {
+test('review flags a dead command in code and accepts a script that exists', () => {
   const dir = project({
     'AGENTS.md': '# A\n\n- Test: `npm test`\n- Lint: `npm run lint`\n\n```sh\nmake check\nnode scripts/missing.mjs\n```\n',
     'package.json': '{"scripts":{"test":"node --test"}}\n',
     'Makefile': 'check:\n\techo ok\n',
   });
   try {
-    const dead = review(dir).findings.filter((f) => f.kind === 'comando-morto');
+    const dead = review(dir).findings.filter((f) => f.kind === 'dead-command');
     assert.deepEqual(dead.map((f) => [f.line, f.quote]), [[4, 'npm run lint'], [8, 'node scripts/missing.mjs']]);
-    assert.ok(dead.every((f) => f.severity === 'aviso' && f.file === 'AGENTS.md'));
+    assert.ok(dead.every((f) => f.severity === 'warning' && f.file === 'AGENTS.md'));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('scan levanta EOL, BOM, import, blocos de outras ferramentas e outros agentes', () => {
+test('scan reports EOL, BOM, import, other tools\' blocks and other agents', () => {
   const dir = project({
     'AGENTS.md': `${BOM}# A\r\n<!-- SPECKIT START -->\r\nx\r\n<!-- SPECKIT END -->\r\n`,
     'CLAUDE.md': '@./AGENTS.md\n',
@@ -117,43 +117,43 @@ test('scan levanta EOL, BOM, import, blocos de outras ferramentas e outros agent
     assert.ok(facts.claudeImportsAgents);
     assert.deepEqual(facts.files.map((f) => f.path).sort(), ['AGENTS.md', 'CLAUDE.md', 'pkg/a/AGENTS.md']);
     assert.deepEqual(facts.otherAgents, ['GEMINI.md']);
-    const others = review(dir).findings.filter((f) => f.kind === 'outros-agentes');
+    const others = review(dir).findings.filter((f) => f.kind === 'other-agents');
     assert.equal(others.length, 1);
     assert.equal(others[0].severity, 'info');
     assert.match(others[0].message, /GEMINI\.md/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('block apply em arquivo com BOM e CRLF preserva os bytes de fora, é idempotente e remove volta ao original', () => {
+test('block apply on a file with BOM and CRLF keeps the outside bytes, is idempotent and remove restores the original', () => {
   const original = `${BOM}# Projeto\r\n\r\nRegras do projeto: não commitar segredos.\r\n`;
   const applied = applyBlock(original, { lang: 'pt-BR', templates: { 'pt-BR': block('pt-BR') } });
-  assert.ok(applied.startsWith(original), 'bytes de fora mudaram');
+  assert.ok(applied.startsWith(original), 'outside bytes changed');
   const added = applied.slice(original.length);
   assert.ok(added.startsWith('\r\n<!-- keel:start -->\r\n'));
   assert.ok(added.endsWith('<!-- keel:end -->\r\n'));
-  assert.ok(!/[^\r]\n/.test(added), 'bloco não usa CRLF');
+  assert.ok(!/[^\r]\n/.test(added), 'block does not use CRLF');
   assert.equal(applyBlock(applied, { lang: 'pt-BR', templates: { 'pt-BR': block('pt-BR') } }), applied);
   assert.equal(removeBlock(applied), original);
   for (const text of ['abc\n\n', 'abc\r\n\r\n', 'abc\n', '']) {
     assert.equal(removeBlock(applyBlock(text, { lang: 'en', templates: { en: block('en') } })), text, JSON.stringify(text));
   }
-  // Sem quebra de linha final não há como saber depois se ela era do arquivo: remove deixa "abc\n".
+  // Without a final line break there is no way to tell later whether it belonged to the file: remove leaves "abc\n".
   assert.equal(removeBlock(applyBlock('abc', { lang: 'en', templates: { en: block('en') } })), 'abc\n');
 });
 
-test('block apply aborta sem escrever com marcadores desbalanceados ou duplicados', () => {
+test('block apply aborts without writing on unbalanced or duplicated markers', () => {
   const bad = '# A\n<!-- keel:start -->\nx\n<!-- keel:start -->\ny\n<!-- keel:end -->\n';
   const dir = project({ 'AGENTS.md': bad });
   try {
     const result = cli(dir, 'block', 'apply', '--file', 'AGENTS.md', '--lang', 'en');
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /marcador/);
+    assert.match(result.stderr, /marker/);
     assert.equal(readFileSync(join(dir, 'AGENTS.md'), 'utf8'), bad);
-    assert.throws(() => applyBlock('<!-- keel:end -->\n<!-- keel:start -->\n', { lang: 'en' }), /marcador/);
+    assert.throws(() => applyBlock('<!-- keel:end -->\n<!-- keel:start -->\n', { lang: 'en' }), /marker/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('block apply nunca cria CLAUDE.md com AGENTS.md presente e só cria arquivo com --create', () => {
+test('block apply never creates CLAUDE.md with AGENTS.md present and only creates a file with --create', () => {
   const dir = project({ 'AGENTS.md': '# A\n' });
   try {
     assert.throws(() => run(['block', 'apply', '--file', 'CLAUDE.md', '--create'], dir), /AGENTS\.md/);
@@ -163,11 +163,11 @@ test('block apply nunca cria CLAUDE.md com AGENTS.md presente e só cria arquivo
     run(['block', 'apply', '--file', 'AGENTS.md', '--create', '--lang', 'en'], dir);
     assert.equal(readFileSync(join(dir, 'AGENTS.md'), 'utf8'), block('en'));
     writeFileSync(join(dir, 'CLAUDE.md'), '@AGENTS.md\n');
-    assert.throws(() => run(['block', 'apply', '--file', 'CLAUDE.md', '--lang', 'en'], dir), /já tem o bloco/);
+    assert.throws(() => run(['block', 'apply', '--file', 'CLAUDE.md', '--lang', 'en'], dir), /already has the keel block/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('block remove tira só o bloco e mantém o arquivo, mesmo vazio; BOM antes do bloco na linha 1 fica', () => {
+test('block remove takes out only the block and keeps the file, even empty; a BOM before the block on line 1 stays', () => {
   const withBom = `${BOM}${block('en')}`;
   assert.equal(applyBlock(withBom, { lang: 'en', templates: { en: block('en') } }), withBom);
   assert.equal(removeBlock(withBom), BOM);
@@ -178,13 +178,13 @@ test('block remove tira só o bloco e mantém o arquivo, mesmo vazio; BOM antes 
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('block apply através de symlink escreve no alvo, mantém o link e avisa', (t) => {
+test('block apply through a symlink writes to the target, keeps the link and warns', (t) => {
   const dir = project({ 'AGENTS.md': '# Project\n\nUse the tests.\n' });
   try {
-    try { symlinkSync('AGENTS.md', join(dir, 'CLAUDE.md')); } catch { t.skip('symlink indisponível'); return; }
+    try { symlinkSync('AGENTS.md', join(dir, 'CLAUDE.md')); } catch { t.skip('symlink unavailable'); return; }
     const facts = scan(dir);
     assert.equal(facts.files.find((f) => f.path === 'CLAUDE.md').symlink, 'AGENTS.md');
-    assert.ok(review(dir).findings.some((f) => f.kind === 'visibilidade' && /carga dupla/.test(f.message)));
+    assert.ok(review(dir).findings.some((f) => f.kind === 'visibility' && /double load/.test(f.message)));
     const { output } = run(['block', 'apply', '--file', 'CLAUDE.md', '--lang', 'en'], dir);
     assert.match(output.warnings.join(' '), /symlink/);
     assert.ok(readFileSync(join(dir, 'AGENTS.md'), 'utf8').endsWith(block('en')));
@@ -193,12 +193,12 @@ test('block apply através de symlink escreve no alvo, mantém o link e avisa', 
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('import-agents põe @AGENTS.md no topo depois do BOM e recusa repetir', () => {
+test('import-agents puts @AGENTS.md at the top after the BOM and refuses to repeat', () => {
   const dir = project({ 'AGENTS.md': '# A\n', 'CLAUDE.md': `${BOM}# C\r\nx\r\n` });
   try {
     run(['import-agents'], dir);
     assert.equal(readFileSync(join(dir, 'CLAUDE.md'), 'utf8'), `${BOM}@AGENTS.md\r\n# C\r\nx\r\n`);
-    assert.throws(() => run(['import-agents'], dir), /já importa/);
+    assert.throws(() => run(['import-agents'], dir), /already imports/);
     mkdirSync(join(dir, '.claude'));
     writeFileSync(join(dir, '.claude', 'CLAUDE.md'), '# C\n');
     run(['import-agents', '--file', '.claude/CLAUDE.md'], dir);
@@ -206,9 +206,9 @@ test('import-agents põe @AGENTS.md no topo depois do BOM e recusa repetir', () 
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('restructure-check aceita proposta que só move e remove e recusa linha reescrita ou duplicada', () => {
+test('restructure-check accepts a proposal that only moves and removes and refuses a rewritten or duplicated line', () => {
   const original = '# App\nIntro.\n- Run `pnpm test` before finishing.\n- Never edit dist/.\n- Old note.\n';
-  const moved = '# App\nIntro.\n\n## Comandos\n- Run `pnpm test` before finishing.\n\n## Limites\n- Never edit dist/.\n';
+  const moved = '# App\nIntro.\n\n## Commands\n- Run `pnpm test` before finishing.\n\n## Boundaries\n- Never edit dist/.\n';
   const ok = restructureCheck(original, moved);
   assert.equal(ok.ok, true);
   assert.deepEqual(ok.removed, [{ line: 5, text: '- Old note.' }]);
@@ -217,7 +217,7 @@ test('restructure-check aceita proposta que só move e remove e recusa linha ree
   assert.deepEqual(rewritten.added, [{ line: 2, text: '- Run `pnpm test` always.' }, { line: 4, text: '- Never edit dist/.' }]);
 });
 
-test('check passa com o bloco do modelo e falha com o bloco editado à mão', () => {
+test('check passes with the template block and fails with a hand-edited block', () => {
   const dir = project({ 'AGENTS.md': `# A\n\n${block('pt-BR')}` });
   try {
     assert.equal(check(dir).ok, true);
@@ -225,14 +225,14 @@ test('check passa com o bloco do modelo e falha com o bloco editado à mão', ()
     writeFileSync(join(dir, 'AGENTS.md'), `# A\n\n${block('pt-BR').replace('à mão', 'quando quiser')}`);
     const result = cli(dir, 'check');
     assert.equal(result.status, 1);
-    assert.match(JSON.parse(result.stdout).errors.join(' '), /modelo/);
+    assert.match(JSON.parse(result.stdout).errors.join(' '), /template/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('a CLI roda quando chamada por um symlink do script', (t) => {
+test('the CLI runs when called through a symlink to the script', (t) => {
   const dir = project({ 'AGENTS.md': '# A\n' });
   try {
-    try { symlinkSync(script, join(dir, 'link.mjs')); } catch { t.skip('symlink indisponível'); return; }
+    try { symlinkSync(script, join(dir, 'link.mjs')); } catch { t.skip('symlink unavailable'); return; }
     const result = spawnSync(process.execPath, [join(dir, 'link.mjs'), 'scan'], { cwd: dir, encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(JSON.parse(result.stdout).files.map((f) => f.path), ['AGENTS.md']);

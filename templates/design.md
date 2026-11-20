@@ -1,35 +1,35 @@
-# Design — <CHAVE>
+# Design — <KEY>
 
-Requisitos: requirements.md · Status: rascunho | aprovado por <dev> em <data>
+Requirements: requirements.md · Status: draft | approved by <dev> on <date>
 
-<!-- congelado após aprovação: início -->
-Gatilho: <trade-off | contrato | dados/migração | dependência nova | transversal | quebra de padrão>
+<!-- frozen after approval: start -->
+Trigger: <trade-off | contract | data/migration | new dependency | cross-cutting | pattern break>
 
-## Abordagem
+## Approach
 Um parágrafo; cite as regras atendidas (R1, R2).
 
-## Mapa de código
-| Caminho | O que muda | Reaproveita / não mexer |
+## Code map
+| Path | What changes | Reuse / do not touch |
 |---|---|---|
 
-## Contratos e dados
+## Contracts and data
 Só a parte relevante.
 
-## Estrutura nova e justificativa
-| Elemento | Tipo (interface, camada, mapper/DTO, módulo, helper, dependência) | Justificativa (R#, 2ª implementação, porta externa, fronteira publicada, 3ª ocorrência) | Alternativa mais simples e por que não |
+## New structure and rationale
+| Element | Kind (interface, layer, mapper/DTO, module, helper, dependency) | Rationale (R#, 2nd implementation, external port, published boundary, 3rd occurrence) | Simpler alternative and why not |
 |---|---|---|---|
 
-## Alternativas consideradas
+## Alternatives considered
 Para cada dúvida técnica: Decisão / Motivo / Alternativas, com o link da fonte.
-| Opção | A favor | Contra | Por que não |
+| Option | For | Against | Why not |
 |---|---|---|---|
 
-## Preocupações transversais
-Segurança: <ou "não se aplica"> · Privacidade: · Desempenho: · Observabilidade: · Migração/rollback:
+## Cross-cutting concerns
+Security: <or "not applicable"> · Privacy: · Performance: · Observability: · Migration/rollback:
 
-## Riscos e quebras de padrão
-- <risco, mitigação>
+## Risks and pattern breaks
+- <risk, mitigation>
 
-## Candidata a ADR?
-Sim | Não — <motivo>
-<!-- congelado após aprovação: fim -->
+## ADR candidate?
+Yes | No — <reason>
+<!-- frozen after approval: end -->

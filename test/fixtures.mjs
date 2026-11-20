@@ -1,97 +1,97 @@
-// Documentos mínimos e válidos de uma história, para os testes alterarem um trecho por vez.
+// Minimal valid documents of a story, for tests to change one piece at a time.
 
 export function requirementsDoc() {
   return `# APP-1 — Login
 
-Fonte: APP-1 · Pasta: keel/features/APP-1-login/ · Nível: padrão
-Status: rascunho
+Source: APP-1 · Folder: keel/features/APP-1-login/ · Level: standard
+Status: draft
 
-<!-- congelado após aprovação: início -->
-## História original
+<!-- frozen after approval: start -->
+## Original story
 > Quero entrar com Google.
 
-## Objetivo
-Dev entra com Google. [fonte: APP-1]
+## Goal
+Dev entra com Google. [source: APP-1]
 
-## Fora de escopo
+## Out of scope
 - Pagamento.
 
-## Regras e critérios de aceite
-R1. WHEN o usuário escolhe Google THE app SHALL abrir o consentimento. [fonte: APP-1]
+## Rules and acceptance criteria
+R1. WHEN o usuário escolhe Google THE app SHALL abrir o consentimento. [source: APP-1]
   - AC-1.1 GIVEN deslogado WHEN clica THEN vê o consentimento.
-R2. IF a sessão expira THEN THE app SHALL pedir login. [fonte: APP-1]
+R2. IF a sessão expira THEN THE app SHALL pedir login. [source: APP-1]
   - AC-2.1 GIVEN sessão WHEN expira THEN pede login.
-R3. WHILE offline THE app SHALL mostrar aviso. [fonte: APP-1]
+R3. WHILE offline THE app SHALL mostrar aviso. [source: APP-1]
   - AC-3.1 GIVEN offline WHEN abre THEN vê aviso.
 
-## Obrigações explícitas
-- Casos de borda: nenhum.
+## Explicit obligations
+- Edge cases: nenhum.
 
-## Perguntas e suposições
+## Questions and assumptions
 - Nenhuma pergunta.
 
-## Conflitos encontrados
+## Conflicts found
 - Nenhum.
 
-## Mudanças após a confirmação
+## Changes after confirmation
 - Nenhuma.
-<!-- congelado após aprovação: fim -->
+<!-- frozen after approval: end -->
 `;
 }
 
 export function tasksDoc() {
   return `# Tasks — APP-1
 
-Requisitos: requirements.md · Design: não há
-Aprovado por Ana em 2026-11-20
+Requirements: requirements.md · Design: none
+Approved by Ana on 2026-11-20
 
-<!-- congelado após aprovação: início -->
-## T1 — Esqueleto andante: botão até o consentimento
-Cobre: R1 (AC-1.1)
-Arquivos: \`src/login.js\`
-Teste primeiro: \`login.test.js\` — abre o consentimento
-Verificação: \`npm test\`
-Pronto quando: teste passa
-Depende de: —
+<!-- frozen after approval: start -->
+## T1 — Walking skeleton: botão até o consentimento
+Covers: R1 (AC-1.1)
+Files: \`src/login.js\`
+Test first: \`login.test.js\` — abre o consentimento
+Verification: \`npm test\`
+Done when: teste passa
+Depends on: —
 
 ## T2 — Sessão expirada
-Cobre: R2 (AC-2.1)
-Teste primeiro: \`session.test.js\` — pede login
-Verificação: \`npm test\`
-Pronto quando: expira e pede login
-Depende de: T1
+Covers: R2 (AC-2.1)
+Test first: \`session.test.js\` — pede login
+Verification: \`npm test\`
+Done when: expira e pede login
+Depends on: T1
 
 ## T3 — Aviso offline
-Cobre: R3
-Teste primeiro: \`offline.test.js\` — mostra aviso
-Verificação: \`npm test\`
-Pronto quando: aviso aparece
-Depende de: T1
+Covers: R3
+Test first: \`offline.test.js\` — mostra aviso
+Verification: \`npm test\`
+Done when: aviso aparece
+Depends on: T1
 
 ## T4 — Configuração do provedor
-Cobre: R1
-Sem teste: só configuração
-Depende de: T1
-<!-- congelado após aprovação: fim -->
+Covers: R1
+No test: só configuração
+Depends on: T1
+<!-- frozen after approval: end -->
 
-## Andamento
+## Progress
 ### T1
-Status: pendente
-Evidência RED: —
-Evidência GREEN: —
+Status: pending
+RED evidence: —
+GREEN evidence: —
 Review: —
 ### T2
-Status: pendente
+Status: pending
 ### T3
-Status: pendente
+Status: pending
 ### T4
-Status: pendente
+Status: pending
 
-## Notas de implementação
+## Implementation notes
 - Nenhuma.
 
-## Convergência (preenchida no fim, conferida por script)
-| Regra | Evidência | Situação |
+## Convergence (filled at the end, checked by script)
+| Rule | Evidence | Outcome |
 |---|---|---|
 `;
 }
@@ -99,34 +99,34 @@ Status: pendente
 export function designDoc() {
   return `# Design — APP-1
 
-Requisitos: requirements.md · Status: rascunho
+Requirements: requirements.md · Status: draft
 
-<!-- congelado após aprovação: início -->
-Gatilho: dependência nova
+<!-- frozen after approval: start -->
+Trigger: new dependency
 
-## Abordagem
+## Approach
 Usa o SDK do Google (R1).
 
-## Mapa de código
-Não se aplica.
+## Code map
+Not applicable.
 
-## Contratos e dados
-Não se aplica.
+## Contracts and data
+Not applicable.
 
-## Estrutura nova e justificativa
+## New structure and rationale
 Nenhuma.
 
-## Alternativas consideradas
-Não se aplica.
+## Alternatives considered
+Not applicable.
 
-## Preocupações transversais
-Segurança: token no servidor.
+## Cross-cutting concerns
+Security: token on the server.
 
-## Riscos e quebras de padrão
+## Risks and pattern breaks
 - Nenhum.
 
-## Candidata a ADR?
-Não — local à história.
-<!-- congelado após aprovação: fim -->
+## ADR candidate?
+No — local to the story.
+<!-- frozen after approval: end -->
 `;
 }
