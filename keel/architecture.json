@@ -1,0 +1,23 @@
+{
+  "components": {
+    "scripts": ["scripts/*.mjs"],
+    "hooks": ["scripts/hooks/**"],
+    "testes": ["test/**"]
+  },
+  "rules": [
+    {
+      "name": "scripts-nao-dependem-de-hooks-nem-testes",
+      "from": "scripts",
+      "forbid": ["hooks", "testes"],
+      "fix": "Mova a lógica para uma função exportada em scripts/ e chame-a do hook ou do teste."
+    },
+    {
+      "name": "hooks-nao-dependem-de-testes",
+      "from": "hooks",
+      "forbid": ["testes"],
+      "fix": "Leve o que o hook precisa para scripts/; testes só importam scripts."
+    }
+  ],
+  "noCycles": ["scripts/*"],
+  "baseline": "keel/arch-baseline.txt"
+}

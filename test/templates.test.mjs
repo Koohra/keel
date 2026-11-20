@@ -69,3 +69,12 @@ test('modelo de architecture.json tem componentes, regras com correção, ciclos
   assert.ok(Array.isArray(arch.noCycles));
   assert.equal(typeof arch.baseline, 'string');
 });
+
+test('modelo de AGENTS.md tem as seções na ordem, aponta para o product.md e cabe em 150 linhas', () => {
+  const text = read('templates/agents.md');
+  const order = ['## Comandos', '## Convenções', '## Limites', '## Pronto quando', '## Armadilhas', '## Mais detalhes'];
+  assert.deepEqual(headings(text).filter((h) => h.startsWith('## ')), order);
+  assert.match(text, /`keel\/product\.md`/);
+  assert.ok(text.split('\n').length <= 150);
+  assert.ok(!text.includes('keel:start'), 'o bloco do Keel é opcional e não vem no modelo');
+});

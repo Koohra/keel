@@ -18,7 +18,7 @@ export const LEVELS = ['trivial', 'padrao', 'com-design'];
 const DOC_STEPS = { 'requirements.md': 'requirements', 'design.md': 'design', 'tasks.md': 'tasks' };
 const VALIDATORS = { 'requirements.md': validateRequirements, 'design.md': validateDesign, 'tasks.md': validateTasks };
 const REVIEW_RESULTS = ['ok', 'achados', 'unavailable'];
-const PENDING_PARTS = { convergence: 6, 'approval:deltas': 6, arch: 7 };
+const PENDING_PARTS = { convergence: 6, 'approval:deltas': 6, arch: 6 };
 
 // Só o bloco congelado entra no hash: andamento, notas e cabeçalho mudam sem vencer a aprovação.
 export function approvalHash(text) {
