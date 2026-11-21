@@ -140,7 +140,8 @@ test('review fixes: task commits must be in the branch history, and a rewritten 
     let next = json(repo.state('next'));
     assert.match(next.closing.convergence[4], /missing — T3: [0-9a-f]+ is not a commit in this branch's history/);
     repo.sh('git', ['stash', '-q']);
-    repo.sh('git', ['rebase', '-q', '--force-rebase', 'HEAD~3']);
+    // A new message per commit: --force-rebase alone can recreate the same hashes within one second.
+    repo.sh('git', ['rebase', '-q', '--exec', 'git commit -q --amend -m rewritten', 'HEAD~3']);
     repo.sh('git', ['stash', 'pop', '-q']);
     next = json(repo.state('next'));
     assert.equal(next.closing.arch.status, 'fail');
