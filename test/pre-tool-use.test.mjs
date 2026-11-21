@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { root, readJson } from './helpers.mjs';
@@ -129,6 +129,8 @@ test('hook blocks git commit in implementation until the dev approves the commit
     const blocked = commit();
     assert.equal(blocked.status, 2);
     assert.match(blocked.stderr, /the dev has not approved the commit of T1/);
+    const tasksFile = join(repo.dir, repo.folder, 'tasks.md');
+    writeFileSync(tasksFile, readFileSync(tasksFile, 'utf8').replace('Status: pending', 'Status: in review'));
     const approved = repo.state('approve', 'commit', '--by', 'Ana');
     assert.equal(approved.status, 0, approved.stderr);
     assert.equal(commit().status, 0);

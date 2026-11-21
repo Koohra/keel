@@ -58,6 +58,12 @@ const OUTPUT_LINES = 20;
 const tail = (run) => ({ ...run, output: run.output.split('\n').slice(-OUTPUT_LINES).join('\n') });
 const noTest = (task) => 'No test' in task.fields;
 
+// "Test first: `<name>` — <what it checks>" → <name>.
+function testName(task) {
+  const field = task.fields['Test first'] ?? '';
+  return (field.match(/^`([^`]+)`/)?.[1] ?? field.split(/\s+[—-]\s+/)[0]).trim();
+}
+
 // Command in backticks of the task's Verification:, the one approved with the plan.
 export function evidenceCommand(state, kind, tasksText) {
   if (!['red', 'green'].includes(kind)) throw new Error(`unknown evidence "${kind}"; use red or green`);
@@ -75,6 +81,10 @@ export function recordEvidence(state, kind, run, tasksText, now) {
   evidenceCommand(state, kind, tasksText);
   if (kind === 'red' && run.exitCode === 0) {
     throw new Error(`${id}: the test must fail before the code: ${run.command} exited with 0. Write a test that fails for the missing behavior`);
+  }
+  const name = testName(openTask(state, tasksText, `evidence ${kind}`));
+  if (kind === 'red' && !WRONG_REASON.test(run.output) && !run.output.includes(name)) {
+    throw new Error(`${id}: the output does not show the test "${name}" failing: it did not run (import or compile error) or has another name. Name the test as in Test first: and make it fail on an assertion\n${tail(run).output}`);
   }
   if (kind === 'red' && WRONG_REASON.test(run.output)) {
     throw new Error(`${id}: the test failed for the wrong reason (import or syntax error, not an assertion):\n${tail(run).output}\nCreate the module or export the test needs, empty, so the test fails on an assertion`);
@@ -151,7 +161,10 @@ export function nextTask(tasksText) {
 export function taskView(state, tasksText, fingerprint, taskExit) {
   const id = implementation(state).currentTask;
   if (!id || isDone(findTask(tasksText, id))) return { task: null, nextTask: nextTask(tasksText) };
-  return { task: { id, missing: taskMissing(state, tasksText, fingerprint, taskExit) }, nextTask: null };
+  return {
+    task: { id, missing: taskMissing(state, tasksText, fingerprint, taskExit), progress: progressLines(state, tasksText) },
+    nextTask: null,
+  };
 }
 
 const REVIEW_RESULTS = ['ok', 'findings', 'unavailable'];
@@ -164,10 +177,37 @@ export function recordTaskReview(state, result, now) {
   return withImplementation(state, { review: { task: currentTask, result, at: now }, blocked: null }, now);
 }
 
+// Status the Progress of the open task should show, from what the script recorded.
+function recordedStatus(impl, task) {
+  if (impl.review) return 'in review';
+  if (impl.green || (noTest(task) && impl.checks?.passed)) return 'green';
+  return impl.red ? 'red' : 'pending';
+}
+
+// Lines of the Progress of the open task, mirrored from state.json for the model to copy.
+export function progressLines(state, tasksText) {
+  const impl = implementation(state);
+  const task = findTask(tasksText, impl.currentTask);
+  const run = (label, r) => `${label}: \`${r.command}\` exited with ${r.exitCode} at ${r.at}`;
+  return [
+    `Status: ${recordedStatus(impl, task)}`,
+    impl.red && run('RED evidence', impl.red),
+    impl.green && run('GREEN evidence', impl.green),
+    impl.checks && `Checks: ${impl.checks.results.map((r) => `${r.name} \`${r.command}\` exited with ${r.exitCode}`).join('; ')}`,
+    impl.review && `Review: ${impl.review.result} (isolated reviewer)`,
+  ].filter(Boolean);
+}
+
 // The dev's approval of the commit, tied to the code it saw (fingerprint).
 export function approveCommit(state, by, tasksText, fingerprint, taskExit, now) {
   if (!by) throw new Error('say who approved with --by <dev>');
-  const { id } = openTask(state, tasksText, 'approve commit');
+  const task = openTask(state, tasksText, 'approve commit');
+  const { id } = task;
+  const expected = recordedStatus(implementation(state), task);
+  const shown = (task.progress?.Status ?? '').replace(/\s*\(.*\)$/, '');
+  if (shown !== expected) {
+    throw new Error(`Status: ${shown} in the Progress of ${id} does not match the state (${expected}): copy the progress lines from keel-state.mjs next into tasks.md`);
+  }
   const missing = taskMissing(state, tasksText, fingerprint, taskExit).filter((m) => m.criterion !== 'approval:commit');
   if (missing.length) throw new Error(`cannot approve the commit of ${id}: ${missing.map((m) => `${m.criterion} (${m.reason})`).join('; ')}`);
   return withImplementation(state, { commit: { task: id, approvedBy: by, at: now, fingerprint } }, now);

@@ -37,3 +37,9 @@ test('stages 7 to 9 have cases: TDD without commit, commit approved by the dev a
   const noBash = tagged('phase-7').find((c) => !/allowed_tools: \[[^\]]*\bBash\b/.test(read(`${c}/case.yaml`)));
   assert.ok(noBash, 'a phase-7 case without Bash');
 });
+
+test('denied command has its own case: only git allowed in Bash, run with --allow-tools "Bash(git *)"', () => {
+  const denied = cases.find((c) => c.endsWith('/implementation-denied'));
+  assert.ok(denied, 'implementation-denied');
+  assert.match(read(`${denied}/case.yaml`), /--allow-tools "Bash\(git \*\)"/);
+});

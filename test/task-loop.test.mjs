@@ -8,7 +8,7 @@ import { newState, nextStep, advance, approve, setLevel, recordReview, recordGen
 import { storyRepo } from './story-repo.mjs';
 import {
   startTask, evidenceCommand, recordEvidence, taskMissing, checkCommands, recordChecks,
-  recordTaskReview, approveCommit, isGitCommit, checkGitCommit, checkStop,
+  recordTaskReview, approveCommit, isGitCommit, checkGitCommit, checkStop, taskView,
 } from '../scripts/task-loop.mjs';
 
 const workflow = readJson('workflow/workflow.json');
@@ -29,7 +29,7 @@ function implementationState() {
   return advance(approve(state, 'tasks.md', 'Ana', docs, workflow, now), workflow, docs, now).state;
 }
 
-const red = { command: 'npm test', exitCode: 1, output: 'not ok 1 - abre o consentimento\n  expected true' };
+const red = { command: 'npm test', exitCode: 1, output: 'not ok 1 - abre o consentimento\n  at login.test.js:3\n  expected true' };
 const green = { command: 'npm test', exitCode: 0, output: 'ok 1 - abre o consentimento' };
 
 test('walking skeleton: task start, RED with a failing exit, GREEN with 0 and next shows the task (AC-2.1, AC-6.1)', () => {
@@ -74,6 +74,7 @@ test('CLI: task start, evidence red and green run the Verification command and r
   }
 });
 
+const inReview = () => withStatus(tasks, 'T1', 'in review');
 const withStatus = (text, id, status) => text.replace(new RegExp(`(### ${id}\\nStatus: )[^\\n]+`), `$1${status}`);
 
 test('task start: dependencies done, one open task at a time, closed only by a real commit (AC-1.1, AC-1.2, AC-1.3)', () => {
@@ -157,14 +158,14 @@ function readyForCommit() {
 
 test('review task records the isolated review; approve commit needs RED, GREEN, checks and review (AC-4.1, AC-5.1)', () => {
   const state = readyForCommit();
-  assert.throws(() => approveCommit(state, 'Ana', tasks, 'tree', taskExit, now), /cannot approve the commit of T1: review:task/);
+  assert.throws(() => approveCommit(state, 'Ana', withStatus(tasks, 'T1', 'green'), 'tree', taskExit, now), /cannot approve the commit of T1: review:task/);
   assert.throws(() => recordTaskReview(state, 'maybe', now), /invalid result "maybe"/);
   const reviewed = recordTaskReview(state, 'findings', now);
   assert.deepEqual(reviewed.steps.implementation.review, { task: 'T1', result: 'findings', at: now });
   assert.deepEqual(taskMissing(reviewed, tasks, 'tree', taskExit).map((m) => m.criterion), ['approval:commit']);
-  assert.throws(() => approveCommit(reviewed, '', tasks, 'tree', taskExit, now), /--by <dev>/);
-  assert.throws(() => approveCommit(reviewed, 'Ana', tasks, 'other', taskExit, now), /code changed after the checks/);
-  const approved = approveCommit(reviewed, 'Ana', tasks, 'tree', taskExit, now);
+  assert.throws(() => approveCommit(reviewed, '', inReview(), 'tree', taskExit, now), /--by <dev>/);
+  assert.throws(() => approveCommit(reviewed, 'Ana', inReview(), 'other', taskExit, now), /code changed after the checks/);
+  const approved = approveCommit(reviewed, 'Ana', inReview(), 'tree', taskExit, now);
   assert.deepEqual(approved.steps.implementation.commit, { task: 'T1', approvedBy: 'Ana', at: now, fingerprint: 'tree' });
   assert.deepEqual(taskMissing(approved, tasks, 'tree', taskExit), []);
   assert.match(taskMissing(approved, tasks, 'later', taskExit).at(-1).reason, /code changed after the dev approved the commit/);
@@ -177,7 +178,7 @@ test('git commit in implementation only with the commit approved for the same co
   for (const command of ['git log --grep commit', 'git status', 'npm test', 'git diff HEAD -- src/commit.js']) assert.equal(isGitCommit(command), false, command);
   const reviewed = recordTaskReview(readyForCommit(), 'ok', now);
   assert.match(checkGitCommit(reviewed, tasks, 'tree').reason, /the dev has not approved the commit of T1/);
-  const approved = approveCommit(reviewed, 'Ana', tasks, 'tree', taskExit, now);
+  const approved = approveCommit(reviewed, 'Ana', inReview(), 'tree', taskExit, now);
   assert.deepEqual(checkGitCommit(approved, tasks, 'tree'), { block: false });
   assert.match(checkGitCommit(approved, tasks, 'changed').reason, /code changed after the dev approved the commit/);
   assert.match(checkGitCommit(implementationState(), tasks, 'tree').reason, /no open task/);
@@ -188,9 +189,9 @@ test('review fixes: wrong-reason RED on long output, plain done, old hash, git c
   const open = startTask(implementationState(), 'T1', tasks, git, now);
   const long = `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/x/src/users.js'\n${'  at line\n'.repeat(40)}not ok 1`;
   assert.throws(() => recordEvidence(open, 'red', { ...red, output: long }, tasks, now), /wrong reason/);
-  const recorded = recordEvidence(open, 'red', { ...red, output: `not ok 1\n${'x\n'.repeat(40)}SyntaxError thrown as expected? no: assertion` }, tasks, now);
+  const recorded = recordEvidence(open, 'red', { ...red, output: `not ok 1 - login.test.js\n${'x\n'.repeat(40)}SyntaxError thrown as expected? no: assertion` }, tasks, now);
   assert.ok(recorded.steps.implementation.red.output.split('\n').length <= 20, 'stored output is the tail');
-  assert.doesNotThrow(() => recordEvidence(open, 'red', { ...red, output: 'AssertionError: expected SyntaxError from JSON.parse' }, tasks, now));
+  assert.doesNotThrow(() => recordEvidence(open, 'red', { ...red, output: 'not ok 1 - login.test.js\nAssertionError: expected SyntaxError from JSON.parse' }, tasks, now));
 
   const plainDone = withStatus(tasks, 'T1', 'done');
   assert.equal(checkStop(open, plainDone, 'tree').action, 'block', 'plain done does not close the open task');
@@ -208,7 +209,7 @@ test('review fixes: wrong-reason RED on long output, plain done, old hash, git c
   assert.deepEqual(checkCommands(product('Tests: `npm test` e `npm run e2e` · Lint: não se aplica')).map((c) => c.command), ['npm test', 'npm run e2e']);
 
   let ready = recordChecks(recordEvidence(withGreen, 'green', green, tasks, now), [{ ...green, name: 'Tests' }], 'tree', now);
-  ready = approveCommit(recordTaskReview(ready, 'ok', now), 'Ana', tasks, 'tree', taskExit, now);
+  ready = approveCommit(recordTaskReview(ready, 'ok', now), 'Ana', inReview(), 'tree', taskExit, now);
   assert.equal(checkStop(ready, tasks, 'after-commit').action, 'allow', 'after the approved commit the Stop does not rerun checks');
 });
 
@@ -224,4 +225,31 @@ test('CLI: a real node --test run that fails on a missing module is refused as R
   } finally {
     repo.cleanup();
   }
+});
+
+test('RED must show the test of Test first: failing by name (AC-2.5)', () => {
+  const open = startTask(implementationState(), 'T1', tasks, git, now);
+  assert.throws(() => recordEvidence(open, 'red', { ...red, output: 'not ok 1 - outro teste\n  expected true' }, tasks, now),
+    /the output does not show the test "login.test.js" failing/);
+  assert.equal(recordEvidence(open, 'red', red, tasks, now).steps.implementation.red.exitCode, 1);
+});
+
+test('Progress mirrors the script: ready lines in the output and approve commit refuses a Status that does not match (AC-12.1, AC-12.2)', () => {
+  let state = recordEvidence(startTask(implementationState(), 'T1', tasks, git, now), 'red', red, tasks, now);
+  const view = taskView(state, tasks, 'tree', taskExit);
+  assert.deepEqual(view.task.progress.slice(0, 2), ['Status: red', 'RED evidence: `npm test` exited with 1 at 2026-11-20T12:00:00Z']);
+  state = recordEvidence(state, 'green', green, tasks, now);
+  state = recordTaskReview(recordChecks(state, [{ ...green, name: 'Tests' }], 'tree', now), 'findings', now);
+  assert.deepEqual(taskView(state, tasks, 'tree', taskExit).task.progress, [
+    'Status: in review',
+    'RED evidence: `npm test` exited with 1 at 2026-11-20T12:00:00Z',
+    'GREEN evidence: `npm test` exited with 0 at 2026-11-20T12:00:00Z',
+    'Checks: Tests `npm test` exited with 0',
+    'Review: findings (isolated reviewer)',
+  ]);
+  assert.throws(() => approveCommit(state, 'Ana', withStatus(tasks, 'T1', 'green'), 'tree', taskExit, now),
+    /Status: green in the Progress of T1 does not match the state \(in review\)/);
+  assert.equal(approveCommit(state, 'Ana', withStatus(tasks, 'T1', 'in review'), 'tree', taskExit, now).steps.implementation.commit.task, 'T1');
+  const onlyRed = recordEvidence(startTask(implementationState(), 'T1', tasks, git, now), 'red', red, tasks, now);
+  assert.throws(() => approveCommit(onlyRed, 'Ana', withStatus(tasks, 'T1', 'green'), 'tree', taskExit, now), /does not match the state \(red\)/);
 });

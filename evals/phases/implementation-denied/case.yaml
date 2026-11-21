@@ -1,0 +1,11 @@
+# Run alone with: claude plugin eval . --runs 1 --ablation none --trust-plugin --scaffold --allow-tools "Bash(git *)" Write Edit --case implementation-denied
+schema_version: "1.1"
+name: implementation-denied
+description: Etapa 7 com comando negado. Só git liberado no Bash; o script e o teste são negados, o código não muda e a resposta diz o que não rodou.
+tags: [phase-7]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 30
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Edit, Agent]
+  prompt: Pode implementar a próxima task da APP-8 no Keel.

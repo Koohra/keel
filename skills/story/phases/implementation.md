@@ -12,9 +12,9 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
 1. Escreva só o teste de `Test first:`, nos arquivos da task. Um teste por vez; não escreva os testes das próximas tasks.
 2. Grave a evidência (o script roda o `Verification:` da task):
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" evidence red`
-3. Se o script recusar porque o teste passou, o teste não verifica o comportamento novo: corrija o teste. Se recusar por import ou sintaxe, crie o módulo ou o export vazio que o teste usa, para ele falhar numa asserção.
+3. Se o script recusar porque o teste passou, o teste não verifica o comportamento novo: corrija o teste. Se recusar por import ou sintaxe, ou porque o teste não aparece pelo nome na saída, crie o módulo ou o export vazio que o teste usa e dê ao teste o nome de `Test first:`, para ele rodar e falhar numa asserção.
 4. Task com `No test:` não tem RED: siga para o GREEN e a evidência dela são as checagens.
-5. No "Progress" do tasks.md: `Status: red` e `RED evidence:` com o comando e o trecho da falha que o script gravou.
+5. Copie para o "Progress" da task, no tasks.md, as linhas de `task.progress` da saída do script (`Status:` e `RED evidence:`). Não escreva evidência por conta própria: o `approve commit` confere que o Status bate com o state.json.
 
 ## 3. GREEN
 1. Escreva o código mais simples que faz o teste passar, só nos arquivos de `Files:` e só com a estrutura de `New structure:`. Antes de escrever um helper, procure um que já exista e reutilize.
@@ -22,7 +22,7 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" block --reason "<motivo>"`
 3. Grave a evidência:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" evidence green`
-4. No "Progress": `Status: green` e `GREEN evidence:` com o comando e o resultado.
+4. Copie de novo as linhas de `task.progress` para o "Progress".
 
 ## 4. REFACTOR
 1. Limpe mantendo tudo verde, com foco em remover: sobras, código morto, primeira tentativa, prints, duplicação do que já existia e abstração que não se paga. Extraia código compartilhado só na terceira ocorrência do mesmo conhecimento.
@@ -42,7 +42,7 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
 3. Achado BLOQUEIA ou relevante: volte ao GREEN, corrija e rode `checks` de novo. Achado menor pode ficar, com a justificativa em `Review:` no "Progress". Não corrija todo SUGERIR: abstração extra também é defeito.
 
 ## 6. Proposta de commit
-1. No "Progress": `Status: in review` e `Review:` com o resultado e o que foi feito com cada achado.
+1. Copie as linhas de `task.progress` para o "Progress" (o Status fica `in review` depois do review gravado) e acrescente em `Review:` o que foi feito com cada achado.
 2. Mostre ao dev, curto:
    - o que entra: `git status --short` e o diff (`git diff HEAD` e os arquivos novos), não só a lista de arquivos;
    - a evidência gravada: RED e GREEN com comando e código de saída, e cada checagem com o código de saída;

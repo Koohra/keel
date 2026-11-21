@@ -28,7 +28,7 @@ export function storyRepo({ verification = 'node check.mjs', checks = 'Tests: `n
   sh('git', ['config', 'core.autocrlf', 'false']);
   write('keel/product.md', `# Produto\n\n## Engineering principles\n1. Nada.\n\n### Checks\n${checks}\n`);
   // check.mjs passes once src/login.js exists.
-  write('check.mjs', "import { existsSync } from 'node:fs';\nif (!existsSync('src/login.js')) { console.log('not ok 1 - abre o consentimento'); process.exit(1); }\nconsole.log('ok 1');\n");
+  write('check.mjs', "import { existsSync } from 'node:fs';\nif (!existsSync('src/login.js')) { console.log('not ok 1 - login.test.js abre o consentimento'); process.exit(1); }\nconsole.log('ok 1');\n");
   const ok = (r) => assert.equal(r.status, 0, r.stderr);
   ok(state('init', '--key', 'APP-1', '--slug', 'login', '--title', 'Login'));
   ok(state('level', 'standard', '--by', 'Ana'));

@@ -93,6 +93,33 @@ Test first: `test/evals.test.mjs` — casos das etapas 7 a 9 existem, com grader
 Verification: `claude plugin eval . --runs 1 --ablation none --trust-plugin --scaffold --allow-tools Bash Write Edit --case "implementation-*"`
 Done when: os três casos passam numa rodada, com custo registrado nas notas
 Depends on: T9
+
+## T11 — RED exige o teste de Test first: pelo nome
+Covers: R2 (AC-2.5)
+Files: `scripts/task-loop.mjs`, `test/task-loop.test.mjs`, `test/story-repo.mjs`, `evals/phases/data/APP-8-T1-test.mjs`
+New structure: none
+Test first: `test/task-loop.test.mjs` — RED que falha sem citar o nome do teste é recusado
+Verification: `node --test test/task-loop.test.mjs`
+Done when: os testes passam e os casos de eval continuam com o nome do teste na saída
+Depends on: T3
+
+## T12 — Progress espelhado e conferido
+Covers: R12 (AC-12.1, AC-12.2)
+Files: `scripts/task-loop.mjs`, `scripts/keel-state.mjs`, `test/task-loop.test.mjs`, `skills/story/phases/implementation.md`
+New structure: none
+Test first: `test/task-loop.test.mjs` — linhas do Progress na saída e approve commit recusado com Status divergente
+Verification: `node --test test/task-loop.test.mjs`
+Done when: os testes passam
+Depends on: T5
+
+## T13 — Caso de eval com comando negado
+Covers: R11 (AC-11.4)
+Files: `evals/phases/implementation-denied/**`, `evals/phases/implementation-no-bash/graders/says-not-run.md`, `test/evals.test.mjs`
+New structure: none
+Test first: `test/evals.test.mjs` — há caso da etapa 7 que libera só git no Bash
+Verification: `claude plugin eval . --runs 1 --ablation none --trust-plugin --scaffold --allow-tools "Bash(git *)" Write Edit --case implementation-denied`
+Done when: o caso passa numa rodada, com custo nas notas
+Depends on: T10
 <!-- frozen after approval: end -->
 
 ## Progress
@@ -146,11 +173,27 @@ Status: green
 RED evidence: o teste de `test/evals.test.mjs` foi escrito depois dos casos (desvio do TDD, registrado); a primeira rodada dos casos falhou de verdade: `implementation-tdd` 2 de 5 e `implementation-commit` 0 de 3, porque o sandbox do eval mascara dotfiles com /dev/null só dentro dele, e a impressão digital do código mudava entre o Bash (dentro) e o hook (fora).
 GREEN evidence: `npm test` 134 de 134. Rodada de 2026-11-21, Claude Code 2.1.330, modelo padrão do eval, uma run por caso, `--ablation none`: implementation-tdd 5 de 5 (US$ 0,19), implementation-commit 3 de 3 (US$ 0,10), implementation-no-bash 3 de 3 (US$ 0,04). Custo total das rodadas desta parte, com as que falharam: cerca de US$ 1,06.
 Review: revisor isolado (subagente, só leitura) achou 8: RED por motivo errado não era detectado em saída longa (a regex via só as 20 últimas linhas); `Status: done` sem hash fechava a task para o Stop e as dependências; `task start` aceitava qualquer commit antigo como hash; `isGitCommit` não pegava `(git commit)`, `VAR=x git commit`, `bash -c "git commit"`, `$(...)`, `/usr/bin/git`, `--git-dir x` nem merge/cherry-pick/revert/am; RED novo não zerava o GREEN; só o primeiro comando de cada item de Checks rodava; graders do caso sem Bash fracos; Stop rodava as checagens depois do commit aprovado. Todos corrigidos com teste que falhou antes (`review fixes` e `a real node --test run` em test/task-loop.test.mjs) e o Stop ganhou `timeout` de 900 s.
+### T11
+Status: green
+RED evidence: `node --test test/task-loop.test.mjs` 1 de 12 falhou (RED sem o nome do teste era aceito).
+GREEN evidence: `npm test` 135 de 135; as saídas de teste dos fixtures passaram a citar o nome de `Test first:`.
+Review: decisão do Miguel no review do PR (2026-11-21), base no checklist do Seemann.
+### T12
+Status: green
+RED evidence: `node --test test/task-loop.test.mjs` 1 de 13 falhou (sem `progress` no next e sem conferência do Status).
+GREEN evidence: `npm test` 136 de 136; os testes que aprovam commit passaram a pôr `Status: in review` antes.
+Review: decisão do Miguel no review do PR (2026-11-21).
+### T13
+Status: green
+RED evidence: `node --test test/evals.test.mjs` 1 de 5 falhou (não havia o caso implementation-denied).
+GREEN evidence: `npm test` 137 de 137. Rodada de 2026-11-21, uma run por caso: implementation-denied 4 de 4 (US$ 0,06; a rodada de teste antes custou mais US$ 0,06), e de novo implementation-tdd 5 de 5 (US$ 0,23), implementation-commit 3 de 3 (US$ 0,11) e implementation-no-bash 3 de 3 (US$ 0,04). Custo total da parte: cerca de US$ 1,55.
+Review: decisão do Miguel no review do PR (2026-11-21).
 
 ## Implementation notes
 - A evidência do loop (RED, GREEN, checagens, review e aprovação do commit) fica no state.json, gravada pelo `keel-state.mjs`, que roda os comandos; o "Progress" do tasks.md continua com Status e um resumo para o dev.
 - A impressão digital do código ignora `keel/features/` e arquivos que não são regulares: o sandbox do `plugin eval` põe dotfiles como /dev/null dentro do Bash, e os hooks rodam fora dele.
 - `isGitCommit` erra para o lado do "sim": `echo git commit` também é barrado na implementação; o custo é uma mensagem do hook.
+- O caso com comando negado roda com `--allow-tools "Bash(git *)" Write Edit`: o `node` é negado de verdade (modo don't ask) e o git continua liberado.
 - O caso sem Bash roda sem `Bash` no `--allow-tools`: `TMPDIR=$HOME/evaltmp claude plugin eval . --runs 1 --ablation none --trust-plugin --scaffold --allow-tools Write Edit --case implementation-no-bash`. Os outros dois com `--allow-tools Bash Write Edit`, um `--case` por vez.
 
 ## Convergence (filled at the end, checked by script)
