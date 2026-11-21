@@ -52,7 +52,7 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
 
 ## 7. Commit aprovado
 Só com a aprovação escrita do dev nesta conversa, depois de ele ver a proposta:
-1. `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" approve commit --by "<dev>"`
+1. `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" approve commit --by "<dev>"` (sozinho, num comando à parte: o hook confere o `git commit` antes de o comando todo rodar)
 2. `git add` dos arquivos da task e da pasta da história, e `git commit -m "<mensagem>"`. Um commit por task, sem mudança alheia. Se o código mudar depois da aprovação, o hook bloqueia: mostre o novo diff e peça de novo.
 3. Pegue o hash (`git rev-parse --short HEAD`) e marque no "Progress": `Status: done (<hash>)`.
 4. Volte ao passo 1 para a próxima task. Quando todas estiverem `done`, peça para avançar com `advance`.

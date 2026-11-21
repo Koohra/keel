@@ -19,9 +19,9 @@ test('a skill story declara nome, descrição e só pré-autoriza os scripts do 
   assert.match(meta['allowed-tools'], /^Bash\(node "?\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/\*/);
 });
 
-test('cada fase da triagem à implementação tem instruções na skill', () => {
+test('cada fase da triagem ao fechamento tem instruções na skill', () => {
   const phases = readJson('workflow/workflow.json').phases;
-  for (const id of ['triage', 'reading', 'requirements', 'confirmation', 'design', 'tasks', 'implementation']) {
+  for (const id of ['triage', 'reading', 'requirements', 'confirmation', 'design', 'tasks', 'implementation', 'closing']) {
     const phase = phases.find((p) => p.id === id);
     assert.ok(existsSync(join(root, 'skills/story', phase.instructions)), `${id}: falta ${phase.instructions}`);
   }
@@ -64,4 +64,14 @@ test('o revisor tem a revisão de task com a rubrica de design', () => {
   }
   assert.match(section, /no máximo 5 achados/);
   assert.match(section, /BLOQUEIA.*REMOVER.*SUGERIR/s);
+});
+
+test('o fechamento copia a convergência, vira regra faltante em task, aprova deltas com a palavra do dev e confere a história (AC-7.1)', () => {
+  const text = read('skills/story/phases/closing.md');
+  for (const command of ['next', 'approve deltas', 'advance']) assert.match(text, new RegExp(`keel-state\\.mjs"? ${command}`), command);
+  assert.match(text, /check-feature\.mjs"? <pasta-da-história> --pr/);
+  assert.match(text, /task nova/);
+  assert.match(text, /Original story/);
+  assert.match(text, /adicionado, modificado e removido/);
+  assert.match(text, /ADR candidate\?/);
 });

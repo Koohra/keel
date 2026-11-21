@@ -8,12 +8,14 @@
 # Documents come from data/: <KEY>-draft.md, <KEY>-complete.md and, when present, <KEY>-design.md
 # and <KEY>-tasks.md (copied as drafts in the tasks phase, approved from implementation on).
 # commit-ready also uses <KEY>-T1-test.mjs (appended to test/users.test.mjs) and <KEY>-T1-users.js.
+# closing: every task done in its own commit, with <KEY>-closing-tasks.md as the plan and the code of
+# <KEY>-T1/T2 (users.js and tests) and <KEY>-T3-server.test.mjs; the story waits in the closing phase.
 set -euo pipefail
 key="$1"; slug="$2"; title="$3"; phase="$4"; level="${5:-standard}"
 plugin="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 data="$plugin/evals/phases/data"
 state() { node "$plugin/scripts/keel-state.mjs" "$@" > /dev/null; }
-implementing() { [ "$phase" = implementation ] || [ "$phase" = commit-ready ]; }
+implementing() { [ "$phase" = implementation ] || [ "$phase" = commit-ready ] || [ "$phase" = closing ]; }
 past_confirmation() { [ "$phase" = design ] || [ "$phase" = tasks ] || implementing; }
 
 cp -R "$plugin/fixtures/node-mini/." .
@@ -50,7 +52,7 @@ if [ "$phase" = tasks ] && [ -f "$data/$key-tasks.md" ]; then
   cp "$data/$key-tasks.md" "$folder/tasks.md"
 fi
 if implementing; then
-  cp "$data/$key-tasks.md" "$folder/tasks.md"
+  if [ "$phase" = closing ]; then cp "$data/$key-closing-tasks.md" "$folder/tasks.md"; else cp "$data/$key-tasks.md" "$folder/tasks.md"; fi
   state approve tasks.md --by Ana
   state advance
 fi
@@ -65,4 +67,20 @@ if [ "$phase" = commit-ready ]; then
   state checks
   state review task --result ok
   node -e "const fs = require('fs'); const f = process.argv[1]; fs.writeFileSync(f, fs.readFileSync(f, 'utf8').replace('Status: pending', 'Status: in review'))" "$folder/tasks.md"
+fi
+if [ "$phase" = closing ]; then
+  done_task() {
+    git add -A
+    git commit -q -m "$key $1"
+    node -e "const fs = require('fs'); const [f, id, hash] = process.argv.slice(1); fs.writeFileSync(f, fs.readFileSync(f, 'utf8').replace(new RegExp('(### ' + id + '\\nStatus: )pending'), '\$1done (' + hash + ')'))" "$folder/tasks.md" "$1" "$(git rev-parse --short HEAD)"
+  }
+  cat "$data/$key-T1-test.mjs" >> test/users.test.mjs
+  cp "$data/$key-T1-users.js" src/users.js
+  done_task T1
+  cat "$data/$key-T2-test.mjs" >> test/users.test.mjs
+  cp "$data/$key-T2-users.js" src/users.js
+  done_task T2
+  cp "$data/$key-T3-server.test.mjs" test/server.test.mjs
+  done_task T3
+  state advance
 fi

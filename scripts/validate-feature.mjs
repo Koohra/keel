@@ -44,7 +44,7 @@ function frozenErrors(text) {
 }
 
 // Splits the markdown into level-2 sections: [{ title, body }].
-function sections(text) {
+export function sections(text) {
   const result = [];
   for (const line of text.replace(/\r\n/g, '\n').split('\n')) {
     if (line.startsWith('## ')) result.push({ title: line.slice(3).trim(), body: [] });
@@ -120,7 +120,7 @@ const EMPTY_CELL = /^[\s—–-]*$/;
 // "No new structure" in the design section or in a task's New structure: field.
 const NO_VALUE = /^\s*(none|nenhuma|not applicable|[—–-])\s*\.?\s*$/i;
 
-function tableRows(body) {
+export function tableRows(body) {
   const rows = body.split('\n').filter((l) => l.trim().startsWith('|'))
     .map((l) => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim()));
   return rows.slice(1).filter((cells) => !cells.every((c) => /^:?-+:?$/.test(c)));
@@ -249,6 +249,7 @@ export function validateTasks(text) {
     if (!progress) errors.push(`${id} has no entry in "Progress" (### ${id} with Status:)`);
     else if (!STATUS.test(progress.Status ?? '')) errors.push(`${id}: invalid Status "${progress.Status ?? ''}"`);
     for (const name of REQUIRED_TASK_FIELDS) if (!fields[name]) errors.push(`${id} has no ${name}:`);
+    if (fields.Files && !/`[^`]+`/.test(fields.Files)) errors.push(`${id}: Files: put each path or glob in backticks (\`src/a.js\`, \`test/**\`)`);
     if (fields['Test first'] && !/\S\s+[—-]\s+\S/.test(fields['Test first'])) {
       errors.push(`${id}: Test first: needs "<test name> — <what it checks>"`);
     }

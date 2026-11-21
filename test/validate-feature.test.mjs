@@ -233,3 +233,9 @@ test('CLI exits with 1 and lists errors per file', () => {
   assert.equal(bad.status, 1);
   assert.match(bad.stderr, /requirements\.md or tasks\.md/);
 });
+
+test('tasks.md: Files: lists paths in backticks, as the task loop and check-feature read them', () => {
+  const tasks = tasksDoc().replace('Files: `src/session.js`', 'Files: src/session.js');
+  assert.match(validateTasks(tasks).join('\n'), /T2: Files: put each path or glob in backticks/);
+  assert.match(read('templates/tasks.md'), /^Files: `<path>`/m);
+});

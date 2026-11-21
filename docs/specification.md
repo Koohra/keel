@@ -370,7 +370,11 @@ Cada critério tem o formato `<tipo>[:<alvo>][?]`. O `?` final faz o critério v
 | `approval:<doc>` | o dev aprovou e o hash do documento ainda é o aprovado |
 | `coverage:rules->tasks->tests` | toda regra tem task com teste e toda task cobre regra existente |
 | `tasks:all-done` | toda task do tasks.md está com `Status: done` |
-| `convergence`, `approval:deltas`, `arch` | ainda sem verificador (parte 6, que usa o `arch-check.mjs` da parte 7): o script recusa avançar e diz isso |
+| `convergence:all-rules` | toda regra está `met` (cada task que a cobre tem `Status: done (<hash>)` de um commit real e cada AC dela é citado no `Covers:` de uma task) e a tabela "Convergence" do tasks.md tem as mesmas linhas que o script devolveu |
+| `arch:baseline-not-grown` | o `arch-check.mjs` completo não acha violação nova e a baseline não ganhou chave desde a base da história; sem `keel/architecture.json` fica `skipped` e não bloqueia |
+| `approval:deltas?` | vale só se `keel/product.md` ou `keel/adrs/` mudaram desde a base da história; então o dev aprovou (`approve deltas --by <dev>`) e o hash do conteúdo ainda é o aprovado |
+
+Na fase closing, cada comando do `keel-state.mjs` recalcula e grava em `steps.closing` a convergência, a arquitetura e os deltas, e o `next` devolve as linhas prontas da tabela. A base da história é o pai do commit de task mais antigo do "Progress"; sem commit de task, é o HEAD. O `check-feature.mjs <pasta>` confere a história fechada item por item (documentos, state.json em `done` com aprovações válidas, um commit real por task, cada commit dentro do `Files:` da task ou da pasta da história, checagens do product.md, convergência, arquitetura e deltas) e, com `--pr`, imprime a descrição do PR com a evidência por regra.
 
 O `taskExit` da implementação é conferido pelo loop da task, na parte 5. O hash da aprovação cobre só o bloco entre `<!-- frozen after approval: start -->` e `<!-- frozen after approval: end -->`, como o `<frozen-after-approval>` do BMAD. No tasks.md o plano das tasks fica dentro do bloco, e o andamento (`## Progress` com Status, evidências e review de cada task), as notas e a convergência ficam fora; assim marcar uma task como feita não vence a aprovação. No requirements.md e no design.md o cabeçalho com `Status:` fica fora e o resto dentro, inclusive "Changes after confirmation", que pede reaprovação.
 
@@ -567,7 +571,7 @@ Approved by <dev> on <date>
 <!-- frozen after approval: start -->
 ## T1 — Walking skeleton: <minimal end-to-end path>
 Covers: R1 (AC-1.1)
-Files: <paths>
+Files: `<path>`, `<glob>`
 New structure: none | <element> (<kind>)
 Test first: <test name> — <what it checks>
 Verification: `<command>`
@@ -716,10 +720,10 @@ O Keel traduz esse arquivo para a ferramenta nativa (ArchUnit, Konsist, NetArchT
     "design":       { "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
     "tasks":        { "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
     "implementation": { "currentTask": null, "blocked": null, "red": null, "green": null, "checks": null, "review": null, "commit": null },
-    "closing":      { "convergence": false, "deltasApproved": false, "pullRequest": null }
+    "closing":      { "convergence": null, "arch": null, "deltas": null, "deltasApproved": null, "pullRequest": null }
   },
   "updatedAt": "2026-11-20T11:42:00Z"
 }
 ```
 
-Valores de `level`: `trivial`, `standard`, `with-design`. Na implementação, `red` e `green` guardam comando, código de saída, trecho da saída e hora do `Verification:` da task aberta; `checks` guarda o resultado de cada comando de "Checks" do product.md e a impressão digital do código; `review` e `commit` guardam o review isolado e a aprovação do commit. Tudo isso é da task aberta e zera no `task start` seguinte. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente). O state.json não repete o que os arquivos já dizem (perguntas abertas, documento gerado, design exigido): o script lê os arquivos.
+Valores de `level`: `trivial`, `standard`, `with-design`. Na implementação, `red` e `green` guardam comando, código de saída, trecho da saída e hora do `Verification:` da task aberta; `checks` guarda o resultado de cada comando de "Checks" do product.md e a impressão digital do código; `review` e `commit` guardam o review isolado e a aprovação do commit. Tudo isso é da task aberta e zera no `task start` seguinte. No fechamento, `convergence` guarda as linhas da tabela (regra, evidência, situação), `arch` o status (`ok`, `fail` ou `skipped`), as violações novas e as chaves que a baseline ganhou, `deltas` os arquivos de `keel/product.md` e `keel/adrs/` mudados desde a base e o hash do conteúdo deles, e `deltasApproved` quem aprovou, quando e o hash aprovado. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente). O state.json não repete o que os arquivos já dizem (perguntas abertas, documento gerado, design exigido): o script lê os arquivos.

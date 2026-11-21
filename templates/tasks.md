@@ -6,7 +6,7 @@ Approved by <dev> on <date>
 <!-- frozen after approval: start -->
 ## T1 — Walking skeleton: <minimal end-to-end path>
 Covers: R1 (AC-1.1)
-Files: <paths>
+Files: `<path>`, `<glob>`
 New structure: none | <element> (<kind>)
 Test first: <test name> — <what it checks>
 Verification: `<command>`

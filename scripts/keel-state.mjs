@@ -18,11 +18,14 @@ import {
   approveCommit, blockTask, checkCommands, evidenceCommand, failedChecks, recordChecks, recordEvidence, recordTaskReview,
   startTask, taskView,
 } from './task-loop.mjs';
+import { commitInHistory } from './git.mjs';
+import {
+  approveDeltas, archResult, closingView, convergenceResult, deltasResult, gatherClosing, recordClosing,
+} from './closing.mjs';
 
 export const LEVELS = ['trivial', 'standard', 'with-design'];
 const DOC_STEPS = { 'requirements.md': 'requirements', 'design.md': 'design', 'tasks.md': 'tasks' };
 const REVIEW_RESULTS = ['ok', 'findings', 'unavailable'];
-const PENDING_PARTS = { convergence: 6, 'approval:deltas': 6, arch: 6 };
 
 // Only the frozen block goes into the hash: progress, notes and header change without expiring the approval.
 export function approvalHash(text) {
@@ -45,7 +48,7 @@ export function newState({ key, slug, title, source = null, branch, now }) {
       design: approvalStep(),
       tasks: approvalStep(),
       implementation: { currentTask: null, blocked: null, red: null, green: null, checks: null, review: null, commit: null },
-      closing: { convergence: false, deltasApproved: false, pullRequest: null },
+      closing: { convergence: null, arch: null, deltas: null, deltasApproved: null, pullRequest: null },
     },
     updatedAt: now,
   };
@@ -70,6 +73,7 @@ function docErrors(doc, docs) {
 const CRITERIA = {
   approval: (target, { state, docs }) => {
     if (target === 'level') return result(state.steps.triage.done, 'level not confirmed: run level <level> --by <dev>');
+    if (target === 'deltas') return deltasResult(state);
     const step = state.steps[DOC_STEPS[target]];
     if (!step) return null;
     if (!step.approved) return result(false, `${target} not approved by the dev`);
@@ -99,6 +103,8 @@ const CRITERIA = {
     const errors = checkCoverage(docs['tasks.md'], docs['requirements.md']);
     return result(errors.length === 0, errors.join('; '));
   },
+  convergence: (target, { state, docs }) => (target === 'all-rules' ? convergenceResult(state, docs) : null),
+  arch: (target, { state }) => (target === 'baseline-not-grown' ? archResult(state) : null),
   tasks: (target, { docs }) => {
     if (target !== 'all-done') return null;
     return result(docs['tasks.md'] != null && tasksDone(docs['tasks.md']), 'tasks.md has a task without Status: done');
@@ -109,8 +115,6 @@ export function evaluate(criterion, ctx) {
   const optional = criterion.endsWith('?');
   const [kind, target] = criterion.replace(/\?$/, '').split(':');
   if (optional && DOC_STEPS[target] && !docRequired(target, ctx.state)) return { criterion, met: true };
-  const pending = PENDING_PARTS[`${kind}:${target}`] ?? PENDING_PARTS[kind];
-  if (pending) return { criterion, met: false, reason: `checker does not exist yet (part ${pending})` };
   const outcome = CRITERIA[kind]?.(target, ctx);
   return { criterion, ...(outcome ?? { met: false, reason: `unknown criterion: ${criterion}` }) };
 }
@@ -162,6 +166,7 @@ export function nextStep(state, workflow, docs, tree = {}) {
   const { state: current, expired } = reconcile(state, workflow, docs);
   const phase = workflow.phases[phaseIndex(workflow, current.phase)];
   const loop = phase.loop === 'tasks' ? taskView(current, docs['tasks.md'], tree.fingerprint, phase.taskExit) : {};
+  const closing = current.phase === 'closing' ? { closing: closingView(current) } : {};
   return {
     story: current.story.key,
     phase: current.phase,
@@ -169,6 +174,7 @@ export function nextStep(state, workflow, docs, tree = {}) {
     instructions: phase.instructions ?? null,
     missing: missingFor(phase, current, docs),
     ...loop,
+    ...closing,
     expired,
   };
 }
@@ -218,7 +224,7 @@ const APPROVAL_CHECKS = {
 };
 
 export function approve(state, doc, by, docs, workflow, now) {
-  if (!DOC_STEPS[doc]) throw new Error(`unknown document "${doc}"; use ${Object.keys(DOC_STEPS).join(', ')} or commit`);
+  if (!DOC_STEPS[doc]) throw new Error(`unknown document "${doc}"; use ${Object.keys(DOC_STEPS).join(', ')}, commit or deltas`);
   requireBy(by);
   const gate = gatePhase(workflow, doc).id;
   if (state.phase !== gate) throw new Error(`the gate of ${doc} belongs to phase ${gate}; the story is in ${state.phase}`);
@@ -303,10 +309,6 @@ export function findActiveStory(root) {
   return null;
 }
 
-function isCommit(root, hash) {
-  return spawnSync('git', ['cat-file', '-e', `${hash}^{commit}`], { cwd: root }).status === 0;
-}
-
 // Story files (documents, state.json) stay out: updating Progress does not make checks or approval stale.
 const OUTSIDE_STORY = ':(exclude)keel/features';
 
@@ -362,7 +364,7 @@ const USAGE = `usage: node scripts/keel-state.mjs <command> [--story <folder>]
   level <${LEVELS.join('|')}> --by <dev>
   generated repo-map
   review <requirements|task> --result <${REVIEW_RESULTS.join('|')}>
-  approve <${[...Object.keys(DOC_STEPS), 'commit'].join('|')}> --by <dev>
+  approve <${[...Object.keys(DOC_STEPS), 'commit', 'deltas'].join('|')}> --by <dev>
   task start <T#>
   evidence <red|green>
   checks
@@ -397,6 +399,8 @@ function run(argv, root, now) {
   const docs = readDocs(folder);
   const { state, expired } = reconcile(stored, workflow, docs);
   let updated = expired.length ? { ...state, updatedAt: now } : state;
+  // In the closing phase every command sees fresh facts: convergence, architecture and deltas.
+  if (updated.phase === 'closing') updated = recordClosing(updated, gatherClosing(root, docs), now);
   switch (command) {
     case 'next':
       break;
@@ -416,13 +420,13 @@ function run(argv, root, now) {
       updated = arg === 'task' ? recordTaskReview(updated, values.result, now) : recordReview(updated, arg, values.result, now);
       break;
     case 'approve':
-      updated = arg === 'commit'
-        ? approveCommit(updated, values.by, docs['tasks.md'], codeFingerprint(root), taskExitOf(workflow), now)
-        : approve(updated, arg, values.by, docs, workflow, now);
+      if (arg === 'commit') updated = approveCommit(updated, values.by, docs['tasks.md'], codeFingerprint(root), taskExitOf(workflow), now);
+      else if (arg === 'deltas') updated = approveDeltas(updated, values.by, now);
+      else updated = approve(updated, arg, values.by, docs, workflow, now);
       break;
     case 'task':
       if (arg !== 'start') throw new Error('use task start <T#>');
-      updated = startTask(updated, third, docs['tasks.md'], { isCommit: (hash) => isCommit(root, hash) }, now);
+      updated = startTask(updated, third, docs['tasks.md'], { isCommit: (hash) => commitInHistory(root, hash) !== null }, now);
       break;
     case 'evidence': {
       const verification = evidenceCommand(updated, arg, docs['tasks.md']);

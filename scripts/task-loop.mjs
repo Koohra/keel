@@ -32,7 +32,7 @@ function openTask(state, tasksText, action) {
   return findTask(tasksText, id);
 }
 
-const doneHash = (task) => task?.progress?.Status?.match(/^done \(([0-9a-f]{7,40})\)$/)?.[1] ?? null;
+export const doneHash = (task) => task?.progress?.Status?.match(/^done \(([0-9a-f]{7,40})\)$/)?.[1] ?? null;
 // A task counts as done only with the hash of its commit; plain "done" is not enough.
 const isDone = (task) => doneHash(task) !== null;
 
@@ -45,7 +45,7 @@ export function startTask(state, id, tasksText, git, now) {
     const hash = doneHash(findTask(tasksText, current));
     if (!hash) throw new Error(`${current} is open: commit it and mark "Status: done (<commit hash>)" in Progress before task start ${id}`);
     if (implementation(state).commit?.task !== current) throw new Error(`${current} has no approved commit: finish it (evidence, checks, review, approve commit) before task start ${id}`);
-    if (!git.isCommit(hash)) throw new Error(`${current}: ${hash} is not a commit in this repository; use the hash of the task's commit`);
+    if (!git.isCommit(hash)) throw new Error(`${current}: ${hash} is not a commit in this branch's history; use the hash of the task's commit`);
   }
   if (isDone(task)) throw new Error(`${id} is already done`);
   const byId = new Map(parseTasks(tasksText).map((t) => [t.id, t]));
@@ -59,7 +59,7 @@ const tail = (run) => ({ ...run, output: run.output.split('\n').slice(-OUTPUT_LI
 const noTest = (task) => 'No test' in task.fields;
 
 // "Test first: `<name>` — <what it checks>" → <name>.
-function testName(task) {
+export function testName(task) {
   const field = task.fields['Test first'] ?? '';
   return (field.match(/^`([^`]+)`/)?.[1] ?? field.split(/\s+[—-]\s+/)[0]).trim();
 }

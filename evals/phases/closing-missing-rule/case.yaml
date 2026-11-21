@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: closing-missing-rule
+description: Etapa 10. Todas as tasks da APP-8 estão feitas, mas nenhuma cita o AC-1.1; o fechamento acrescenta uma task nova para ele em vez de mexer no código ou marcar a regra como atendida.
+tags: [phase-10]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 30
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Edit, Agent]
+  prompt: Sou a Ana. As tasks da APP-8 estão todas feitas, pode fechar a história no Keel.
