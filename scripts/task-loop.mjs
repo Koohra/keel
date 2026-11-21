@@ -32,7 +32,7 @@ function openTask(state, tasksText, action) {
   return findTask(tasksText, id);
 }
 
-const doneHash = (task) => task?.progress?.Status?.match(/^done \(([0-9a-f]{7,40})\)$/)?.[1] ?? null;
+export const doneHash = (task) => task?.progress?.Status?.match(/^done \(([0-9a-f]{7,40})\)$/)?.[1] ?? null;
 // A task counts as done only with the hash of its commit; plain "done" is not enough.
 const isDone = (task) => doneHash(task) !== null;
 
@@ -45,7 +45,7 @@ export function startTask(state, id, tasksText, git, now) {
     const hash = doneHash(findTask(tasksText, current));
     if (!hash) throw new Error(`${current} is open: commit it and mark "Status: done (<commit hash>)" in Progress before task start ${id}`);
     if (implementation(state).commit?.task !== current) throw new Error(`${current} has no approved commit: finish it (evidence, checks, review, approve commit) before task start ${id}`);
-    if (!git.isCommit(hash)) throw new Error(`${current}: ${hash} is not a commit in this repository; use the hash of the task's commit`);
+    if (!git.isCommit(hash)) throw new Error(`${current}: ${hash} is not a commit in this branch's history; use the hash of the task's commit`);
   }
   if (isDone(task)) throw new Error(`${id} is already done`);
   const byId = new Map(parseTasks(tasksText).map((t) => [t.id, t]));
@@ -59,9 +59,22 @@ const tail = (run) => ({ ...run, output: run.output.split('\n').slice(-OUTPUT_LI
 const noTest = (task) => 'No test' in task.fields;
 
 // "Test first: `<name>` — <what it checks>" → <name>.
-function testName(task) {
+export function testName(task) {
   const field = task.fields['Test first'] ?? '';
   return (field.match(/^`([^`]+)`/)?.[1] ?? field.split(/\s+[—-]\s+/)[0]).trim();
+}
+
+// A test for behavior an earlier task already delivered passes at once; it proves it can fail with the
+// code sabotaged (outside the task's Files:) at RED, and the sabotage is undone before GREEN.
+function regressionCheck(task, kind, changed) {
+  const by = task.fields.Regression?.match(/T\d+/)?.[0];
+  if (!by) return {};
+  const outside = changed.filter((path) => isOutsideTask(path, filesOf(task)));
+  if (kind === 'red' && !outside.length) {
+    throw new Error(`${task.id}: Regression: sabotage the code delivered by ${by} (outside the task's Files:) so the test fails on an assertion, then run evidence red`);
+  }
+  if (kind === 'green' && outside.length) throw new Error(`${task.id}: undo the sabotage before evidence green: ${outside.join(', ')} still differ from HEAD`);
+  return kind === 'red' ? { sabotage: outside } : {};
 }
 
 // Command in backticks of the task's Verification:, the one approved with the plan.
@@ -76,7 +89,9 @@ export function evidenceCommand(state, kind, tasksText) {
 }
 
 // run: { command, exitCode, output } of the Verification command, run by the edge.
-export function recordEvidence(state, kind, run, tasksText, now) {
+// changed: code files that differ from HEAD (outside the story folder), from the edge; used by
+// Regression: tasks, whose RED comes from sabotaging the code that an earlier task delivered.
+export function recordEvidence(state, kind, run, tasksText, now, changed = []) {
   const { id } = openTask(state, tasksText, `evidence ${kind}`);
   evidenceCommand(state, kind, tasksText);
   if (kind === 'red' && run.exitCode === 0) {
@@ -90,9 +105,10 @@ export function recordEvidence(state, kind, run, tasksText, now) {
     throw new Error(`${id}: the test failed for the wrong reason (import or syntax error, not an assertion):\n${tail(run).output}\nCreate the module or export the test needs, empty, so the test fails on an assertion`);
   }
   if (kind === 'green' && run.exitCode !== 0) throw new Error(`${id}: GREEN needs exit 0: ${run.command} exited with ${run.exitCode}\n${tail(run).output}`);
+  const sabotage = regressionCheck(openTask(state, tasksText, `evidence ${kind}`), kind, changed);
   // A new RED makes the previous GREEN stale.
   const reset = kind === 'red' ? { green: null } : {};
-  return withImplementation(state, { ...reset, [kind]: { ...tail(run), at: now }, blocked: null }, now);
+  return withImplementation(state, { ...reset, [kind]: { ...tail(run), ...sabotage, at: now }, blocked: null }, now);
 }
 
 // "### Checks" of keel/product.md: "Architecture: `<cmd>` · Lint/complexity: não se aplica · Tests: `<cmd>`".
@@ -191,7 +207,7 @@ export function progressLines(state, tasksText) {
   const run = (label, r) => `${label}: \`${r.command}\` exited with ${r.exitCode} at ${r.at}`;
   return [
     `Status: ${recordedStatus(impl, task)}`,
-    impl.red && run('RED evidence', impl.red),
+    impl.red && `${run('RED evidence', impl.red)}${impl.red.sabotage ? ` with the code sabotaged (${impl.red.sabotage.join(', ')})` : ''}`,
     impl.green && run('GREEN evidence', impl.green),
     impl.checks && `Checks: ${impl.checks.results.map((r) => `${r.name} \`${r.command}\` exited with ${r.exitCode}`).join('; ')}`,
     impl.review && `Review: ${impl.review.result} (isolated reviewer)`,
@@ -266,7 +282,11 @@ export function checkStop(state, tasksText, fingerprint) {
 
 // Paths or globs in backticks of the task's Files:.
 export function taskFiles(tasksText, id) {
-  return [...(findTask(tasksText, id).fields.Files ?? '').matchAll(/`([^`]+)`/g)].map((m) => m[1]);
+  return filesOf(findTask(tasksText, id));
+}
+
+function filesOf(task) {
+  return [...(task.fields.Files ?? '').matchAll(/`([^`]+)`/g)].map((m) => m[1]);
 }
 
 export function isOutsideTask(path, patterns) {

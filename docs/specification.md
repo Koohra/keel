@@ -204,6 +204,7 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 - Deve dar a cada task: `Covers: R#/AC-#`, `Files:`, `Test first:` (nome e o que verifica), `Verification:` (comando), `Done when:`, `Depends on:` e status em "Progress".
 - Deve declarar em cada task os elementos estruturais novos permitidos, e separar tasks de estrutura (preparar o terreno) das tasks de comportamento.
 - Deve marcar tasks sem comportamento (configuração, scaffolding, migração simples) como `No test: <reason>`.
+- Regra que uma task anterior já entregou vira task de regressão (`Regression: delivered by T<n>`), com `Test first:` como qualquer outra.
 - Deve garantir que cada task caiba num contexto limpo: se precisar de muito contexto além das regras citadas, provavelmente são duas tasks.
 - Não deve gerar todos os testes de uma vez antes de implementar.
 
@@ -231,6 +232,7 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 - Falha causada pela task é corrigida na task; falha fora do escopo é bloqueio reportado.
 - Deve registrar em "Implementation notes" o que aprender e afetar as próximas tasks; se mudar uma regra, segue a regra 8.
 - Task sem comportamento pula RED e registra o motivo.
+- Task de regressão (`Regression: delivered by T<n>`) prova o RED sabotando o código entregue (mudança fora do `Files:` da task); o GREEN só vale com a sabotagem desfeita (Seemann, Feathers).
 
 **Práticas:** Canon TDD, um teste por vez (Beck); pedir evidência, não declaração (Anthropic, Willison); reinjetar o plano por task (Liu et al.); regras viradas em checagem com feedback (ContextCov, preprint: 88% de patches limpos contra 67% só com instruções); hooks determinísticos para o que não tem exceção (Anthropic).
 
@@ -286,8 +288,8 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 - Deve listar escolhas de implementação que se afastaram da spec.
 - Regra faltante vira task nova, acrescentada ao tasks.md; o Keel não corrige em silêncio.
 - Deve comparar o entregue com a história original para apontar desvio de escopo.
-- Deve rodar a checagem de arquitetura completa e confirmar que a baseline não cresceu, e que exemplares e regras do product.md ainda valem.
-- Se a história mudou o produto, deve propor a mudança no product.md como delta (adicionado, modificado, removido).
+- Deve rodar a checagem de arquitetura completa e confirmar que a baseline não cresceu, e que exemplares e regras do product.md ainda valem. Sem `keel/architecture.json`, só passa com a dispensa `Architecture: não se aplica` no "### Checks" do product.md.
+- Se a história mudou o produto, deve editar o product.md direto; o script mostra o delta por seção (adicionado, modificado, removido) contra a base da história.
 - Se o design gerou candidata a ADR que atende o critério de Nygard, deve propor a ADR.
 - Deve preparar a descrição do PR com resumo dos requisitos e a evidência por regra.
 
@@ -370,7 +372,11 @@ Cada critério tem o formato `<tipo>[:<alvo>][?]`. O `?` final faz o critério v
 | `approval:<doc>` | o dev aprovou e o hash do documento ainda é o aprovado |
 | `coverage:rules->tasks->tests` | toda regra tem task com teste e toda task cobre regra existente |
 | `tasks:all-done` | toda task do tasks.md está com `Status: done` |
-| `convergence`, `approval:deltas`, `arch` | ainda sem verificador (parte 6, que usa o `arch-check.mjs` da parte 7): o script recusa avançar e diz isso |
+| `convergence:all-rules` | toda regra está `met` (cada task que a cobre tem `Status: done (<hash>)` de um commit real e cada AC dela é citado no `Covers:` de uma task) e a tabela "Convergence" do tasks.md tem as mesmas linhas que o script devolveu |
+| `arch:baseline-not-grown` | o `arch-check.mjs` completo não acha violação nova e a baseline não ganhou chave desde a base da história; sem `keel/architecture.json` fica `skipped` e só passa com `Architecture: não se aplica` no "### Checks" do product.md |
+| `approval:deltas?` | vale só se `keel/product.md` ou `keel/adrs/` mudaram desde a base da história; então o dev aprovou (`approve deltas --by <dev>`) e o hash do conteúdo ainda é o aprovado |
+
+Na fase closing, cada comando do `keel-state.mjs` recalcula e grava em `steps.closing` a convergência, a arquitetura e os deltas, e o `next` devolve as linhas prontas da tabela. A base da história é o merge-base com o branch dado no `init --base` (padrão `origin/HEAD`), como o diff de três pontos de um PR; sem ele, é o pai do commit de task mais antigo do "Progress" que está no histórico, e sem commit de task é o HEAD. O `check-feature.mjs <pasta>` confere a história fechada item por item (documentos, state.json em `done` com aprovações válidas, um commit real por task, cada commit dentro do `Files:` da task ou da pasta da história, checagens do product.md, convergência, arquitetura e deltas) e, com `--pr`, imprime a descrição do PR com a evidência por regra.
 
 O `taskExit` da implementação é conferido pelo loop da task, na parte 5. O hash da aprovação cobre só o bloco entre `<!-- frozen after approval: start -->` e `<!-- frozen after approval: end -->`, como o `<frozen-after-approval>` do BMAD. No tasks.md o plano das tasks fica dentro do bloco, e o andamento (`## Progress` com Status, evidências e review de cada task), as notas e a convergência ficam fora; assim marcar uma task como feita não vence a aprovação. No requirements.md e no design.md o cabeçalho com `Status:` fica fora e o resto dentro, inclusive "Changes after confirmation", que pede reaprovação.
 
@@ -464,6 +470,10 @@ Cada parte é desenvolvida com TDD e, desde a parte 1, usando o próprio fluxo d
 | Estado da história | `state.json` por história, escrito só por script, aprovações presas a hash | 2026-11-20 |
 | Sequência do fluxo | `workflow.json` no plugin; a IA pergunta o próximo passo ao script em vez de decidir | 2026-11-20 |
 | Testes | Quatro camadas enxutas, sem qualificação por hash nem resultados no repo | 2026-11-20 |
+| Regra já entregue | Task de regressão com RED por sabotagem do código entregue (Seemann, Feathers) | 2026-11-21 |
+| Base da história no fechamento | merge-base com o branch do `init --base`, como o diff de três pontos do PR | 2026-11-21 |
+| Delta de product.md e ADR | Edição direta; o script mostra o delta por seção e por arquivo de ADR (OpenSpec) | 2026-11-21 |
+| Sem architecture.json | Bloqueia o fechamento, salvo dispensa `Architecture: não se aplica` no product.md | 2026-11-21 |
 | Hosts | Só Claude Code; Codex adiado | 2026-11-18 |
 | Repo | Repo novo, do zero, com o nome Keel; keel-dev depreciado, sem tag rc.1 | 2026-11-18 |
 
@@ -567,7 +577,7 @@ Approved by <dev> on <date>
 <!-- frozen after approval: start -->
 ## T1 — Walking skeleton: <minimal end-to-end path>
 Covers: R1 (AC-1.1)
-Files: <paths>
+Files: `<path>`, `<glob>`
 New structure: none | <element> (<kind>)
 Test first: <test name> — <what it checks>
 Verification: `<command>`
@@ -581,6 +591,12 @@ Covers: R2 (AC-2.1)
 ## T3 — <task with no behavior>
 Covers: R1
 No test: <reason>
+...
+
+## T4 — <rule already delivered by an earlier task>
+Covers: R3 (AC-3.1)
+Regression: delivered by T2
+Test first: <test name> — <what it checks>
 ...
 <!-- frozen after approval: end -->
 
@@ -705,7 +721,8 @@ O Keel traduz esse arquivo para a ferramenta nativa (ArchUnit, Konsist, NetArchT
     "title": "Login com Google",
     "source": "https://<jira>/browse/STUD-142",
     "folder": "keel/features/STUD-142-login-google",
-    "branch": "feat/STUD-142-login-google"
+    "branch": "feat/STUD-142-login-google",
+    "base": "origin/main"
   },
   "level": "standard",
   "phase": "confirmation",
@@ -716,10 +733,10 @@ O Keel traduz esse arquivo para a ferramenta nativa (ArchUnit, Konsist, NetArchT
     "design":       { "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
     "tasks":        { "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
     "implementation": { "currentTask": null, "blocked": null, "red": null, "green": null, "checks": null, "review": null, "commit": null },
-    "closing":      { "convergence": false, "deltasApproved": false, "pullRequest": null }
+    "closing":      { "convergence": null, "arch": null, "deltas": null, "deltasApproved": null, "pullRequest": null }
   },
   "updatedAt": "2026-11-20T11:42:00Z"
 }
 ```
 
-Valores de `level`: `trivial`, `standard`, `with-design`. Na implementação, `red` e `green` guardam comando, código de saída, trecho da saída e hora do `Verification:` da task aberta; `checks` guarda o resultado de cada comando de "Checks" do product.md e a impressão digital do código; `review` e `commit` guardam o review isolado e a aprovação do commit. Tudo isso é da task aberta e zera no `task start` seguinte. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente). O state.json não repete o que os arquivos já dizem (perguntas abertas, documento gerado, design exigido): o script lê os arquivos.
+Valores de `level`: `trivial`, `standard`, `with-design`. Na implementação, `red` e `green` guardam comando, código de saída, trecho da saída e hora do `Verification:` da task aberta (o `red` de uma task de regressão guarda também os arquivos sabotados); `checks` guarda o resultado de cada comando de "Checks" do product.md e a impressão digital do código; `review` e `commit` guardam o review isolado e a aprovação do commit. Tudo isso é da task aberta e zera no `task start` seguinte. No fechamento, `convergence` guarda as linhas da tabela (regra, evidência, situação), `arch` o status (`ok`, `fail` ou `skipped`), as violações novas e as chaves que a baseline ganhou, `deltas` os arquivos de `keel/product.md` e `keel/adrs/` mudados desde a base, o delta por seção e o hash do conteúdo deles, e `deltasApproved` quem aprovou, quando e o hash aprovado. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente). O state.json não repete o que os arquivos já dizem (perguntas abertas, documento gerado, design exigido): o script lê os arquivos.

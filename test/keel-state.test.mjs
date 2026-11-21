@@ -70,7 +70,7 @@ test('an open question blocks leaving requirements', () => {
   assert.deepEqual(result.missing.map((m) => m.criterion), ['noOpenQuestions']);
 });
 
-test('standard level skips design and reaches closing; closing refuses without a checker', () => {
+test('standard level skips design and reaches closing; closing refuses until the closing facts are recorded', () => {
   const impl = walkTo('implementation');
   assert.equal(impl.steps.requirements.approvedBy, 'Ana');
   assert.equal(impl.steps.requirements.hash, approvalHash(requirementsDoc()));
@@ -81,7 +81,8 @@ test('standard level skips design and reaches closing; closing refuses without a
   const closing = advance(impl, workflow, docs, now).state;
   assert.equal(closing.phase, 'closing');
   const refused = advance(closing, workflow, docs, now);
-  assert.match(refused.missing[0].reason, /checker does not exist yet \(part 6\)/);
+  assert.equal(refused.missing[0].criterion, 'convergence:all-rules');
+  assert.match(refused.missing[0].reason, /convergence not computed: run next/);
 });
 
 test('with-design level goes through design and requires approving design.md', () => {

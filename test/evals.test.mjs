@@ -43,3 +43,10 @@ test('denied command has its own case: only git allowed in Bash, run with --allo
   assert.ok(denied, 'implementation-denied');
   assert.match(read(`${denied}/case.yaml`), /--allow-tools "Bash\(git \*\)"/);
 });
+
+test('stage 10 has a case: a missing rule at closing becomes a new task, run on a fixture with every task done', () => {
+  const closing = cases.find((c) => c.endsWith('/closing-missing-rule'));
+  assert.ok(closing, 'closing-missing-rule');
+  assert.match(read(`${closing}/case.yaml`), /tags: \[phase-10\]/);
+  assert.match(read(`${closing}/fixture.sh`), /prepare\.sh" APP-8 \S+ "[^"]+" closing$/m);
+});

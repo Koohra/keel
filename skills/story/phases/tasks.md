@@ -8,12 +8,13 @@ Objetivo: quebrar a história em tasks pequenas, sequenciadas e testáveis. Port
 4. As próximas tasks são fatias verticais: uma regra ou uma variação por vez (caminho feliz, depois cada erro ou borda). Tasks de estrutura (preparar o terreno) ficam separadas das de comportamento.
 5. Cada task, dentro do bloco congelado, com estes campos:
    - `Covers:` as regras e critérios, como `R2 (AC-2.1)`. No trivial, o próprio critério: `Covers: GIVEN ... WHEN ... THEN ...`.
-   - `Files:` os arquivos que a task cria ou muda.
+   - `Files:` os arquivos que a task cria ou muda, cada um entre crases.
    - `New structure:` `none`, ou os elementos da tabela do design.md que a task cria, como `UserStore (interface)`. Sem design.md, declare o que for criado; estrutura que pede justificativa é gatilho de design: fale com o dev.
    - `Test first:` `<nome do teste> — <o que ele verifica>`. Task sem comportamento (configuração, scaffolding, migração simples) usa `No test: <motivo>` no lugar.
    - `Verification:` o comando entre crases, tirado de "Checks" do product.md quando existir.
    - `Done when:` a condição observável.
    - `Depends on:` `—` ou as tasks anteriores.
+   - `Regression: delivered by T<n>` só quando o comportamento que a task testa já existe ou vai existir pelo código de uma task anterior (o teste passaria de primeira). A task traz só o teste: `Files:` lista só os arquivos de teste, e o RED vem de sabotar o código de T<n> (veja a implementação). Antes de planejar, procure no código e nas tasks anteriores se o comportamento já existe.
 6. Cada task cabe num contexto limpo: se precisa de muito mais do que as regras que cita, são duas tasks.
 7. Fora do bloco: `## Progress` com `### T<n>` e `Status: pending` para cada task, "Implementation notes" com "not applicable" e a tabela de "Convergence" só com o cabeçalho.
 8. Não escreva testes nem código agora: só o plano. Os testes nascem um por vez, na implementação.

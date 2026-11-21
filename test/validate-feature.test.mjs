@@ -233,3 +233,18 @@ test('CLI exits with 1 and lists errors per file', () => {
   assert.equal(bad.status, 1);
   assert.match(bad.stderr, /requirements\.md or tasks\.md/);
 });
+
+test('tasks.md: Files: lists paths in backticks, as the task loop and check-feature read them', () => {
+  const tasks = tasksDoc().replace('Files: `src/session.js`', 'Files: src/session.js');
+  assert.match(validateTasks(tasks).join('\n'), /T2: Files: put each path or glob in backticks/);
+  assert.match(read('templates/tasks.md'), /^Files: `<path>`/m);
+});
+
+test('tasks.md: Regression: names the task that delivered the behavior, and the task keeps its test', () => {
+  const ok = tasksDoc().replace('Files: `src/session.js`', 'Files: `test/session.test.js`\nRegression: delivered by T1');
+  assert.deepEqual(validateTasks(ok), []);
+  const missing = tasksDoc().replace('Files: `src/session.js`', 'Files: `src/session.js`\nRegression: delivered by T9');
+  assert.match(validateTasks(missing).join('\n'), /T2: Regression: T9 does not exist/);
+  const malformed = tasksDoc().replace('Files: `src/session.js`', 'Files: `src/session.js`\nRegression: yes');
+  assert.match(validateTasks(malformed).join('\n'), /T2: Regression: write "delivered by T<n>"/);
+});
