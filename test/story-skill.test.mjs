@@ -19,9 +19,9 @@ test('a skill story declara nome, descrição e só pré-autoriza os scripts do 
   assert.match(meta['allowed-tools'], /^Bash\(node "?\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/\*/);
 });
 
-test('cada fase da triagem às tasks tem instruções na skill', () => {
+test('cada fase da triagem à implementação tem instruções na skill', () => {
   const phases = readJson('workflow/workflow.json').phases;
-  for (const id of ['triage', 'reading', 'requirements', 'confirmation', 'design', 'tasks']) {
+  for (const id of ['triage', 'reading', 'requirements', 'confirmation', 'design', 'tasks', 'implementation']) {
     const phase = phases.find((p) => p.id === id);
     assert.ok(existsSync(join(root, 'skills/story', phase.instructions)), `${id}: falta ${phase.instructions}`);
   }
@@ -43,4 +43,25 @@ test('o revisor isolado só lê', () => {
   const meta = frontmatter(read('agents/reviewer.md'));
   assert.equal(meta.name, 'reviewer');
   assert.deepEqual(meta.tools.split(',').map((t) => t.trim()), ['Read', 'Grep', 'Glob']);
+});
+
+test('a implementação grava evidência por script, chama o revisor e só commita com a palavra do dev (AC-10.1)', () => {
+  const text = read('skills/story/phases/implementation.md');
+  for (const command of ['task start', 'evidence red', 'evidence green', 'checks', 'review task', 'approve commit', 'block']) {
+    assert.match(text, new RegExp(`keel-state\\.mjs"? ${command}`), command);
+  }
+  assert.match(text, /task-metrics\.mjs/);
+  assert.match(text, /keel:reviewer/);
+  assert.match(text, /git diff/);
+});
+
+test('o revisor tem a revisão de task com a rubrica de design', () => {
+  const text = read('agents/reviewer.md');
+  const section = text.slice(text.indexOf('## Revisão de task'));
+  assert.ok(text.includes('## Revisão de task'));
+  for (const item of ['Regra de negócio fora do lugar', 'Estrutura sem justificativa', 'Reuso', 'Escopo e sobra', 'Erros', 'Degrau', 'Legibilidade', 'teste afrouxado']) {
+    assert.ok(section.includes(item), item);
+  }
+  assert.match(section, /no máximo 5 achados/);
+  assert.match(section, /BLOQUEIA.*REMOVER.*SUGERIR/s);
 });

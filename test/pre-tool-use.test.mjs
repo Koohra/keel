@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { root, readJson } from './helpers.mjs';
@@ -9,6 +9,7 @@ import {
   checkEdit, checkCommand, newState, setLevel, recordGenerated, recordReview, approve, advance,
 } from '../scripts/keel-state.mjs';
 import { requirementsDoc, tasksDoc } from './fixtures.mjs';
+import { storyRepo } from './story-repo.mjs';
 
 const workflow = readJson('workflow/workflow.json');
 const hook = join(root, 'scripts', 'hooks', 'pre-tool-use.mjs');
@@ -110,4 +111,32 @@ test('hooks.json registers PreToolUse on the edit tools and on Bash', () => {
   const entry = readJson('hooks/hooks.json').hooks.PreToolUse[0];
   assert.equal(entry.matcher, 'Write|Edit|MultiEdit|NotebookEdit|Bash');
   assert.match(entry.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/hooks\/pre-tool-use\.mjs/);
+});
+
+test('hook blocks git commit in implementation until the dev approves the commit of the same code (AC-5.2, AC-5.3, AC-5.4)', () => {
+  const repo = storyRepo();
+  try {
+    const commit = () => spawnSync(process.execPath, [hook], {
+      input: JSON.stringify({ tool_name: 'Bash', tool_input: { command: 'git add -A && git commit -m "APP-1 T1"' }, cwd: repo.dir }),
+      encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: repo.dir },
+    });
+    repo.state('task', 'start', 'T1');
+    repo.state('evidence', 'red');
+    repo.write('src/login.js', 'export const login = 1;\n');
+    repo.state('evidence', 'green');
+    repo.state('checks');
+    repo.state('review', 'task', '--result', 'ok');
+    const blocked = commit();
+    assert.equal(blocked.status, 2);
+    assert.match(blocked.stderr, /the dev has not approved the commit of T1/);
+    const tasksFile = join(repo.dir, repo.folder, 'tasks.md');
+    writeFileSync(tasksFile, readFileSync(tasksFile, 'utf8').replace('Status: pending', 'Status: in review'));
+    const approved = repo.state('approve', 'commit', '--by', 'Ana');
+    assert.equal(approved.status, 0, approved.stderr);
+    assert.equal(commit().status, 0);
+    repo.write('src/login.js', 'export const login = 2;\n');
+    assert.match(commit().stderr, /code changed after the dev approved the commit/);
+  } finally {
+    repo.cleanup();
+  }
 });

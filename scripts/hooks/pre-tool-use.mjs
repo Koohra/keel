@@ -1,18 +1,46 @@
 #!/usr/bin/env node
-// PreToolUse hook: blocks writes to state.json (by edit or terminal) and code edits
-// outside the phase that allows them.
+// PreToolUse hook: blocks writes to state.json (by edit or terminal), code edits outside the
+// phase that allows them and, in the implementation, git commit without the dev's approval.
 // Reads the event from stdin; exits with 2 (block, reason on stderr) or 0 (allow).
 import { readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { checkCommand, checkEdit, findActiveStory, isProjectSource, loadWorkflow, reconcile } from '../keel-state.mjs';
+import {
+  checkCommand, checkEdit, codeFingerprint, findActiveStory, isProjectSource, loadWorkflow, reconcile,
+} from '../keel-state.mjs';
+import { checkGitCommit, isGitCommit } from '../task-loop.mjs';
 import { readDocs } from '../validate-feature.mjs';
+
+function block(reason) {
+  console.error(reason);
+  process.exit(2);
+}
+
+// Without an active story git commit is not the Keel's business; an unreadable state.json blocks it.
+function gitCommitDecision(root) {
+  const active = findActiveStory(root);
+  if (!active) return { block: false };
+  const docs = readDocs(active.folder);
+  const state = reconcile(active.state, loadWorkflow(), docs).state;
+  if (state.phase !== 'implementation') return { block: false };
+  return checkGitCommit(state, docs['tasks.md'], codeFingerprint(root));
+}
 
 const event = JSON.parse(readFileSync(0, 'utf8'));
 const root = process.env.CLAUDE_PROJECT_DIR ?? event.cwd;
 if (event.tool_name === 'Bash') {
-  const decision = checkCommand(event.tool_input?.command ?? '');
-  if (decision.block) console.error(decision.reason);
-  process.exit(decision.block ? 2 : 0);
+  const command = event.tool_input?.command ?? '';
+  const decision = checkCommand(command);
+  if (decision.block) block(decision.reason);
+  if (isGitCommit(command)) {
+    let commit;
+    try {
+      commit = gitCommitDecision(root);
+    } catch (error) {
+      block(error.message);
+    }
+    if (commit.block) block(commit.reason);
+  }
+  process.exit(0);
 }
 const target = event.tool_input?.file_path ?? event.tool_input?.notebook_path;
 if (!target) process.exit(0);

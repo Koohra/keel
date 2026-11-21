@@ -2,15 +2,19 @@
 # Prepares a case workspace: copies fixtures/node-mini, creates the story branch and takes
 # state.json to the requested phase using keel-state.mjs itself.
 # Usage (from a fixture.sh): "$(dirname "$0")/../prepare.sh" <KEY> <slug> <title> <phase> [level]
-# Phases: triage, reading, requirements, confirmation, design, tasks. Level: standard (default) or with-design.
+# Phases: triage, reading, requirements, confirmation, design, tasks, implementation and commit-ready
+# (T1 open with RED, GREEN, checks and review recorded, waiting for the commit approval).
+# Level: standard (default) or with-design.
 # Documents come from data/: <KEY>-draft.md, <KEY>-complete.md and, when present, <KEY>-design.md
-# and <KEY>-tasks.md (copied as drafts in the tasks phase).
+# and <KEY>-tasks.md (copied as drafts in the tasks phase, approved from implementation on).
+# commit-ready also uses <KEY>-T1-test.mjs (appended to test/users.test.mjs) and <KEY>-T1-users.js.
 set -euo pipefail
 key="$1"; slug="$2"; title="$3"; phase="$4"; level="${5:-standard}"
 plugin="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 data="$plugin/evals/phases/data"
 state() { node "$plugin/scripts/keel-state.mjs" "$@" > /dev/null; }
-past_confirmation() { [ "$phase" = design ] || [ "$phase" = tasks ]; }
+implementing() { [ "$phase" = implementation ] || [ "$phase" = commit-ready ]; }
+past_confirmation() { [ "$phase" = design ] || [ "$phase" = tasks ] || implementing; }
 
 cp -R "$plugin/fixtures/node-mini/." .
 git init -q -b "feat/$key-$slug"
@@ -45,5 +49,20 @@ fi
 if [ "$phase" = tasks ] && [ -f "$data/$key-tasks.md" ]; then
   cp "$data/$key-tasks.md" "$folder/tasks.md"
 fi
+if implementing; then
+  cp "$data/$key-tasks.md" "$folder/tasks.md"
+  state approve tasks.md --by Ana
+  state advance
+fi
 git add -A
 git commit -q -m "Fixture at phase $phase"
+if [ "$phase" = commit-ready ]; then
+  state task start T1
+  cat "$data/$key-T1-test.mjs" >> test/users.test.mjs
+  state evidence red
+  cp "$data/$key-T1-users.js" src/users.js
+  state evidence green
+  state checks
+  state review task --result ok
+  node -e "const fs = require('fs'); const f = process.argv[1]; fs.writeFileSync(f, fs.readFileSync(f, 'utf8').replace('Status: pending', 'Status: in review'))" "$folder/tasks.md"
+fi

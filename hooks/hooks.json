@@ -23,6 +23,13 @@
           { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/session-start.mjs\"" }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/stop.mjs\"", "timeout": 900 }
+        ]
+      }
     ]
   }
 }

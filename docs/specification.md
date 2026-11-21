@@ -715,11 +715,11 @@ O Keel traduz esse arquivo para a ferramenta nativa (ArchUnit, Konsist, NetArchT
     "requirements": { "review": { "result": "ok", "at": "2026-11-20T11:40:00Z" }, "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
     "design":       { "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
     "tasks":        { "approved": false, "approvedBy": null, "approvedAt": null, "hash": null },
-    "implementation": { "currentTask": null, "blocked": null },
+    "implementation": { "currentTask": null, "blocked": null, "red": null, "green": null, "checks": null, "review": null, "commit": null },
     "closing":      { "convergence": false, "deltasApproved": false, "pullRequest": null }
   },
   "updatedAt": "2026-11-20T11:42:00Z"
 }
 ```
 
-Valores de `level`: `trivial`, `standard`, `with-design`. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente). O state.json não repete o que os arquivos já dizem (perguntas abertas, documento gerado, design exigido): o script lê os arquivos.
+Valores de `level`: `trivial`, `standard`, `with-design`. Na implementação, `red` e `green` guardam comando, código de saída, trecho da saída e hora do `Verification:` da task aberta; `checks` guarda o resultado de cada comando de "Checks" do product.md e a impressão digital do código; `review` e `commit` guardam o review isolado e a aprovação do commit. Tudo isso é da task aberta e zera no `task start` seguinte. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente). O state.json não repete o que os arquivos já dizem (perguntas abertas, documento gerado, design exigido): o script lê os arquivos.
