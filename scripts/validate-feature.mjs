@@ -258,6 +258,12 @@ export function validateTasks(text) {
     if (!noTest && !('Test first' in fields)) errors.push(`${id} has neither Test first: nor No test:`);
     if (!noTest && !/`[^`]+`/.test(fields['Verification'] ?? '')) errors.push(`${id}: Verification has no command in backticks`);
     for (const dep of deps) if (!ids.has(dep)) errors.push(`${id} depends on ${dep}, which does not exist`);
+    if ('Regression' in fields) {
+      const by = fields.Regression.match(/^delivered by (T\d+)$/)?.[1];
+      if (!by) errors.push(`${id}: Regression: write "delivered by T<n>", the task whose code already does what this test checks`);
+      else if (!ids.has(by)) errors.push(`${id}: Regression: ${by} does not exist`);
+      if (noTest) errors.push(`${id}: a Regression task needs Test first:, the test it adds`);
+    }
   }
   const cycle = findCycle(tasks);
   if (cycle) errors.push(`dependency cycle: ${cycle.join(' → ')}`);

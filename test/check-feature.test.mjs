@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import { readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { root } from './helpers.mjs';
 import { closingRepo } from './story-repo.mjs';
 
@@ -81,6 +82,37 @@ test('review fixes: two tasks pointing to the same commit with different abbrevi
     repo.setStatus('T3', `done (${full.slice(0, 8)})`);
     const run = checkFeature(repo);
     assert.match(run.stdout, /^FAIL +commits: .*same commit/m);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+// On Windows the temp folder comes as a short name (RUNNER~1) and git answers with the long one;
+// a symlink gives the same mismatch here. Windows CI covers the real case.
+test('review fixes: the story folder through another spelling of the root path', { skip: process.platform === 'win32' }, () => {
+  const repo = closingRepo();
+  try {
+    repo.close();
+    symlinkSync(repo.dir, `${repo.dir}-link`);
+    const run = spawnSync(process.execPath, [join(root, 'scripts', 'check-feature.mjs'), join(`${repo.dir}-link`, repo.folder)], { cwd: root, encoding: 'utf8' });
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+  } finally {
+    rmSync(`${repo.dir}-link`, { force: true });
+    repo.cleanup();
+  }
+});
+
+test('decisions: without architecture.json and without the waiver the architecture item fails; the PR lists the delta by section', () => {
+  const repo = closingRepo({ checks: 'Tests: `node -e 0`' });
+  try {
+    repo.copyConvergence();
+    const product = readFileSync(join(repo.dir, 'keel/product.md'), 'utf8');
+    repo.write('keel/product.md', product.replace('Tests: `node -e 0`', 'Tests: `node -e 0` · Architecture: não se aplica'));
+    repo.ok(repo.state('approve', 'deltas', '--by', 'Ana'));
+    repo.ok(repo.state('advance'));
+    assert.match(checkFeature(repo, '--pr').stdout, /^- Modified: `keel\/product\.md#Checks`$/m);
+    repo.write('keel/product.md', product);
+    assert.match(checkFeature(repo).stdout, /^FAIL +architecture: .*Architecture: não se aplica/m);
   } finally {
     repo.cleanup();
   }

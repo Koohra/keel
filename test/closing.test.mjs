@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { requirementsDoc } from './fixtures.mjs';
 import { closingRepo, closingTasksDoc } from './story-repo.mjs';
-import { convergenceRows, convergenceLines } from '../scripts/closing.mjs';
+import { convergenceRows, convergenceLines, sectionDelta } from '../scripts/closing.mjs';
 
 const doneTasks = () => closingTasksDoc()
   .replace('### T1\nStatus: pending', '### T1\nStatus: done (aaa1111)')
@@ -159,6 +159,46 @@ test('review fixes: an ADR with a non-ASCII name is hashed by content, so editin
     repo.ok(repo.state('approve', 'deltas', '--by', 'Ana'));
     repo.write('keel/adrs/ADR-002-decisão.md', '# ADR-002 mudou\n');
     assert.match(json(repo.state('next')).missing.find((m) => m.criterion === 'approval:deltas?').reason, /changed after the approval/);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test('decisions: the story base is the merge-base with the base branch given at init', () => {
+  const repo = closingRepo({ base: 'main', beforeTasks: (r) => {
+    r.sh('git', ['branch', 'main']);
+    r.write('keel/product.md', `${readFileSync(join(r.dir, 'keel/product.md'), 'utf8')}\n## Cadastro\nNovo.\n`);
+    r.sh('git', ['commit', '-q', '-am', 'product before the first task']);
+  } });
+  try {
+    const next = json(repo.state('next'));
+    assert.deepEqual(next.closing.deltas.files, ['keel/product.md']);
+    assert.deepEqual(next.closing.deltas.sections, { added: ['keel/product.md#Cadastro'], modified: [], removed: [] });
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test('decisions: delta by section and ADR file, added, modified and removed', () => {
+  const before = '# P\n\n## Visão\nA.\n\n## Glossário\nX.\n\n### Checks\nTests: `t`\n';
+  const after = '# P\n\n## Visão\nB.\n\n### Checks\nTests: `t`\n\n## Login\nNovo.\n';
+  assert.deepEqual(sectionDelta('keel/product.md', before, after), {
+    added: ['keel/product.md#Login'], modified: ['keel/product.md#Visão'], removed: ['keel/product.md#Glossário'],
+  });
+  assert.deepEqual(sectionDelta('keel/adrs/ADR-002-x.md', null, '# ADR'), { added: ['keel/adrs/ADR-002-x.md'], modified: [], removed: [] });
+  assert.deepEqual(sectionDelta('keel/adrs/ADR-001-x.md', '# ADR', null), { added: [], modified: [], removed: ['keel/adrs/ADR-001-x.md'] });
+});
+
+test('decisions: without architecture.json, skipped blocks unless Checks says Architecture: não se aplica', () => {
+  const repo = closingRepo({ checks: 'Tests: `node -e 0`' });
+  try {
+    let next = json(repo.state('next'));
+    assert.equal(next.closing.arch.status, 'skipped');
+    assert.match(next.missing.find((m) => m.criterion === 'arch:baseline-not-grown').reason, /Architecture: não se aplica/);
+    const product = join(repo.dir, 'keel/product.md');
+    repo.write('keel/product.md', readFileSync(product, 'utf8').replace('Tests: `node -e 0`', 'Tests: `node -e 0` · Architecture: não se aplica'));
+    next = json(repo.state('next'));
+    assert.ok(!next.missing.some((m) => m.criterion === 'arch:baseline-not-grown'), JSON.stringify(next.missing));
   } finally {
     repo.cleanup();
   }

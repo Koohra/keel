@@ -17,6 +17,12 @@ Depends on: —
 Covers: R2 (AC-2.1)
 ...
 
+## T4 — <test for behavior an earlier task already delivers>
+Covers: R1 (AC-1.2)
+Files: `<test file>`
+Regression: delivered by T1
+...
+
 ## T3 — <task with no behavior>
 Covers: R1
 No test: <reason>

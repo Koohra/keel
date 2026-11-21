@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { root } from './helpers.mjs';
 import { requirementsDoc, tasksDoc } from './fixtures.mjs';
 
-export function storyRepo({ verification = 'node check.mjs', checks = 'Tests: `node check.mjs`', tasks = null, check = null, architecture = null } = {}) {
+export function storyRepo({ verification = 'node check.mjs', checks = 'Tests: `node check.mjs`', tasks = null, check = null, architecture = null, base = null } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'keel-loop-'));
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
@@ -31,7 +31,7 @@ export function storyRepo({ verification = 'node check.mjs', checks = 'Tests: `n
   write('check.mjs', check ?? "import { existsSync } from 'node:fs';\nif (!existsSync('src/login.js')) { console.log('not ok 1 - login.test.js abre o consentimento'); process.exit(1); }\nconsole.log('ok 1');\n");
   if (architecture) write('keel/architecture.json', JSON.stringify(architecture, null, 2));
   const ok = (r) => assert.equal(r.status, 0, r.stderr);
-  ok(state('init', '--key', 'APP-1', '--slug', 'login', '--title', 'Login'));
+  ok(state('init', '--key', 'APP-1', '--slug', 'login', '--title', 'Login', ...(base ? ['--base', base] : [])));
   ok(state('level', 'standard', '--by', 'Ana'));
   ok(state('advance'));
   ok(state('generated', 'repo-map'));
@@ -93,8 +93,10 @@ const CHECK_FILE = "import { existsSync } from 'node:fs';\nconst [file, name] = 
 
 // The story through the task loop as the skill drives it, up to the closing phase.
 // extra: { T1: 'src/extra.js' } adds a file to that task's commit.
-export function closingRepo({ architecture = null, extra = {} } = {}) {
-  const repo = storyRepo({ tasks: closingTasksDoc(), checks: 'Tests: `node -e 0`', check: CHECK_FILE, architecture });
+// beforeTasks(repo) runs after the story reaches implementation and before T1.
+export function closingRepo({ architecture = null, extra = {}, base = null, beforeTasks = null, checks = 'Tests: `node -e 0` · Architecture: não se aplica' } = {}) {
+  const repo = storyRepo({ tasks: closingTasksDoc(), checks, check: CHECK_FILE, architecture, base });
+  beforeTasks?.(repo);
   const ok = (r) => assert.equal(r.status, 0, r.stderr);
   const tasksPath = join(repo.dir, repo.folder, 'tasks.md');
   const setStatus = (id, status) => {

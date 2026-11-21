@@ -82,6 +82,9 @@ export function baselineGrowth(before, after) {
 export function archResult(state) {
   const arch = closingOf(state).arch;
   if (!arch) return result('architecture not checked: run next in the closing phase');
+  if (arch.status === 'skipped' && !arch.waived) {
+    return result('keel/architecture.json does not exist and the "### Checks" of keel/product.md does not say "Architecture: não se aplica": run the setup skill to declare the rules, or ask the dev to declare the waiver');
+  }
   const grown = arch.grown.length ? [`the baseline grew since the story base: ${arch.grown.join(', ')}; fix the violation instead of adding it to the baseline`] : [];
   return result([...arch.violations, ...grown].join('; '));
 }
@@ -106,6 +109,42 @@ export function deltasResult(state) {
   return result(deltasApproved.hash === deltas.hash ? null : `${deltas.files.join(', ')} changed after the approval: show the delta again and ask the dev`);
 }
 
+// "Architecture: não se aplica" (or "not applicable") in the "### Checks" of product.md: the dev's waiver.
+export function architectureWaived(productText) {
+  const checks = (productText ?? '').replace(/\r\n/g, '\n').match(/^### Checks\n([\s\S]*?)(?=^#{1,6} |(?![\s\S]))/m)?.[1] ?? '';
+  return /(^|·)\s*Architecture:\s*(não se aplica|not applicable)\b/im.test(checks);
+}
+
+function headingSections(text) {
+  const result = new Map();
+  let current = null;
+  for (const line of text.replace(/\r\n/g, '\n').split('\n')) {
+    const heading = line.match(/^#{2,3} (.+)$/)?.[1].trim();
+    if (heading) result.set((current = heading), []);
+    else if (current) result.get(current).push(line);
+  }
+  return new Map([...result].map(([k, v]) => [k, v.join('\n').trim()]));
+}
+
+// Delta of one file against the story base, as OpenSpec's ADDED/MODIFIED/REMOVED: an ADR as a whole
+// file, product.md by "##"/"###" section. before/after are null when the file does not exist.
+export function sectionDelta(file, before, after) {
+  const delta = { added: [], modified: [], removed: [] };
+  if (file.startsWith('keel/adrs/') || before == null || after == null) {
+    const kind = before == null ? 'added' : after == null ? 'removed' : before === after ? null : 'modified';
+    if (kind) delta[kind].push(file);
+    return delta;
+  }
+  const old = headingSections(before);
+  const now = headingSections(after);
+  for (const [title, body] of now) {
+    if (!old.has(title)) delta.added.push(`${file}#${title}`);
+    else if (old.get(title) !== body) delta.modified.push(`${file}#${title}`);
+  }
+  for (const title of old.keys()) if (!now.has(title)) delta.removed.push(`${file}#${title}`);
+  return delta;
+}
+
 // What next shows in the closing phase.
 export function closingView(state) {
   const closing = closingOf(state);
@@ -119,9 +158,12 @@ const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
 const git = gitOutput;
 const NO_BASE = 'story base not found: no task commit of the Progress is in this branch\'s history (rewritten or squashed?); fix the Status: done (<hash>) lines';
 
-// Commit before the story's code: parent of the oldest task commit reachable from HEAD; HEAD while
-// no task is done; null when tasks are done but none of their commits is in the history.
-export function storyBase(root, docs, inHistory) {
+// Commit before the story's code: the merge-base with the base branch given at init, as a pull
+// request diff (three-dot); without it, the parent of the oldest task commit reachable from HEAD;
+// HEAD while no task is done; null when tasks are done but none of their commits is in the history.
+export function storyBase(root, docs, inHistory, baseBranch = null) {
+  const mergeBase = baseBranch && git(root, ['merge-base', baseBranch, 'HEAD'])?.trim();
+  if (mergeBase) return mergeBase;
   const done = parseTasks(docs['tasks.md'] ?? '').map(doneHash).filter(Boolean);
   const commits = new Set(done.map(inHistory).filter(Boolean));
   const history = (git(root, ['rev-list', '--reverse', 'HEAD']) ?? '').split('\n').filter(Boolean);
@@ -140,7 +182,11 @@ function checkArch(root, base) {
   } catch (error) {
     return { status: 'fail', violations: [`arch-check could not run: ${error.message}`], grown: [] };
   }
-  if (check.status === 'skipped') return { status: 'skipped', violations: [], grown: [] };
+  if (check.status === 'skipped') {
+    const product = join(root, 'keel', 'product.md');
+    const waived = architectureWaived(existsSync(product) ? readFileSync(product, 'utf8') : '');
+    return { status: 'skipped', waived, violations: [], grown: [] };
+  }
   const file = join(root, ...check.baselinePath.split('/'));
   const now = existsSync(file) ? parseBaseline(readFileSync(file, 'utf8')) : new Set();
   const before = parseBaseline(git(root, ['show', `${base}:${check.baselinePath}`]) ?? '');
@@ -153,20 +199,24 @@ const PROJECT_DOCS = ['keel/product.md', 'keel/adrs'];
 
 // Files of keel/product.md and keel/adrs/ that differ from the base, and the hash of their content.
 function projectDeltas(root, base) {
-  if (base == null) return { files: [], hash: null, error: NO_BASE };
+  if (base == null) return { files: [], sections: null, hash: null, error: NO_BASE };
   const changed = gitPaths(root, ['diff', '--name-only', '-z', base, '--', ...PROJECT_DOCS]);
   const added = gitPaths(root, ['ls-files', '--others', '--exclude-standard', '-z', '--', ...PROJECT_DOCS]);
   const files = [...new Set([...changed, ...added])].sort();
   const hash = createHash('sha256');
+  const sections = { added: [], modified: [], removed: [] };
   for (const file of files) {
     const path = join(root, ...file.split('/'));
-    hash.update(`\0${file}\0`).update(existsSync(path) ? readFileSync(path) : '<deleted>');
+    const after = existsSync(path) ? readFileSync(path, 'utf8') : null;
+    hash.update(`\0${file}\0`).update(after ?? '<deleted>');
+    const delta = sectionDelta(file, git(root, ['show', `${base}:${file}`]), after);
+    for (const kind of Object.keys(sections)) sections[kind].push(...delta[kind]);
   }
-  return { files, hash: hash.digest('hex') };
+  return { files, sections, hash: hash.digest('hex') };
 }
 
-export function gatherClosing(root, docs) {
+export function gatherClosing(root, docs, state) {
   const inHistory = (hash) => commitInHistory(root, hash);
-  const base = storyBase(root, docs, inHistory);
+  const base = storyBase(root, docs, inHistory, state?.story?.base);
   return { convergence: convergenceRows(docs, inHistory), arch: checkArch(root, base), deltas: projectDeltas(root, base) };
 }

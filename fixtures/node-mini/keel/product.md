@@ -13,4 +13,4 @@ Serviço HTTP de cadastro de usuários para um clube de leitura. Usuários se ca
 2. Erros de validação respondem 400 com `{ "error": "<mensagem>" }`. [review]
 
 ### Checks
-Tests: `npm test`
+Tests: `npm test` · Architecture: não se aplica

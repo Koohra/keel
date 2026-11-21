@@ -13,8 +13,9 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
 2. Grave a evidência (o script roda o `Verification:` da task):
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" evidence red`
 3. Se o script recusar porque o teste passou, o teste não verifica o comportamento novo: corrija o teste. Se recusar por import ou sintaxe, ou porque o teste não aparece pelo nome na saída, crie o módulo ou o export vazio que o teste usa e dê ao teste o nome de `Test first:`, para ele rodar e falhar numa asserção.
-4. Task com `No test:` não tem RED: siga para o GREEN e a evidência dela são as checagens.
-5. Copie para o "Progress" da task, no tasks.md, as linhas de `task.progress` da saída do script (`Status:` e `RED evidence:`). Não escreva evidência por conta própria: o `approve commit` confere que o Status bate com o state.json.
+4. Task com `Regression: delivered by T<n>`: o teste passa de primeira porque o comportamento já existe. Sabote de propósito o código de T<n> (fora do `Files:` da task) para o teste falhar numa asserção, grave o `evidence red` (o script exige a sabotagem) e desfaça a sabotagem antes do `evidence green` (o script confere que o código voltou ao HEAD).
+5. Task com `No test:` não tem RED: siga para o GREEN e a evidência dela são as checagens.
+6. Copie para o "Progress" da task, no tasks.md, as linhas de `task.progress` da saída do script (`Status:` e `RED evidence:`). Não escreva evidência por conta própria: o `approve commit` confere que o Status bate com o state.json.
 
 ## 3. GREEN
 1. Escreva o código mais simples que faz o teste passar, só nos arquivos de `Files:` e só com a estrutura de `New structure:`. Antes de escrever um helper, procure um que já exista e reutilize.

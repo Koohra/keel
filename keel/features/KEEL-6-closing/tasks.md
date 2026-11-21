@@ -102,6 +102,51 @@ Test first: `Files: lists paths in backticks` — task com Files: sem crase é r
 Verification: `node --test test/validate-feature.test.mjs`
 Done when: os testes passam
 Depends on: —
+
+## T12 — Pasta da história por outra grafia da raiz
+Covers: R5 (AC-5.4)
+Files: `scripts/check-feature.mjs`, `test/check-feature.test.mjs`
+New structure: none
+Test first: `review fixes: the story folder through another spelling of the root path` — pasta por link simbólico da raiz passa em todos os itens
+Verification: `node --test test/check-feature.test.mjs`
+Done when: os testes passam e o CI do Windows fica verde
+Depends on: T10
+
+## T13 — Task de regressão com RED por sabotagem
+Covers: R10 (AC-10.1, AC-10.2)
+Files: `scripts/task-loop.mjs`, `scripts/validate-feature.mjs`, `scripts/keel-state.mjs`, `skills/story/phases/tasks.md`, `skills/story/phases/implementation.md`, `templates/tasks.md`, `test/task-loop.test.mjs`, `test/validate-feature.test.mjs`, `docs/specification.md`
+New structure: none
+Test first: `regression task: RED only with the delivered code sabotaged, GREEN only after undoing it` — RED sem sabotagem falha, com sabotagem registra os arquivos, GREEN com sabotagem falha
+Verification: `node --test test/task-loop.test.mjs test/validate-feature.test.mjs`
+Done when: os testes passam
+Depends on: —
+
+## T14 — Base da história pelo merge-base
+Covers: R4 (AC-4.5)
+Files: `scripts/closing.mjs`, `scripts/keel-state.mjs`, `test/closing.test.mjs`, `test/story-repo.mjs`, `docs/specification.md`
+New structure: none
+Test first: `decisions: the story base is the merge-base with the base branch given at init` — delta commitado antes da primeira task aparece
+Verification: `node --test test/closing.test.mjs`
+Done when: os testes passam
+Depends on: T10
+
+## T15 — Delta por seção e por ADR
+Covers: R4 (AC-4.4)
+Files: `scripts/closing.mjs`, `scripts/check-feature.mjs`, `skills/story/phases/closing.md`, `test/closing.test.mjs`, `test/check-feature.test.mjs`, `docs/specification.md`
+New structure: none
+Test first: `decisions: delta by section and ADR file, added, modified and removed` — seção nova, mudada e removida e ADR nova e removida
+Verification: `node --test test/closing.test.mjs test/check-feature.test.mjs`
+Done when: os testes passam
+Depends on: T6
+
+## T16 — Sem architecture.json só com a dispensa
+Covers: R3 (AC-3.2, AC-3.3)
+Files: `scripts/closing.mjs`, `scripts/check-feature.mjs`, `skills/story/phases/closing.md`, `fixtures/node-mini/keel/product.md`, `test/closing.test.mjs`, `test/check-feature.test.mjs`, `test/story-repo.mjs`, `docs/specification.md`
+New structure: none
+Test first: `decisions: without architecture.json, skipped blocks unless Checks says Architecture: não se aplica` — sem dispensa falta o critério; com ela, passa
+Verification: `node --test test/closing.test.mjs test/check-feature.test.mjs`
+Done when: os testes passam
+Depends on: T3
 <!-- frozen after approval: end -->
 
 ## Progress
@@ -160,6 +205,31 @@ Status: green
 RED evidence: `node --test test/validate-feature.test.mjs` 1 de 24 falhou (Files: sem crase aceito).
 GREEN evidence: `npm test` 156 de 156.
 Review: achado da primeira rodada de ponta a ponta: o modelo de tasks tinha `Files: <paths>` sem crase, o validador aceitava e o loop não lia os caminhos, então todo arquivo da T1 saiu fora da task.
+### T12
+Status: green
+RED evidence: CI windows-latest do PR #16: 4 testes do `test/check-feature.test.mjs` falharam (`path.relative` entre `C:\Users\RUNNER~1` e o caminho longo devolvido pelo git). Reproduzido aqui com link simbólico: `node --test test/check-feature.test.mjs` 1 falhou.
+GREEN evidence: pasta pelo `git rev-parse --show-prefix`; `node --test test/check-feature.test.mjs` passa.
+Review: sem review isolado; correção pequena, coberta pelo teste do link simbólico e pelo CI do Windows.
+### T13
+Status: green
+RED evidence: `node --test test/task-loop.test.mjs test/validate-feature.test.mjs` falharam o teste da regressão (RED aceito sem sabotagem) e o do `Regression:` (campo aceito sem T<n>).
+GREEN evidence: `npm test` 163 de 163.
+Review: sem review isolado; decisão do Miguel em 2026-11-21.
+### T14
+Status: green
+RED evidence: `node --test test/closing.test.mjs` falhou o teste do merge-base (delta antes da primeira task não aparecia).
+GREEN evidence: `npm test` 163 de 163.
+Review: sem review isolado; decisão do Miguel em 2026-11-21.
+### T15
+Status: green
+RED evidence: `node --test test/closing.test.mjs` falhou o teste do delta por seção (`sectionDelta` não existia).
+GREEN evidence: `npm test` 163 de 163.
+Review: o teste do check-feature com o delta na descrição do PR foi escrito junto do código, não antes.
+### T16
+Status: green
+RED evidence: `node --test test/closing.test.mjs` falhou o teste da dispensa (skipped passava sem ela).
+GREEN evidence: `npm test` 163 de 163.
+Review: o node-mini e o repositório de teste passaram a declarar `Architecture: não se aplica`.
 
 ## Implementation notes
 - not applicable

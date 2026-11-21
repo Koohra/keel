@@ -18,7 +18,7 @@ import {
   approveCommit, blockTask, checkCommands, evidenceCommand, failedChecks, recordChecks, recordEvidence, recordTaskReview,
   startTask, taskView,
 } from './task-loop.mjs';
-import { commitInHistory } from './git.mjs';
+import { commitInHistory, gitOutput, gitPaths } from './git.mjs';
 import {
   approveDeltas, archResult, closingView, convergenceResult, deltasResult, gatherClosing, recordClosing,
 } from './closing.mjs';
@@ -35,10 +35,10 @@ export function approvalHash(text) {
 
 const approvalStep = () => ({ approved: false, approvedBy: null, approvedAt: null, hash: null });
 
-export function newState({ key, slug, title, source = null, branch, now }) {
+export function newState({ key, slug, title, source = null, branch, base = null, now }) {
   return {
     schema: 1,
-    story: { key, title, source, folder: `keel/features/${key}-${slug}`, branch },
+    story: { key, title, source, folder: `keel/features/${key}-${slug}`, branch, base },
     level: null,
     phase: 'triage',
     steps: {
@@ -332,6 +332,18 @@ export function codeFingerprint(root) {
   return hash.digest('hex');
 }
 
+// Branch the pull request goes to: --base, or the remote's default branch (origin/HEAD), or null.
+function defaultBase(root) {
+  return gitOutput(root, ['symbolic-ref', '-q', '--short', 'refs/remotes/origin/HEAD'])?.trim() || null;
+}
+
+// Code files that differ from HEAD or are new, outside the story folder.
+export function changedFiles(root) {
+  const changed = gitPaths(root, ['diff', 'HEAD', '--name-only', '-z', '--', '.', OUTSIDE_STORY]);
+  const added = gitPaths(root, ['ls-files', '--others', '--exclude-standard', '-z', '--', '.', OUTSIDE_STORY]);
+  return [...new Set([...changed, ...added])].sort();
+}
+
 // Runs a project command (Verification:, Checks) as the dev would; task-loop.mjs keeps the end of the output.
 export function runCommand(root, command) {
   const run = spawnSync(command, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
@@ -359,7 +371,7 @@ function loadStory(root, story) {
 export const COMMANDS = ['init', 'next', 'advance', 'level', 'generated', 'review', 'approve', 'hash', 'task', 'evidence', 'checks', 'block'];
 
 const USAGE = `usage: node scripts/keel-state.mjs <command> [--story <folder>]
-  init --key <KEY> --slug <slug> --title <title> [--source <link>] [--branch <branch>]
+  init --key <KEY> --slug <slug> --title <title> [--source <link>] [--branch <branch>] [--base <branch the PR goes to>]
   next | advance
   level <${LEVELS.join('|')}> --by <dev>
   generated repo-map
@@ -375,7 +387,7 @@ function run(argv, root, now) {
   const { values, positionals } = parseArgs({
     args: argv,
     allowPositionals: true,
-    options: Object.fromEntries(['story', 'key', 'slug', 'title', 'source', 'branch', 'by', 'result', 'reason']
+    options: Object.fromEntries(['story', 'key', 'slug', 'title', 'source', 'branch', 'base', 'by', 'result', 'reason']
       .map((name) => [name, { type: 'string' }])),
   });
   const [command, arg, third] = positionals;
@@ -388,7 +400,7 @@ function run(argv, root, now) {
     for (const name of ['key', 'slug', 'title']) if (!values[name]) throw new Error(`init requires --${name}`);
     const branch = values.branch ?? currentBranch(root);
     if (!branch) throw new Error('could not find the current branch; pass --branch');
-    const state = newState({ ...values, branch, now });
+    const state = newState({ ...values, branch, base: values.base ?? defaultBase(root), now });
     const folder = join(root, state.story.folder);
     if (existsSync(join(folder, 'state.json'))) throw new Error(`${state.story.folder} already has state.json`);
     mkdirSync(folder, { recursive: true });
@@ -400,7 +412,7 @@ function run(argv, root, now) {
   const { state, expired } = reconcile(stored, workflow, docs);
   let updated = expired.length ? { ...state, updatedAt: now } : state;
   // In the closing phase every command sees fresh facts: convergence, architecture and deltas.
-  if (updated.phase === 'closing') updated = recordClosing(updated, gatherClosing(root, docs), now);
+  if (updated.phase === 'closing') updated = recordClosing(updated, gatherClosing(root, docs, updated), now);
   switch (command) {
     case 'next':
       break;
@@ -430,7 +442,7 @@ function run(argv, root, now) {
       break;
     case 'evidence': {
       const verification = evidenceCommand(updated, arg, docs['tasks.md']);
-      updated = recordEvidence(updated, arg, runCommand(root, verification), docs['tasks.md'], now);
+      updated = recordEvidence(updated, arg, runCommand(root, verification), docs['tasks.md'], now, changedFiles(root));
       break;
     }
     case 'block': updated = blockTask(updated, values.reason, now); break;

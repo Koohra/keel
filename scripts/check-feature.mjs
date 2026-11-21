@@ -4,7 +4,7 @@
 // architecture and deltas. With --pr, prints the pull request description with that evidence.
 // Usage: node scripts/check-feature.mjs <story-folder> [--pr]
 import { existsSync, readFileSync } from 'node:fs';
-import { join, relative, resolve, sep } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseRules, parseTasks, readDocs, sections, validateFeature } from './validate-feature.mjs';
 import { checkCommands, doneHash, isOutsideTask, taskFiles } from './task-loop.mjs';
@@ -57,8 +57,8 @@ function checksItem(runs) {
 function closingItems(state, docs, facts) {
   const closed = recordClosing(state, facts, null);
   const problems = ({ met, reason }) => (met ? [] : [reason]);
-  const arch = facts.arch.status === 'skipped'
-    ? { ...item('architecture', [], 'no keel/architecture.json'), skipped: true }
+  const arch = facts.arch.status === 'skipped' && facts.arch.waived
+    ? { ...item('architecture', [], 'no keel/architecture.json; waived in product.md (Architecture: não se aplica)'), skipped: true }
     : item('architecture', problems(archResult(closed)), 'no new violation, baseline did not grow');
   return [
     item('convergence', problems(convergenceResult(closed, docs)), `${facts.convergence.length} rule(s) met`),
@@ -69,6 +69,12 @@ function closingItems(state, docs, facts) {
 
 export function formatReport(items) {
   return items.map((i) => `${(i.skipped ? 'skipped' : i.ok ? 'ok' : 'FAIL').padEnd(8)}${i.name}: ${i.details.join('\n        ')}`).join('\n');
+}
+
+function deltaLines(deltas) {
+  if (!deltas.files.length) return ['none'];
+  return Object.entries(deltas.sections ?? {}).filter(([, items]) => items.length)
+    .map(([kind, items]) => `- ${kind[0].toUpperCase()}${kind.slice(1)}: ${items.map((i) => `\`${i}\``).join(', ')}`);
 }
 
 // Pull request description: the mechanical part comes from the story; the model fills the last two sections.
@@ -97,7 +103,7 @@ export function pullRequestBody({ state, docs, items, facts }) {
     '```',
     '',
     '## Product and ADR deltas',
-    ...(facts.deltas.files.length ? facts.deltas.files.map((f) => `- \`${f}\``) : ['none']),
+    ...deltaLines(facts.deltas),
     '',
     '## Deviations from the spec',
     '<!-- Keel: implementation choices that departed from requirements.md or design.md, each with the reason; "none" if there are none. -->',
@@ -131,7 +137,8 @@ export function checkFeature(cwd, folderArg) {
   const path = resolve(cwd, folderArg);
   const root = existsSync(path) && gitOutput(path, ['rev-parse', '--show-toplevel'])?.trim();
   if (!root) throw new Error(`${folderArg} is not a folder inside a git repository`);
-  const folder = relative(root, path).split(sep).join('/');
+  // git gives the folder relative to the root: path.relative breaks on Windows short names (RUNNER~1).
+  const folder = gitOutput(path, ['rev-parse', '--show-prefix']).trim().replace(/\/$/, '');
   const docs = readDocs(join(root, folder));
   const statePath = join(root, folder, 'state.json');
   const state = existsSync(statePath) ? JSON.parse(readFileSync(statePath, 'utf8')) : null;
@@ -139,7 +146,7 @@ export function checkFeature(cwd, folderArg) {
   const commitsOf = readCommits(root, tasks);
   const runs = checkCommands(readFileSync(join(root, 'keel', 'product.md'), 'utf8')).map(({ name, command }) => ({ name, ...runCommand(root, command) }));
   const items = [documentsItem(docs), stateItem(state, docs), commitsItem(tasks, commitsOf), scopeItem(tasks, commitsOf, docs['tasks.md'] ?? '', folder), checksItem(runs)];
-  const facts = state ? gatherClosing(root, docs) : null;
+  const facts = state ? gatherClosing(root, docs, state) : null;
   if (state) items.push(...closingItems(state, docs, facts));
   return { items, state, docs, facts, ok: items.every((i) => i.ok) };
 }

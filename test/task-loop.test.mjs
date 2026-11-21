@@ -253,3 +253,17 @@ test('Progress mirrors the script: ready lines in the output and approve commit 
   const onlyRed = recordEvidence(startTask(implementationState(), 'T1', tasks, git, now), 'red', red, tasks, now);
   assert.throws(() => approveCommit(onlyRed, 'Ana', withStatus(tasks, 'T1', 'green'), 'tree', taskExit, now), /does not match the state \(red\)/);
 });
+
+test('regression task: RED only with the delivered code sabotaged, GREEN only after undoing it', () => {
+  const regression = tasks.replace('Files: `src/session.js`', 'Files: `test/session.test.js`\nRegression: delivered by T1')
+    .replace('### T1\nStatus: pending', '### T1\nStatus: done (abc1234)');
+  let state = startTask(implementationState(), 'T2', regression, git, now);
+  const failing = { command: 'npm test', exitCode: 1, output: 'not ok 1 - session.test.js pede login' };
+  assert.throws(() => recordEvidence(state, 'red', failing, regression, now, ['test/session.test.js']), /sabotage the code delivered by T1/);
+  state = recordEvidence(state, 'red', failing, regression, now, ['test/session.test.js', 'src/login.js']);
+  assert.deepEqual(state.steps.implementation.red.sabotage, ['src/login.js']);
+  const passing = { command: 'npm test', exitCode: 0, output: 'ok 1 - session.test.js pede login' };
+  assert.throws(() => recordEvidence(state, 'green', passing, regression, now, ['test/session.test.js', 'src/login.js']), /undo the sabotage .*src\/login\.js/);
+  state = recordEvidence(state, 'green', passing, regression, now, ['test/session.test.js']);
+  assert.equal(state.steps.implementation.green.exitCode, 0);
+});
