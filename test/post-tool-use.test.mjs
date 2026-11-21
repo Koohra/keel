@@ -5,6 +5,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { root, read, readJson } from './helpers.mjs';
+import { storyRepo } from './story-repo.mjs';
 
 const hook = join(root, 'scripts', 'hooks', 'post-tool-use.mjs');
 
@@ -83,4 +84,21 @@ test('hooks.json registers PostToolUse on the edit tools', () => {
   const entry = readJson('hooks/hooks.json').hooks.PostToolUse[0];
   assert.equal(entry.matcher, 'Write|Edit|MultiEdit');
   assert.match(entry.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/hooks\/post-tool-use\.mjs/);
+});
+
+test('PostToolUse warns without blocking when the edit is outside the Files: of the open task (AC-9.1)', () => {
+  const repo = storyRepo();
+  try {
+    repo.state('task', 'start', 'T1');
+    repo.write('src/server.js', 'export const server = 1;\n');
+    const outside = run(repo.dir, 'src/server.js');
+    assert.equal(outside.status, 0);
+    assert.equal(outside.output.decision, undefined);
+    assert.match(outside.output.hookSpecificOutput.additionalContext, /src\/server\.js is outside the Files: of T1/);
+    repo.write('src/login.js', 'export const login = 1;\n');
+    assert.deepEqual(run(repo.dir, 'src/login.js'), { status: 0, output: null });
+    assert.deepEqual(run(repo.dir, 'keel/features/APP-1-login/tasks.md'), { status: 0, output: null }, 'story documents are not task code');
+  } finally {
+    repo.cleanup();
+  }
 });

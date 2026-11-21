@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: implementation-tdd
+description: Etapas 7 e 8. Tasks aprovadas; implementa a T1 com RED antes de GREEN gravados pelo script, chama o revisor isolado e para na proposta de commit, sem commitar.
+tags: [phase-7]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 60
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Edit, Agent]
+  prompt: Pode implementar a próxima task da APP-8 no Keel.

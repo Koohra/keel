@@ -28,8 +28,8 @@ Se `expired` não estiver vazio, diga ao dev qual documento mudou depois da apro
 ## O que nunca fazer
 
 - Escrever, copiar ou apagar `state.json`. Só o `keel-state.mjs` muda o estado; o hook bloqueia o resto.
-- Rodar `level` ou `approve` sem que o dev tenha dito, nesta conversa, que confirma o nível ou aprova o documento. Pergunta sua sem resposta não é aprovação. Use o nome do dev em `--by` (pergunte ou use `git config user.name`).
-- Editar código do projeto antes da fase de implementação.
+- Rodar `level` ou `approve` (de documento ou de commit) sem que o dev tenha dito, nesta conversa, que confirma o nível, aprova o documento ou aprova o commit. Pergunta sua sem resposta não é aprovação. Use o nome do dev em `--by` (pergunte ou use `git config user.name`).
+- Editar código do projeto antes da fase de implementação, ou commitar sem a aprovação do commit gravada.
 - Pular, reordenar ou declarar fase cumprida por conta própria.
 
 ## Regras de todas as fases

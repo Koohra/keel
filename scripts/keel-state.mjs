@@ -5,14 +5,19 @@
 //
 // Exit criterion: "<kind>[:<target>][?]". A trailing "?" makes the criterion apply only when the
 // document is required by the level (design.md only in with-design). Kinds in CRITERIA below.
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
   checkCoverage, frozenBlock, openQuestions, readDocs, tasksDone, validateDoc,
 } from './validate-feature.mjs';
+import {
+  approveCommit, blockTask, checkCommands, evidenceCommand, failedChecks, recordChecks, recordEvidence, recordTaskReview,
+  startTask, taskView,
+} from './task-loop.mjs';
 
 export const LEVELS = ['trivial', 'standard', 'with-design'];
 const DOC_STEPS = { 'requirements.md': 'requirements', 'design.md': 'design', 'tasks.md': 'tasks' };
@@ -39,7 +44,7 @@ export function newState({ key, slug, title, source = null, branch, now }) {
       requirements: { review: null, ...approvalStep() },
       design: approvalStep(),
       tasks: approvalStep(),
-      implementation: { currentTask: null, blocked: null },
+      implementation: { currentTask: null, blocked: null, red: null, green: null, checks: null, review: null, commit: null },
       closing: { convergence: false, deltasApproved: false, pullRequest: null },
     },
     updatedAt: now,
@@ -110,6 +115,10 @@ export function evaluate(criterion, ctx) {
   return { criterion, ...(outcome ?? { met: false, reason: `unknown criterion: ${criterion}` }) };
 }
 
+export function taskExitOf(workflow) {
+  return workflow.phases.find((p) => p.loop === 'tasks')?.taskExit ?? [];
+}
+
 function phaseIndex(workflow, id) {
   return workflow.phases.findIndex((p) => p.id === id);
 }
@@ -148,15 +157,18 @@ export function reconcile(state, workflow, docs) {
   return { state: next, expired };
 }
 
-export function nextStep(state, workflow, docs) {
+// tree: { fingerprint } of the code (see codeFingerprint), needed only in the task loop.
+export function nextStep(state, workflow, docs, tree = {}) {
   const { state: current, expired } = reconcile(state, workflow, docs);
   const phase = workflow.phases[phaseIndex(workflow, current.phase)];
+  const loop = phase.loop === 'tasks' ? taskView(current, docs['tasks.md'], tree.fingerprint, phase.taskExit) : {};
   return {
     story: current.story.key,
     phase: current.phase,
     level: current.level,
     instructions: phase.instructions ?? null,
     missing: missingFor(phase, current, docs),
+    ...loop,
     expired,
   };
 }
@@ -192,7 +204,7 @@ export function recordGenerated(state, artifact, now) {
 }
 
 export function recordReview(state, doc, outcome, now) {
-  if (doc !== 'requirements') throw new Error(`unknown review of "${doc}"; use requirements`);
+  if (doc !== 'requirements') throw new Error(`unknown review of "${doc}"; use requirements or task`);
   if (!REVIEW_RESULTS.includes(outcome)) throw new Error(`invalid result "${outcome}"; use ${REVIEW_RESULTS.join(', ')}`);
   requirePhase(state, 'confirmation', 'review requirements');
   const requirements = { ...state.steps.requirements, review: { result: outcome, at: now } };
@@ -206,7 +218,7 @@ const APPROVAL_CHECKS = {
 };
 
 export function approve(state, doc, by, docs, workflow, now) {
-  if (!DOC_STEPS[doc]) throw new Error(`unknown document "${doc}"; use ${Object.keys(DOC_STEPS).join(', ')}`);
+  if (!DOC_STEPS[doc]) throw new Error(`unknown document "${doc}"; use ${Object.keys(DOC_STEPS).join(', ')} or commit`);
   requireBy(by);
   const gate = gatePhase(workflow, doc).id;
   if (state.phase !== gate) throw new Error(`the gate of ${doc} belongs to phase ${gate}; the story is in ${state.phase}`);
@@ -291,6 +303,40 @@ export function findActiveStory(root) {
   return null;
 }
 
+function isCommit(root, hash) {
+  return spawnSync('git', ['cat-file', '-e', `${hash}^{commit}`], { cwd: root }).status === 0;
+}
+
+// Story files (documents, state.json) stay out: updating Progress does not make checks or approval stale.
+const OUTSIDE_STORY = ':(exclude)keel/features';
+
+function git(root, args) {
+  const run = spawnSync('git', args, { cwd: root, maxBuffer: 256 * 1024 * 1024 });
+  if (run.status !== 0) {
+    throw new Error(`git ${args[0]} failed: ${String(run.stderr || run.error?.message).trim()}. The task loop needs a git repository with at least one commit`);
+  }
+  return run.stdout;
+}
+
+// Hash of the uncommitted code: diff against HEAD plus new files, outside the story folder.
+export function codeFingerprint(root) {
+  const hash = createHash('sha256').update(git(root, ['diff', 'HEAD', '--binary', '--', '.', OUTSIDE_STORY]));
+  const untracked = git(root, ['ls-files', '--others', '--exclude-standard', '-z', '--', '.', OUTSIDE_STORY])
+    .toString('utf8').split('\0').filter(Boolean).sort();
+  // Only regular files: a sandbox masks dotfiles with /dev/null inside it and not outside, where hooks run.
+  for (const file of untracked.filter((name) => lstatSync(join(root, name)).isFile())) {
+    hash.update(`\0${file}\0`).update(readFileSync(join(root, file)));
+  }
+  return hash.digest('hex');
+}
+
+// Runs a project command (Verification:, Checks) as the dev would; task-loop.mjs keeps the end of the output.
+export function runCommand(root, command) {
+  const run = spawnSync(command, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const output = `${run.stdout ?? ''}${run.stderr ?? ''}${run.error ? run.error.message : ''}`.replace(/\r\n/g, '\n').trimEnd();
+  return { command, exitCode: run.status ?? 1, output };
+}
+
 function writeState(folder, state) {
   writeFileSync(join(folder, 'state.json'), `${JSON.stringify(state, null, 2)}\n`);
 }
@@ -308,25 +354,29 @@ function loadStory(root, story) {
 }
 
 // CLI commands; the skill uses only these (checked in test/story-skill.test.mjs).
-export const COMMANDS = ['init', 'next', 'advance', 'level', 'generated', 'review', 'approve', 'hash'];
+export const COMMANDS = ['init', 'next', 'advance', 'level', 'generated', 'review', 'approve', 'hash', 'task', 'evidence', 'checks', 'block'];
 
 const USAGE = `usage: node scripts/keel-state.mjs <command> [--story <folder>]
   init --key <KEY> --slug <slug> --title <title> [--source <link>] [--branch <branch>]
   next | advance
   level <${LEVELS.join('|')}> --by <dev>
   generated repo-map
-  review requirements --result <${REVIEW_RESULTS.join('|')}>
-  approve <${Object.keys(DOC_STEPS).join('|')}> --by <dev>
+  review <requirements|task> --result <${REVIEW_RESULTS.join('|')}>
+  approve <${[...Object.keys(DOC_STEPS), 'commit'].join('|')}> --by <dev>
+  task start <T#>
+  evidence <red|green>
+  checks
+  block --reason <reason>
   hash <file>`;
 
 function run(argv, root, now) {
   const { values, positionals } = parseArgs({
     args: argv,
     allowPositionals: true,
-    options: Object.fromEntries(['story', 'key', 'slug', 'title', 'source', 'branch', 'by', 'result']
+    options: Object.fromEntries(['story', 'key', 'slug', 'title', 'source', 'branch', 'by', 'result', 'reason']
       .map((name) => [name, { type: 'string' }])),
   });
-  const [command, arg] = positionals;
+  const [command, arg, third] = positionals;
   if (command === 'hash') {
     if (!arg) throw new Error('give the file: hash <file>');
     return { output: { file: arg, hash: approvalHash(readFileSync(resolve(root, arg), 'utf8')) } };
@@ -362,12 +412,41 @@ function run(argv, root, now) {
     }
     case 'level': updated = setLevel(updated, arg, values.by, now); break;
     case 'generated': updated = recordGenerated(updated, arg, now); break;
-    case 'review': updated = recordReview(updated, arg, values.result, now); break;
-    case 'approve': updated = approve(updated, arg, values.by, docs, workflow, now); break;
+    case 'review':
+      updated = arg === 'task' ? recordTaskReview(updated, values.result, now) : recordReview(updated, arg, values.result, now);
+      break;
+    case 'approve':
+      updated = arg === 'commit'
+        ? approveCommit(updated, values.by, docs['tasks.md'], codeFingerprint(root), taskExitOf(workflow), now)
+        : approve(updated, arg, values.by, docs, workflow, now);
+      break;
+    case 'task':
+      if (arg !== 'start') throw new Error('use task start <T#>');
+      updated = startTask(updated, third, docs['tasks.md'], { isCommit: (hash) => isCommit(root, hash) }, now);
+      break;
+    case 'evidence': {
+      const verification = evidenceCommand(updated, arg, docs['tasks.md']);
+      updated = recordEvidence(updated, arg, runCommand(root, verification), docs['tasks.md'], now);
+      break;
+    }
+    case 'block': updated = blockTask(updated, values.reason, now); break;
+    case 'checks': {
+      const commands = checkCommands(readFileSync(join(root, 'keel', 'product.md'), 'utf8'));
+      const runs = commands.map(({ name, command }) => ({ name, ...runCommand(root, command) }));
+      updated = recordChecks(updated, runs, codeFingerprint(root), now);
+      if (!updated.steps.implementation.checks.passed) {
+        writeState(folder, updated);
+        const failed = updated.steps.implementation.checks.results.filter((r) => r.exitCode !== 0).map((r) => `${r.name}: ${r.command}\n${r.output}`);
+        throw new Error(`checks failed: ${failedChecks(updated.steps.implementation.checks).join('; ')}\n${failed.join('\n')}`);
+      }
+      break;
+    }
     default: throw new Error(command ? `unknown command "${command}"\n${USAGE}` : USAGE);
   }
   if (updated !== stored) writeState(folder, updated);
-  return { output: nextStep(updated, workflow, docs) };
+  const open = updated.phase === 'implementation' && updated.steps.implementation?.currentTask;
+  const tree = open ? { fingerprint: codeFingerprint(root) } : {};
+  return { output: nextStep(updated, workflow, docs, tree) };
 }
 
 function main() {

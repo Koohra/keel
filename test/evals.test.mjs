@@ -29,3 +29,11 @@ test('stages 5 and 6 have cases: design, plan without approval and approval of d
   assert.ok(tagged('phase-5').length >= 1, 'phase-5');
   assert.ok(tagged('phase-6').length >= 2, 'phase-6');
 });
+
+test('stages 7 to 9 have cases: TDD without commit, commit approved by the dev and denied command (no Bash)', () => {
+  const tagged = (tag) => cases.filter((c) => existsSync(join(root, c, 'case.yaml')) && read(`${c}/case.yaml`).includes(`tags: [${tag}]`));
+  assert.ok(tagged('phase-7').length >= 2, 'phase-7');
+  assert.ok(tagged('phase-9').length >= 1, 'phase-9');
+  const noBash = tagged('phase-7').find((c) => !/allowed_tools: \[[^\]]*\bBash\b/.test(read(`${c}/case.yaml`)));
+  assert.ok(noBash, 'a phase-7 case without Bash');
+});
