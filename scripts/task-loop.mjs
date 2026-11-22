@@ -57,6 +57,10 @@ export function startTask(state, id, tasksText, git, now) {
 }
 
 const WRONG_REASON = /ERR_MODULE_NOT_FOUND|Cannot find module|^SyntaxError: |^\s*SyntaxError \[|SyntaxError: (The requested module|Unexpected|Invalid or unexpected|Cannot use import)/m;
+// A failed assertion means the test ran: a SyntaxError beside it came from what the test exercises
+// (a child process, a captured message), not from the test file itself (issue #37).
+const ASSERTION = /AssertionError|ERR_ASSERTION|expect\(received\)/;
+const wrongReason = (output) => WRONG_REASON.test(output) && !ASSERTION.test(output);
 const OUTPUT_LINES = 20;
 const tail = (run) => ({ ...run, output: run.output.split('\n').slice(-OUTPUT_LINES).join('\n') });
 const noTest = (task) => 'No test' in task.fields;
@@ -102,10 +106,10 @@ export function recordEvidence(state, kind, run, tasksText, now, changed = []) {
     throw new Error(`${id}: the test must fail before the code: ${run.command} exited with 0. Write a test that fails for the missing behavior`);
   }
   const name = testName(openTask(state, tasksText, `evidence ${kind}`));
-  if (kind === 'red' && !WRONG_REASON.test(run.output) && !run.output.includes(name)) {
+  if (kind === 'red' && !wrongReason(run.output) && !run.output.includes(name)) {
     throw new Error(`${id}: the output does not show the test "${name}" failing: it did not run (import or compile error) or has another name. Name the test as in Test first: and make it fail on an assertion\n${tail(run).output}`);
   }
-  if (kind === 'red' && WRONG_REASON.test(run.output)) {
+  if (kind === 'red' && wrongReason(run.output)) {
     throw new Error(`${id}: the test failed for the wrong reason (import or syntax error, not an assertion):\n${tail(run).output}\nCreate the module or export the test needs, empty, so the test fails on an assertion`);
   }
   if (kind === 'green' && run.exitCode !== 0) throw new Error(`${id}: GREEN needs exit 0: ${run.command} exited with ${run.exitCode}\n${tail(run).output}`);
