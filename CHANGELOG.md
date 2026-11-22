@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões: 
 
 ## [Unreleased]
 
+### Changed
+
+- A skill `story` sugere uma conversa nova ao sair de requirements, confirmation e tasks, como já fazia a cada task, para retomar a história sem o custo da conversa longa (#32, KEEL-32).
+
 ## [2.0.0-beta.0] - 2026-11-22
 
 Primeira versão completa do Keel 2: as 8 partes do plano estão na `main`. Falta o piloto numa história real antes da 2.0.0.
