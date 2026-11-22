@@ -107,3 +107,24 @@ test('focus: the skill finishes what was asked without extra work', () => {
   const implementation = read('skills/story/phases/implementation.md');
   assert.match(implementation, /`outsideTask`[^\n]*desfaça[^\n]*`approve commit` recusa/);
 });
+
+test('red: the tasks phase plans no test-only task without Regression', () => {
+  const text = read('skills/story/phases/tasks.md');
+  assert.match(text, /RED possível/);
+  assert.match(text, /[Nn]unca planeje task "só teste" sem `Regression:`/);
+  assert.match(text, /amplie o `Test first:` da task que entrega o comportamento/);
+  assert.match(text, /de onde vem o RED/);
+});
+
+test('scope: confirmation review keeps the story inside its goal', () => {
+  const reviewer = read('agents/reviewer.md');
+  const review = reviewer.slice(reviewer.indexOf('## Revisão de requisitos'), reviewer.indexOf('## Revisão de task'));
+  assert.match(review, /"Goal" e o "Out of scope"/);
+  assert.match(review, /[Nn]ão reporte como falta o que o "Out of scope" já exclui/);
+  assert.match(review, /fora da história/);
+  const confirmation = read('skills/story/phases/confirmation.md');
+  assert.match(confirmation, /pendência em "Out of scope"/);
+  assert.match(confirmation, /contraria o "Out of scope"/);
+  assert.match(confirmation, /não se testa de verdade/);
+  assert.match(confirmation, /quantas regras a história tinha e quantas terá/);
+});
