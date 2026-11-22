@@ -12,7 +12,8 @@ Objetivo: o dev concorda com o que vai ser construído antes de qualquer design,
    - fora de escopo;
    - suposições que ele precisa aceitar;
    - conflitos, cada um com a decisão que você propõe;
-   - achados do revisor e o que você sugere para cada um.
+   - achados do revisor e o que você sugere para cada um. Achado não vira regra por padrão: sugira regra nova só para achado dentro do objetivo e com resultado observável no ambiente de teste do projeto (sem resultado esperado conhecido, é `[QUESTION]`). Achado fora do objetivo, achado que contraria o "Out of scope" e achado que não se testa de verdade no ambiente (só simulado, ou pulado): sugira como pendência em "Out of scope" (`- <achado> (pendência do review, fora desta história)`), não como regra nova. Se o dev quiser mesmo assim uma regra que contraria o "Out of scope", registre o conflito em "Conflicts found" com a decisão dele;
+   - se sugerir regra nova, quantas regras a história tinha e quantas terá.
    Pergunte se ele aprova o requirements.md. Pare e espere.
 4. Se o dev pedir mudança, edite o requirements.md, valide com `node "${CLAUDE_PLUGIN_ROOT}/scripts/validate-feature.mjs" <pasta>` e mostre de novo o que mudou.
 5. Não avance com `[QUESTION]` aberta ou conflito sem decisão.
