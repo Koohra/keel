@@ -432,7 +432,7 @@ function run(argv, root, now) {
       updated = arg === 'task' ? recordTaskReview(updated, values.result, now) : recordReview(updated, arg, values.result, now);
       break;
     case 'approve':
-      if (arg === 'commit') updated = approveCommit(updated, values.by, docs['tasks.md'], codeFingerprint(root), taskExitOf(workflow), now);
+      if (arg === 'commit') updated = approveCommit(updated, values.by, docs['tasks.md'], codeFingerprint(root), taskExitOf(workflow), now, changedFiles(root));
       else if (arg === 'deltas') updated = approveDeltas(updated, values.by, now);
       else updated = approve(updated, arg, values.by, docs, workflow, now);
       break;

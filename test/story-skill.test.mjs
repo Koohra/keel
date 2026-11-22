@@ -96,3 +96,14 @@ test('debugging, review answer and checklists are in the skill', () => {
   assert.match(section, /sim ou não/);
   assert.match(section, /arquivo:linha/);
 });
+
+test('focus: the skill finishes what was asked without extra work', () => {
+  const skill = read('skills/story/SKILL.md');
+  const rules = skill.slice(skill.indexOf('## Regras de todas as fases'));
+  assert.match(rules, /Foco:.*só o que a fase e a task pedem/);
+  assert.match(rules, /não proponha nem comece trabalho/i);
+  assert.match(rules, /"Implementation notes"/);
+  assert.match(rules, /resultado ou na pergunta do portão/);
+  const implementation = read('skills/story/phases/implementation.md');
+  assert.match(implementation, /`outsideTask`[^\n]*desfaça[^\n]*`approve commit` recusa/);
+});

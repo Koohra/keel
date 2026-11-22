@@ -92,7 +92,7 @@ Status: pending
 const CHECK_FILE = "import { existsSync } from 'node:fs';\nconst [file, name] = process.argv.slice(2);\nif (!existsSync(file)) { console.log(`not ok 1 - ${name}`); process.exit(1); }\nconsole.log(`ok 1 - ${name}`);\n";
 
 // The story through the task loop as the skill drives it, up to the closing phase.
-// extra: { T1: 'src/extra.js' } adds a file to that task's commit.
+// extra: { T1: 'src/extra.js' } adds a file to that task's commit after the approval (approve commit refuses it).
 // beforeTasks(repo) runs after the story reaches implementation and before T1.
 export function closingRepo({ architecture = null, extra = {}, base = null, beforeTasks = null, checks = 'Tests: `node -e 0` · Architecture: não se aplica' } = {}) {
   const repo = storyRepo({ tasks: closingTasksDoc(), checks, check: CHECK_FILE, architecture, base });
@@ -107,12 +107,12 @@ export function closingRepo({ architecture = null, extra = {}, base = null, befo
     ok(repo.state('task', 'start', id));
     ok(repo.state('evidence', 'red'));
     repo.write(file, 'export const done = true;\n');
-    if (extra[id]) repo.write(extra[id], 'export const extra = true;\n');
     ok(repo.state('evidence', 'green'));
     ok(repo.state('checks'));
     ok(repo.state('review', 'task', '--result', 'ok'));
     setStatus(id, 'in review');
     ok(repo.state('approve', 'commit', '--by', 'Ana'));
+    if (extra[id]) repo.write(extra[id], 'export const extra = true;\n');
     repo.sh('git', ['add', '-A']);
     repo.sh('git', ['commit', '-q', '-m', `APP-1 ${id}`]);
     setStatus(id, `done (${repo.sh('git', ['rev-parse', '--short', 'HEAD'])})`);

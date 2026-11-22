@@ -343,3 +343,11 @@ test('checklists: next lists the reviewer checklists the design asks for', () =>
   assert.deepEqual(taskView(state, tasks, 'tree', taskExit, withDesign['design.md']).task.checklists, ['checklists/contract.md', 'checklists/security.md']);
   assert.deepEqual(taskView(state, tasks, 'tree', taskExit, null).task.checklists, []);
 });
+
+test('scope: approve commit refuses files outside the task\'s Files:', () => {
+  const reviewed = recordTaskReview(readyForCommit(), 'ok', now);
+  assert.throws(() => approveCommit(reviewed, 'Ana', inReview(), 'tree', taskExit, now, ['src/extra.js', 'src/login.js']),
+    /T1 changed src\/extra\.js, outside its Files: \(src\/login\.js\).*undo/s);
+  const approved = approveCommit(reviewed, 'Ana', inReview(), 'tree', taskExit, now, ['src/login.js']);
+  assert.equal(approved.steps.implementation.commit.task, 'T1');
+});

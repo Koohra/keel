@@ -30,7 +30,7 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
 1. Limpe mantendo tudo verde, com foco em remover: sobras, código morto, primeira tentativa, prints, duplicação do que já existia e abstração que não se paga. Extraia código compartilhado só na terceira ocorrência do mesmo conhecimento.
 2. Gere as métricas da task:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/task-metrics.mjs"`
-   Arquivo em `outsideTask`, dependência nova ou tipo abstrato que a task não declarou: remova, ou explique na proposta de commit por que a task precisa.
+   Arquivo em `outsideTask`: desfaça a mudança; o `approve commit` recusa arquivo fora do `Files:` da task. Se a task precisa mesmo dele, pare e proponha ao dev a mudança do `Files:` no tasks.md, que pede nova aprovação. Dependência nova ou tipo abstrato que a task não declarou: remova, ou explique na proposta de commit por que a task precisa.
 3. Rode as checagens do projeto ("Checks" do product.md), cada uma isolada, gravadas pelo script:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" checks`
    Falha causada pela task: corrija na task seguindo `${CLAUDE_SKILL_DIR}/phases/debugging.md` e rode de novo. Falha fora do escopo da task: não corrija; grave com `block --reason` e reporte ao dev.
@@ -67,4 +67,5 @@ Só com a aprovação escrita do dev nesta conversa, depois de ele ver a propost
 ## Nunca
 - Declarar teste ou checagem como passando sem o script ter gravado. Se um comando não pôde rodar (negado, ausente, sem permissão), diga que não rodou e pare; não escreva evidência à mão.
 - Rodar `approve commit` sem o dev ter dito, nesta conversa, que aprova o commit que você mostrou.
-- Misturar duas tasks num commit ou mexer fora da task sem dizer.
+- Misturar duas tasks num commit ou mexer fora do `Files:` da task.
+- Propor ou começar trabalho que a task não pede; o que achar fora dela vai para "Implementation notes".
