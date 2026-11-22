@@ -438,7 +438,7 @@ Detalhes e fontes em [Como testar o Keel 2.md](Como%20testar%20o%20Keel%202.md).
 
 ## Agente de documentação (keel-docs)
 
-Plugin separado e opcional em `plugins/keel-docs/`, no mesmo marketplace (`/plugin install keel-docs --marketplace Koohra/keel`). O Keel funciona sem ele, e ele não depende de nenhum arquivo do Keel.
+Plugin separado e opcional em `plugins/keel-docs/`, no mesmo marketplace (`/plugin install keel-docs@keel`, depois de `/plugin marketplace add Koohra/keel`). O Keel funciona sem ele, e ele não depende de nenhum arquivo do Keel.
 
 - **Skill `keel-docs:write`:** ajuda o dev a redigir `keel/product.md`, uma ADR, ou o requirements.md ou o design.md de uma história. Carrega só o guia do documento pedido (`skills/write/guides/`), parte do modelo do plugin, cita fonte em todo fato ou marca `[QUESTION]`/`[ASSUMPTION]` e pergunta uma coisa por vez, com a opção recomendada.
 - **Modelos:** `templates/product.md` (termina com a seção de princípios do Keel), `templates/adr.md` (Nygard com `## Confirmation`), e cópias de `requirements.md` e `design.md` idênticas às do Keel; um teste confere que não divergem.
