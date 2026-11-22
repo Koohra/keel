@@ -10,6 +10,12 @@ Plugin do Claude Code para desenvolvimento orientado a especificação: transfor
 /plugin install keel --marketplace Koohra/keel
 ```
 
+Opcional: o agente de documentação, que ajuda a redigir `keel/product.md`, ADRs, requirements.md e design.md sem implementar nem aprovar nada ([plugins/keel-docs/](plugins/keel-docs/)):
+
+```
+/plugin install keel-docs --marketplace Koohra/keel
+```
+
 ## Como funciona
 
 1. O projeto tem `keel/product.md` (curto, com princípios de engenharia) e `keel/adrs/`.
