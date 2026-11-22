@@ -64,10 +64,17 @@ test('advance refuses without changing state when a criterion is missing', () =>
 
 test('an open question blocks leaving requirements', () => {
   const docs = docsFor('standard');
-  docs['requirements.md'] = docs['requirements.md'].replace('- Nenhuma pergunta.', '- [QUESTION] qual escopo?');
+  docs['requirements.md'] = docs['requirements.md'].replace('- Nenhuma pergunta.', [
+    '- [QUESTION] qual escopo?', '- [QUESTION] qual porta?', '- [QUESTION] qual pasta?',
+    '- [ASSUMPTION] a pasta é criada', '- [ASSUMPTION] o caminho é relativo',
+    '- [ASSUMPTION] UTF-8 — accepted by Ana on 2026-11-22.',
+  ].join('\n'));
   const state = walkTo('requirements', 'standard', docs);
   const result = advance(state, workflow, docs, now);
   assert.deepEqual(result.missing.map((m) => m.criterion), ['noOpenQuestions']);
+  const { reason } = result.missing[0];
+  assert.match(reason, /^3 open \[QUESTION\]\(s\) in requirements\.md/);
+  assert.match(reason, /2 \[ASSUMPTION\]\(s\) awaiting the dev's acceptance.*do not block/);
 });
 
 test('standard level skips design and reaches closing; closing refuses until the closing facts are recorded', () => {

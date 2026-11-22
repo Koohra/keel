@@ -53,6 +53,8 @@ test('a implementação grava evidência por script, chama o revisor e só commi
   assert.match(text, /task-metrics\.mjs/);
   assert.match(text, /keel:reviewer/);
   assert.match(text, /git diff/);
+  assert.match(text, /mesma linha/);
+  assert.match(text, /`Review: findings \(isolated reviewer\); [^`]+`/);
 });
 
 test('o revisor tem a revisão de task com a rubrica de design', () => {

@@ -321,7 +321,7 @@ test('review findings: approve commit needs what was done with them', () => {
   const withReview = (line) => inReview().replace('Review: —', `Review: ${line}`);
   const findings = recordTaskReview(readyForCommit(), 'findings', now);
   assert.throws(() => approveCommit(findings, 'Ana', withReview('findings (isolated reviewer)'), 'tree', taskExit, now),
-    /T1: the review had findings.*Review:/s);
+    /T1: the review had findings.*same line.*Review: findings \(isolated reviewer\); .*fixed.*kept/s);
   assert.throws(() => approveCommit(findings, 'Ana', inReview(), 'tree', taskExit, now), /the review had findings/);
   const approved = approveCommit(findings, 'Ana', withReview('findings (isolated reviewer); R1 removido, R2 mantido — ADR-002'), 'tree', taskExit, now);
   assert.equal(approved.steps.implementation.commit.approvedBy, 'Ana');

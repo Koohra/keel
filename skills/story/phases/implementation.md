@@ -46,7 +46,7 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
    - Achado que não se confirma, ou que contraria o product.md, uma ADR ou o requisito: discorde com a fonte (`ADR-NNN`, `keel/product.md#seção`, `R#`) e não mude nada.
    - Achado BLOQUEIA ou relevante que se confirma: volte ao GREEN, corrija só isso e rode `checks` de novo. Se a correção pedir mudar o teste do RED, nunca afrouxe o teste: grave o `block` e pergunte ao dev.
    - Achado menor pode ficar, com a justificativa. Não corrija todo SUGERIR: abstração extra também é defeito.
-4. Registre o destino de cada achado em `Review:` no "Progress", depois do resultado: corrigido, removido ou mantido com a fonte. Com `findings`, o `approve commit` recusa um `Review:` só com o resultado.
+4. Registre o destino de cada achado em `Review:` no "Progress", na mesma linha do resultado: corrigido, removido ou mantido com a fonte, por exemplo `Review: findings (isolated reviewer); F1 fixed; F2 kept [source: ADR-001]`. O `approve commit` só lê essa linha: com `findings`, ele recusa um `Review:` só com o resultado, e o destino escrito nas linhas de baixo não conta.
 
 ## 6. Proposta de commit
 1. Copie as linhas de `task.progress` para o "Progress" (o Status fica `in review` depois do review gravado) e acrescente em `Review:` o que foi feito com cada achado.
