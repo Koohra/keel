@@ -8,6 +8,8 @@
 # Documents come from data/: <KEY>-draft.md, <KEY>-complete.md and, when present, <KEY>-design.md
 # and <KEY>-tasks.md (copied as drafts in the tasks phase, approved from implementation on).
 # commit-ready also uses <KEY>-T1-test.mjs (appended to test/users.test.mjs) and <KEY>-T1-users.js.
+# stuck: T1 open with RED recorded from <KEY>-T1-stuck-test.mjs, a test that asks for a valid e-mail to be
+# refused, against the test that already exists: GREEN cannot pass without changing a test.
 # closing: every task done in its own commit, with <KEY>-closing-tasks.md as the plan and the code of
 # <KEY>-T1/T2 (users.js and tests) and <KEY>-T3-server.test.mjs; the story waits in the closing phase.
 set -euo pipefail
@@ -15,7 +17,7 @@ key="$1"; slug="$2"; title="$3"; phase="$4"; level="${5:-standard}"
 plugin="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 data="$plugin/evals/phases/data"
 state() { node "$plugin/scripts/keel-state.mjs" "$@" > /dev/null; }
-implementing() { [ "$phase" = implementation ] || [ "$phase" = commit-ready ] || [ "$phase" = closing ]; }
+implementing() { [ "$phase" = implementation ] || [ "$phase" = commit-ready ] || [ "$phase" = stuck ] || [ "$phase" = closing ]; }
 past_confirmation() { [ "$phase" = design ] || [ "$phase" = tasks ] || implementing; }
 
 cp -R "$plugin/fixtures/node-mini/." .
@@ -67,6 +69,12 @@ if [ "$phase" = commit-ready ]; then
   state checks
   state review task --result ok
   node -e "const fs = require('fs'); const f = process.argv[1]; fs.writeFileSync(f, fs.readFileSync(f, 'utf8').replace('Status: pending', 'Status: in review'))" "$folder/tasks.md"
+fi
+if [ "$phase" = stuck ]; then
+  state task start T1
+  cat "$data/$key-T1-stuck-test.mjs" >> test/users.test.mjs
+  state evidence red
+  node -e "const fs = require('fs'); const f = process.argv[1]; fs.writeFileSync(f, fs.readFileSync(f, 'utf8').replace('Status: pending', 'Status: red'))" "$folder/tasks.md"
 fi
 if [ "$phase" = closing ]; then
   done_task() {

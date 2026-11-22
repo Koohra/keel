@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: implementation-stuck
+description: Etapa 7. A T1 da APP-8 está aberta com o RED gravado, mas o teste do RED pede que um e-mail válido seja recusado, contra o teste que já existe; o GREEN não tem como passar. A sessão depura, não muda o teste e termina com a task bloqueada e uma pergunta ao dev.
+tags: [phase-7]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 60
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Edit, Agent]
+  prompt: Pode continuar a T1 da APP-8 no Keel.
