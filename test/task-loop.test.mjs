@@ -351,3 +351,18 @@ test('scope: approve commit refuses files outside the task\'s Files:', () => {
   const approved = approveCommit(reviewed, 'Ana', inReview(), 'tree', taskExit, now, ['src/login.js']);
   assert.equal(approved.steps.implementation.commit.task, 'T1');
 });
+
+test('scope: review task refuses files outside the task\'s Files:', () => {
+  assert.throws(() => recordTaskReview(readyForCommit(), 'ok', now, tasks, ['src/extra.js', 'src/login.js']),
+    /T1 changed src\/extra\.js, outside its Files: \(src\/login\.js\).*undo/s);
+  const reviewed = recordTaskReview(readyForCommit(), 'ok', now, tasks, ['src/login.js']);
+  assert.equal(reviewed.steps.implementation.review.result, 'ok');
+});
+
+test('adr: approve commit points the project docs to the closing', () => {
+  const reviewed = recordTaskReview(readyForCommit(), 'ok', now);
+  assert.throws(() => approveCommit(reviewed, 'Ana', inReview(), 'tree', taskExit, now, ['keel/adrs/ADR-002-x.md', 'src/login.js']),
+    /T1 changed keel\/adrs\/ADR-002-x\.md, outside its Files:.*closing.*adr-draft\.md/s);
+  assert.throws(() => approveCommit(reviewed, 'Ana', inReview(), 'tree', taskExit, now, ['src/extra.js']),
+    (error) => !/adr-draft\.md/.test(error.message));
+});

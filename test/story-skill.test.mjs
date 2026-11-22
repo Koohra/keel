@@ -107,3 +107,13 @@ test('focus: the skill finishes what was asked without extra work', () => {
   const implementation = read('skills/story/phases/implementation.md');
   assert.match(implementation, /`outsideTask`[^\n]*desfaça[^\n]*`approve commit` recusa/);
 });
+
+test('adr: the design drafts the ADR in the story folder and the closing writes it', () => {
+  const design = read('skills/story/phases/design.md');
+  const step = design.split('\n').find((line) => line.includes('"ADR candidate?"'));
+  assert.match(step, /rascunho em `keel\/features\/<KEY>-<slug>\/adr-draft\.md`/);
+  assert.doesNotMatch(step, /rascunho em `keel\/adrs\//);
+  assert.match(step, /Não escreva em `keel\/adrs\/`/);
+  const closing = read('skills/story/phases/closing.md');
+  assert.match(closing, /`adr-draft\.md`[^\n]*`keel\/adrs\/ADR-NNN-<slug>\.md`/);
+});

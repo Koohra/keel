@@ -429,7 +429,7 @@ function run(argv, root, now) {
     case 'level': updated = setLevel(updated, arg, values.by, now); break;
     case 'generated': updated = recordGenerated(updated, arg, now); break;
     case 'review':
-      updated = arg === 'task' ? recordTaskReview(updated, values.result, now) : recordReview(updated, arg, values.result, now);
+      updated = arg === 'task' ? recordTaskReview(updated, values.result, now, docs['tasks.md'], changedFiles(root)) : recordReview(updated, arg, values.result, now);
       break;
     case 'approve':
       if (arg === 'commit') updated = approveCommit(updated, values.by, docs['tasks.md'], codeFingerprint(root), taskExitOf(workflow), now, changedFiles(root));

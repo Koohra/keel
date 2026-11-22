@@ -46,6 +46,9 @@ test('Stop runs stale checks, blocks when they fail and asks for the review when
     assert.match(failing.stderr, /Lint \(node -e "process.exit\(3\)"\) exited with 3/);
     assert.equal(repo.read().steps.implementation.checks.passed, false);
     repo.write('keel/product.md', '# Produto\n\n### Checks\nTests: `node check.mjs`\n');
+    // The dev's fix is committed apart (outside T1's Files:); the task's code changes, so the checks are stale.
+    repo.sh('git', ['commit', '-q', '-m', 'the dev fixes the checks', '--', 'keel/product.md']);
+    repo.write('src/login.js', 'export const login = 2;\n');
     const review = stop(repo);
     assert.equal(review.status, 2);
     assert.match(review.stderr, /T1 has no isolated review/);
