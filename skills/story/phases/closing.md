@@ -36,7 +36,7 @@ Se recusar, mostre ao dev o que falta e resolva aqui. Aceito, a história fica `
 2. Gere a descrição do PR e troque os dois comentários pelo que você levantou no passo 2:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/check-feature.mjs" <pasta-da-história> --pr`
 3. Proponha o commit do fechamento (`<KEY>: fechamento`), com a pasta da história e os deltas aprovados, mostrando o diff. Commite só com a palavra do dev.
-4. Entregue a descrição do PR ao dev. Abra o PR (por exemplo com `gh pr create --body-file`) só se o dev pedir.
+4. Mostre a descrição do PR na resposta ao dev. Não grave arquivo com ela no projeto: o commit do fechamento já passou e ele ficaria solto. Se o dev pedir para abrir o PR com `gh pr create --body-file`, grave o arquivo fora da árvore do projeto (na pasta temporária do sistema), nunca na raiz do projeto nem na pasta da história.
 
 ## Nunca
 - Corrigir código, teste ou baseline no fechamento, ou marcar `met` o que o script não marcou.

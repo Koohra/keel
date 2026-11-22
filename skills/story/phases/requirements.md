@@ -12,7 +12,7 @@ Objetivo: transformar a história em obrigações explícitas e testáveis no `r
 3. Sem THEN, é pergunta: se a história, o product.md, uma ADR ou o código não dizem o resultado esperado, escreva `[QUESTION]` em "Questions and assumptions" com a opção que você recomenda, e não escreva o critério.
 4. Preencha "Explicit obligations": casos de borda, invariantes (o que nunca pode acontecer), comportamento existente que não muda (com `arquivo:linha`), erros esperados ou "nenhum" explícito.
 5. Preencha "Out of scope" com o que parece próximo mas esta história não faz.
-6. Em "Conflicts found", liste cada divergência entre história, product.md, ADRs e código com as duas fontes. Seção sem conteúdo diz "not applicable"; não remova seção.
+6. Em "Conflicts found", liste cada divergência entre história, product.md, ADRs e código com as duas fontes. Seção sem conteúdo diz "not applicable"; não remova seção. Num conflito com uma ADR, se a recomendação for mudar a decisão, diga que o design a registra como candidata a ADR num rascunho `adr-draft.md` na pasta da história e que a ADR em `keel/adrs/` nasce no fechamento, com a aprovação dos deltas pelo dev; não diga que o design escreve a ADR.
 7. `[ASSUMPTION]` é algo que você assumiu e o dev precisa aceitar; `[QUESTION]` bloqueia o avanço.
 8. Valide por script e corrija até não haver erro:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/validate-feature.mjs" keel/features/<KEY>-<slug>`

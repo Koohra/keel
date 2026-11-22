@@ -47,7 +47,7 @@ O Keel transforma documentação mínima e cuidadosa em código bom, uma histór
 
 ### Estado da história (state.json)
 
-O `state.json` diz à IA em que etapa a história está e o que já foi gerado e aprovado. O Keel lê esse arquivo no início de toda interação, inclusive ao retomar uma história em outra sessão, e só avança de etapa se o estado permitir. Por isso a saída de requirements, confirmation e tasks, e cada task, terminam sugerindo uma conversa nova: retomar a mesma conversa fica mais caro a cada resposta (na segunda história de ponta a ponta, de US$ 0,05 para US$ 2 por resposta curta).
+O `state.json` diz à IA em que etapa a história está e o que já foi gerado e aprovado. O Keel lê esse arquivo no início de toda interação, inclusive ao retomar uma história em outra sessão, e só avança de etapa se o estado permitir. Por isso a saída de requirements, confirmation, tasks e implementation, e cada task, terminam sugerindo uma conversa nova: retomar a mesma conversa fica mais caro a cada resposta (na segunda história de ponta a ponta, de US$ 0,05 para US$ 2 por resposta curta).
 
 - **Quem escreve:** só o script de estado (`keel-state.mjs`), chamado pela skill com comandos como `next`, `advance` ou `approve requirements.md --by <dev>`. O modelo não edita o JSON diretamente.
 - **Aprovação presa ao conteúdo:** ao aprovar um documento, o script grava o hash dele. Se o arquivo mudar depois, a aprovação vence e a história volta para a confirmação daquele documento.
