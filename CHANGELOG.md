@@ -7,6 +7,8 @@ Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões: 
 ### Changed
 
 - A skill `story` sugere uma conversa nova ao sair de requirements, confirmation e tasks, como já fazia a cada task, para retomar a história sem o custo da conversa longa (#32, KEEL-32).
+- A proposta de commit da task traz o `git diff --stat` e o diff no próprio texto da resposta; saída de ferramenta e "o diff está acima" não contam (#38, KEEL-38).
+- A marca `Status: done (<hash>)` vai num commit próprio, só da pasta da história, logo após o commit da task; o hook aceita esse commit quando não sobra código fora da pasta (#39, KEEL-38).
 - O fechamento mostra a descrição do PR na resposta e não deixa arquivo solto no projeto; a saída de implementation também sugere conversa nova; a pergunta sobre conflito com ADR nos requisitos diz que o design só rascunha a ADR e que ela nasce no fechamento (#40, #41, KEEL-40).
 
 ## [2.0.0-beta.0] - 2026-11-22

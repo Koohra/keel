@@ -5,7 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import {
-  checkCommand, checkEdit, codeFingerprint, findActiveStory, isProjectSource, loadWorkflow, reconcile,
+  changedFiles, checkCommand, checkEdit, codeFingerprint, findActiveStory, isProjectSource, loadWorkflow, reconcile,
 } from '../keel-state.mjs';
 import { checkGitCommit, isGitCommit } from '../task-loop.mjs';
 import { readDocs } from '../validate-feature.mjs';
@@ -22,7 +22,7 @@ function gitCommitDecision(root) {
   const docs = readDocs(active.folder);
   const state = reconcile(active.state, loadWorkflow(), docs).state;
   if (state.phase !== 'implementation') return { block: false };
-  return checkGitCommit(state, docs['tasks.md'], codeFingerprint(root));
+  return checkGitCommit(state, docs['tasks.md'], codeFingerprint(root), changedFiles(root));
 }
 
 const event = JSON.parse(readFileSync(0, 'utf8'));

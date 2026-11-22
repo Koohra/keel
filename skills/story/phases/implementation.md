@@ -50,8 +50,8 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
 
 ## 6. Proposta de commit
 1. Copie as linhas de `task.progress` para o "Progress" (o Status fica `in review` depois do review gravado) e acrescente em `Review:` o que foi feito com cada achado.
-2. Mostre ao dev, curto:
-   - o que entra: `git status --short` e o diff (`git diff HEAD` e os arquivos novos), não só a lista de arquivos;
+2. Mostre ao dev, curto, no próprio texto da resposta:
+   - o que entra: `git diff --stat` e o diff (`git diff HEAD` e os arquivos novos) colado na resposta, não só a lista de arquivos. Em task grande, o `git diff --stat` e o trecho alterado de cada arquivo. O dev não vê a saída de ferramenta: rodar o `git diff` não mostra o diff, e referência a "acima" ("o diff está acima") não conta;
    - a evidência gravada: RED e GREEN com comando e código de saída, e cada checagem com o código de saída;
    - o resultado do review;
    - a mensagem proposta: `<KEY> T<n>: <título da task> (R#)`.
@@ -62,7 +62,8 @@ Só com a aprovação escrita do dev nesta conversa, depois de ele ver a propost
 1. `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" approve commit --by "<dev>"` (sozinho, num comando à parte: o hook confere o `git commit` antes de o comando todo rodar)
 2. `git add` dos arquivos da task e da pasta da história, e `git commit -m "<mensagem>"`. Um commit por task, sem mudança alheia. Se o código mudar depois da aprovação, o hook bloqueia: mostre o novo diff e peça de novo.
 3. Pegue o hash (`git rev-parse --short HEAD`) e marque no "Progress": `Status: done (<hash>)`.
-4. Volte ao passo 1 para a próxima task. Quando todas estiverem `done`, peça para avançar com `advance` e, aceito, sugira seguir o fechamento numa conversa nova (`/clear`).
+4. Commite só a pasta da história, com a marca: `git add <pasta da história>` e `git commit -m "<KEY> T<n>: done (<hash>)"`. A árvore fica limpa antes da próxima task; o hook só aceita esse commit sem código fora da pasta da história.
+5. Volte ao passo 1 para a próxima task. Quando todas estiverem `done`, peça para avançar com `advance` e, aceito, sugira seguir o fechamento numa conversa nova (`/clear`).
 
 ## Nunca
 - Declarar teste ou checagem como passando sem o script ter gravado. Se um comando não pôde rodar (negado, ausente, sem permissão), diga que não rodou e pare; não escreva evidência à mão.

@@ -272,8 +272,8 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 
 **Comportamentos**
 - Deve propor um commit que representa a task inteira, com mensagem que cita a história e a regra.
-- Deve mostrar ao dev o que entra no commit, a evidência e o resultado do review.
-- Deve marcar a task como feita no tasks.md com o hash do commit.
+- Deve mostrar ao dev, no próprio texto da resposta, o que entra no commit (`git diff --stat` e o diff), a evidência e o resultado do review; saída de ferramenta e referência a "acima" não contam.
+- Deve marcar a task como feita no tasks.md com o hash do commit e commitar essa marca à parte, só a pasta da história (`<KEY> T<n>: done (<hash>)`), para a árvore ficar limpa entre tasks.
 - Não deve commitar sem aprovação, nem misturar duas tasks, nem incluir mudança alheia.
 
 **Portão:** **dev aprova o commit.**
