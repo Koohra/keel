@@ -6,6 +6,6 @@
     "name": "Miguel Pereira de Sousa"
   },
   "repository": "https://github.com/Koohra/keel",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "keywords": ["sdd", "documentation", "requirements", "adr"]
 }
