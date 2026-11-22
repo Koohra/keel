@@ -238,3 +238,50 @@ test('the CLI runs when called through a symlink to the script', (t) => {
     assert.deepEqual(JSON.parse(result.stdout).files.map((f) => f.path), ['AGENTS.md']);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+const findingsOf = (files, kind) => {
+  const dir = project(files);
+  try { return review(dir).findings.filter((f) => f.kind === kind); } finally { rmSync(dir, { recursive: true, force: true }); }
+};
+
+test('review warns when no instruction file names a test, build or lint command', () => {
+  const prose = findingsOf({ 'AGENTS.md': '# App\n\nA small app. Be careful with the database.\n' }, 'commands');
+  assert.equal(prose.length, 1);
+  assert.equal(prose[0].severity, 'warning');
+  const pkg = { 'package.json': '{"scripts":{"test":"node --test"}}\n' };
+  assert.deepEqual(findingsOf({ 'AGENTS.md': '# App\n\n- Test: `npm test`\n', ...pkg }, 'commands'), []);
+  assert.deepEqual(findingsOf({ 'AGENTS.md': '# App\n\n```sh\npytest -q\n```\n' }, 'commands'), []);
+  assert.deepEqual(findingsOf({ 'CLAUDE.md': '@AGENTS.md\n', 'AGENTS.md': '# A\n\n`make lint`\n', 'Makefile': 'lint:\n\ttrue\n' }, 'commands'), []);
+  assert.deepEqual(findingsOf({ 'README.md': '# none\n' }, 'commands'), []);
+});
+
+test('review lists the template sections missing from the main file, with Portuguese synonyms', () => {
+  const pt = '# App\n\n## Comandos\n\n## Convenções\n\n## Limites\n\n## Pronto quando\n\n## Armadilhas\n\n## Mais detalhes\n';
+  assert.deepEqual(findingsOf({ 'AGENTS.md': pt, 'CLAUDE.md': '@AGENTS.md\n## Other\n' }, 'sections'), []);
+  const sparse = findingsOf({ 'AGENTS.md': '# App\n\n## Setup\n' }, 'sections');
+  assert.equal(sparse.length, 1);
+  assert.equal(sparse[0].severity, 'info');
+  assert.equal(sparse[0].file, 'AGENTS.md');
+  assert.match(sparse[0].message, /Conventions, Boundaries, Done when, Pitfalls, More details/);
+  assert.doesNotMatch(sparse[0].message, /Commands/);
+  assert.match(sparse[0].message, /restructur/);
+  const two = findingsOf({ 'CLAUDE.md': '# A\n## Commands\n## Conventions\n## Boundaries\n## Done when\n' }, 'sections');
+  assert.equal(two[0].file, 'CLAUDE.md');
+  assert.doesNotMatch(two[0].message, /restructur/);
+  assert.deepEqual(findingsOf({ 'README.md': '# none\n' }, 'sections'), []);
+});
+
+test('review flags piled-up emphasis and too many list items', () => {
+  const shout = (n) => Array.from({ length: n }, (_, i) => `IMPORTANT: rule ${i}.`).join('\n');
+  const loud = findingsOf({ 'AGENTS.md': `# A\n${shout(5)}\n` }, 'emphasis');
+  assert.equal(loud.length, 1);
+  assert.equal(loud[0].severity, 'info');
+  assert.match(loud[0].message, /\b5\b/);
+  assert.deepEqual(findingsOf({ 'AGENTS.md': `# A\n${shout(4)}\n` }, 'emphasis'), []);
+  assert.deepEqual(findingsOf({ 'AGENTS.md': '# A\n```\nNEVER NEVER NEVER\nNEVER NEVER\n```\n' }, 'emphasis'), []);
+  const items = (n) => Array.from({ length: n }, (_, i) => `- rule ${i}`).join('\n');
+  const many = findingsOf({ 'AGENTS.md': `# A\n${items(40)}\n` }, 'rules');
+  assert.equal(many.length, 1);
+  assert.equal(many[0].severity, 'info');
+  assert.deepEqual(findingsOf({ 'AGENTS.md': `# A\n${items(39)}\n` }, 'rules'), []);
+});

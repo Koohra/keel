@@ -40,6 +40,23 @@ const CONFLICTS = [
   /\bn[ãa]o\s+(pe[çc]a|pergunte)\s+(por\s+)?(confirma|aprova|permiss)/i,
 ];
 
+const CHECK_COMMAND = /\b(test|tests|build|lint|check|verify|typecheck|pytest|jest|vitest|tsc|ruff|eslint|clippy|mypy|phpunit|rspec)\b/i;
+
+// Headings that count as each section of templates/agents.md, in English and Portuguese.
+const SECTION_SYNONYMS = {
+  Commands: /command|comando|setup|\brun\b|rodar|build|scripts|development|desenvolvimento|getting started|testing|testes/i,
+  Conventions: /convention|conven[çc]|padr[õo]es|\bstyle|estilo/i,
+  Boundaries: /boundar|limite|\bnever\b|\bnunca\b|\brules?\b|\bregras?\b|restri|ask first|proib/i,
+  'Done when': /\bdone\b|pronto|verifica|checklist|before (a |opening a )?pr|antes de (abrir )?(um )?pr/i,
+  Pitfalls: /pitfall|armadilha|gotcha|cuidado|known issue|problemas conhecidos|caveat/i,
+  'More details': /more details|mais detalhes|\bdocs\b|documenta|reference|refer[êe]ncia|links|see also|veja tamb/i,
+};
+const EMPHASIS = /\b(IMPORTANT|CRITICAL|MUST|NEVER|ALWAYS|IMPORTANTE|NUNCA|SEMPRE|OBRIGATÓRIO|CRÍTICO)\b/g;
+const MAX_EMPHASIS = 4;
+const MAX_LIST_ITEMS = 39;
+const MAIN_FILES = ['AGENTS.md', 'CLAUDE.md', '.claude/CLAUDE.md'];
+const RESTRUCTURE_AT = 3;
+
 const PNPM_BUILTINS = new Set(['install', 'i', 'add', 'remove', 'rm', 'uninstall', 'update', 'up', 'exec', 'dlx', 'create',
   'init', 'list', 'ls', 'why', 'outdated', 'audit', 'publish', 'pack', 'link', 'unlink', 'store', 'prune', 'rebuild',
   'config', 'import', 'fetch', 'patch', 'patch-commit', 'env', 'setup', 'server', 'root', 'bin', 'deploy', 'licenses',
@@ -368,6 +385,7 @@ function keelBlockFinding(file, text, templates) {
 export function review(root, { templates = loadTemplates() } = {}) {
   const facts = scan(root);
   const findings = [visibility(root, facts)];
+  const texts = [];
   if (facts.otherAgents.length) {
     findings.push(finding('other-agents', 'info', null, null, null, `Other agents read this repository `
       + `(${facts.otherAgents.join(', ')}). The optional keel block can guide them (default: no).`));
@@ -389,13 +407,69 @@ export function review(root, { templates = loadTemplates() } = {}) {
       }
     });
     findings.push(...deadCommands(root, file.path, text));
+    findings.push(...proseFindings(file.path, text, blockLines));
     for (const name of file.otherBlocks) {
       findings.push(finding('other-tool', 'info', file.path, null, null,
         `Block ${name}: another tool's flow; decide which one drives the stories. Keel does not touch it.`));
     }
     findings.push(...keelBlockFinding(file.path, text, templates));
+    texts.push({ path: file.path, text });
   }
+  if (texts.length && !texts.some(({ text }) => codeSnippets(text).some(({ code }) => CHECK_COMMAND.test(code)))) {
+    findings.push(finding('commands', 'warning', texts[0].path, null, null, 'No test, build or lint command in code '
+      + '(`...` or a fence). Agents use the commands the file names and rarely find others; add them under "Commands".'));
+  }
+  findings.push(...missingSections(texts));
   return { findings };
+}
+
+// Lines outside fences and outside the keel block, without `inline` code.
+function proseLines(text, [blockStart, blockEnd]) {
+  const prose = [];
+  let fence = null;
+  splitLines(text).forEach((line, index) => {
+    if (index + 1 >= blockStart && index + 1 <= blockEnd) return;
+    const marker = line.match(/^\s*(`{3,}|~{3,})/);
+    if (marker) {
+      if (!fence) fence = marker[1][0];
+      else if (marker[1][0] === fence) fence = null;
+      return;
+    }
+    if (!fence) prose.push(line.replace(/`[^`]*`/g, ''));
+  });
+  return prose;
+}
+
+function proseFindings(path, text, blockLines) {
+  const prose = proseLines(text, blockLines);
+  const findings = [];
+  const emphasis = prose.reduce((sum, line) => sum + (line.match(EMPHASIS) ?? []).length, 0);
+  if (emphasis > MAX_EMPHASIS) {
+    findings.push(finding('emphasis', 'info', path, null, null, `${emphasis} emphasis words in capitals (IMPORTANT, NEVER, `
+      + 'MUST...). Anthropic advises against it: piled-up emphasis makes Claude over-apply the rule. Plain text with the reason works better.'));
+  }
+  const items = prose.filter((line) => /^\s*([-*+]|\d+[.)])\s+\S/.test(line)).length;
+  if (items > MAX_LIST_ITEMS) {
+    findings.push(finding('rules', 'info', path, null, null, `${items} list items. Anthropic: at forty rules most are `
+      + 'preferences. Suggestion: a checkable rule becomes a lint, test or hook and only its command stays; long detail goes to a linked doc.'));
+  }
+  return findings;
+}
+
+function missingSections(texts) {
+  const main = MAIN_FILES.map((path) => texts.find((item) => item.path === path)).find(Boolean);
+  if (!main) return [];
+  const headings = splitLines(main.text).map((line) => line.match(/^##\s+(.+?)\s*$/)?.[1]).filter(Boolean);
+  const missing = [...allowedHeadings()].filter((section) => {
+    const synonym = SECTION_SYNONYMS[section];
+    return !headings.some((heading) => heading.toLowerCase() === section.toLowerCase() || synonym?.test(heading));
+  });
+  if (!missing.length) return [];
+  const advice = missing.length >= RESTRUCTURE_AT
+    ? ' Suggestion: a restructuring into the template sections that only moves and removes lines (setup step 5).'
+    : '';
+  return [finding('sections', 'info', main.path, null, null,
+    `Sections of templates/agents.md not found: ${missing.join(', ')}. Add only those the project needs.${advice}`)];
 }
 
 // ---- check ----
