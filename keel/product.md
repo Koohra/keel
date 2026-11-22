@@ -2,25 +2,25 @@
 
 Versão 2 · Responsável: Miguel · Fonte detalhada: [docs/specification.md](../docs/specification.md)
 
-## Visão
+## Vision
 O Keel é um plugin do Claude Code que transforma documentação mínima e cuidadosa em código bom, uma história e uma task pequena por vez, com TDD em cada task e evidência verificável em cada passo. [source: docs/specification.md#propósito]
 
 Para quem: devs que usam o Claude Code em projetos reais e querem que a IA siga um processo de engenharia sem gerar volume de texto para revisar.
 
-## O que o Keel faz
+## What it does
 - Prepara o projeto uma vez: `keel/product.md` e `keel/adrs/`.
 - Conduz cada história pelo fluxo: triagem, leitura das fontes, requisitos, confirmação, design (só com gatilho), tasks, implementação em TDD, review isolado, commit aprovado e fechamento.
 - Decide a ordem do fluxo por script (`workflow/workflow.json` e `state.json` por história), não pela IA.
 - Bloqueia por hook o que estiver fora da fase.
 
-## O que o Keel não faz
+## What it does not do
 - Não gera código a partir da spec como fonte única.
 - Não cria pacote de muitos artefatos por história (research, data-model, contracts, checklists).
 - Não commita sem aprovação nem decide trade-offs sozinho.
-- Não escreve documentação para o dev: isso é do agente de documentação, um plugin separado e opcional.
+- Não escreve documentação para o dev: isso é do agente de documentação, um plugin separado e opcional (`plugins/keel-docs/`).
 - Não cobre o Codex nesta versão.
 
-## Glossário
+## Glossary
 | Termo | Significado |
 |---|---|
 | História | Unidade de trabalho vinda do Jira ou ferramenta parecida, identificada por `<KEY>` |
@@ -32,7 +32,7 @@ Para quem: devs que usam o Claude Code em projetos reais e querem que a IA siga 
 | Fase | Etapa do `workflow.json`; o script diz qual é a atual e o que falta para sair |
 | Evidência | Comando, código de saída e saída relevante registrados |
 
-## Decisões
+## Decisions
 As decisões que afetam o projeto inteiro estão em [adrs/](adrs/):
 - [ADR-001](adrs/ADR-001-per-story-flow.md) Fluxo por história e arquivos versionados.
 - [ADR-002](adrs/ADR-002-script-driven-sequence.md) Sequência do fluxo controlada por script.

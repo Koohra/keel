@@ -432,6 +432,16 @@ Detalhes e fontes em [Como testar o Keel 2.md](Como%20testar%20o%20Keel%202.md).
 - **Primeiro caso a escrever:** confirmar que os hooks do plugin disparam dentro do `claude plugin eval`.
 - Os testes da camada 0 precisam passar no Windows desde o primeiro dia.
 
+## Agente de documentação (keel-docs)
+
+Plugin separado e opcional em `plugins/keel-docs/`, no mesmo marketplace (`/plugin install keel-docs --marketplace Koohra/keel`). O Keel funciona sem ele, e ele não depende de nenhum arquivo do Keel.
+
+- **Skill `keel-docs:write`:** ajuda o dev a redigir `keel/product.md`, uma ADR, ou o requirements.md ou o design.md de uma história. Carrega só o guia do documento pedido (`skills/write/guides/`), parte do modelo do plugin, cita fonte em todo fato ou marca `[QUESTION]`/`[ASSUMPTION]` e pergunta uma coisa por vez, com a opção recomendada.
+- **Modelos:** `templates/product.md` (termina com a seção de princípios do Keel), `templates/adr.md` (Nygard com `## Confirmation`), e cópias de `requirements.md` e `design.md` idênticas às do Keel; um teste confere que não divergem.
+- **`scripts/doc-check.mjs`:** só lê. Aponta seção do modelo que falta ou está vazia, linha do modelo não preenchida, regra sem `[source:`, regra fora de EARS, critério fora de Given/When/Then, nome de ADR fora de `ADR-NNN-<slug>.md` e product.md acima de cerca de 200 linhas (requirements.md e design.md longos são aviso). Sai com 1 se houver erro.
+- **Não implementa nem aprova:** o documento que ele cria fica `Status: draft` (ADR `Proposed`); ele não muda `Status` existente, não escreve código, tasks.md nem state.json e não roda scripts do Keel. Pedido de aprovar ou implementar é recusado e apontado para `keel:story`. A garantia é da skill e do eval de recusa; os hooks do Keel continuam bloqueando código fora da fase.
+- **Fora desta versão:** migração de documentação antiga (etapa 0), que continua com a skill `setup`.
+
 ## Plano de desenvolvimento
 
 Cada parte é desenvolvida com TDD e, desde a parte 1, usando o próprio fluxo do Keel à mão (product.md, requirements, tasks).
@@ -468,6 +478,7 @@ Cada parte é desenvolvida com TDD e, desde a parte 1, usando o próprio fluxo d
 | TDD | Obrigatório por task: RED, GREEN, REFACTOR | 2026-11-18 |
 | Hook que protege o teste do RED | Versão futura; o review cobre na versão 1 | 2026-11-20 |
 | Estado da história | `state.json` por história, escrito só por script, aprovações presas a hash | 2026-11-20 |
+| Agente de documentação | Segundo plugin no mesmo repo e marketplace (`plugins/keel-docs/`), sem hook próprio | 2026-11-21 |
 | Sequência do fluxo | `workflow.json` no plugin; a IA pergunta o próximo passo ao script em vez de decidir | 2026-11-20 |
 | Testes | Quatro camadas enxutas, sem qualificação por hash nem resultados no repo | 2026-11-20 |
 | Regra já entregue | Task de regressão com RED por sabotagem do código entregue (Seemann, Feathers) | 2026-11-21 |

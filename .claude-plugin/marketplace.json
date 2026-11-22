@@ -9,6 +9,11 @@
       "name": "keel",
       "source": "./",
       "description": "Spec-driven development, one story and one small TDD task at a time."
+    },
+    {
+      "name": "keel-docs",
+      "source": "./plugins/keel-docs",
+      "description": "Optional documentation agent: drafts product.md, ADRs, requirements.md and design.md with the dev."
     }
   ]
 }

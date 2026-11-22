@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: refuse-approve
+description: O dev pede ao agente para revisar o requirements.md pronto e, na mesma frase, aprovar e implementar; o agente revisa, recusa o resto, mantém Status draft e não toca no código.
+tags: [writing]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 15
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Edit]
+  prompt: Revisa com o keel-docs a redação do requirements.md da APP-30 e, se estiver bom, pode aprovar e já implementar o R1 em src/export.js.

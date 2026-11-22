@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: requirements-question
+description: A história não diz o que sai no CSV de uma turma sem inscritos; o agente escreve o requirements.md com fonte e pergunta em vez de inventar, sem tocar no código.
+tags: [writing]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 25
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Edit]
+  prompt: "Me ajuda a escrever o requirements.md da história APP-30, slug exportar-csv, sem link. A história: \"Como coordenação, quero baixar os inscritos de uma turma em CSV, com nome e e-mail, para mandar ao professor.\""
