@@ -318,9 +318,12 @@ export function isGitCommit(command) {
 }
 
 // PreToolUse decision on git commit: in implementation, only the approved commit of the open task.
-export function checkGitCommit(state, tasksText, fingerprint) {
+// changed: code files that differ from HEAD or are new, outside the story folder. With the approved
+// commit already made and no code left, only the story folder can go in: the Status: done (<hash>) mark.
+export function checkGitCommit(state, tasksText, fingerprint, changed = null) {
   if (state.phase !== 'implementation') return { block: false };
   const impl = implementation(state);
+  if (impl.currentTask && impl.commit?.task === impl.currentTask && changed?.length === 0) return { block: false };
   const reason = impl.currentTask
     ? commitReason(impl, fingerprint)
     : 'no open task in the implementation; commits here are task commits approved by the dev (task start, then approve commit)';
