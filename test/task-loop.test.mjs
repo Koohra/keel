@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readJson } from './helpers.mjs';
-import { requirementsDoc, tasksDoc } from './fixtures.mjs';
+import { designDoc, requirementsDoc, tasksDoc } from './fixtures.mjs';
 import { newState, nextStep, advance, approve, setLevel, recordReview, recordGenerated } from '../scripts/keel-state.mjs';
 import { storyRepo } from './story-repo.mjs';
 import {
   startTask, evidenceCommand, recordEvidence, taskMissing, checkCommands, recordChecks,
-  recordTaskReview, approveCommit, isGitCommit, checkGitCommit, checkStop, taskView,
+  recordTaskReview, approveCommit, isGitCommit, checkGitCommit, checkStop, taskView, reviewChecklists,
 } from '../scripts/task-loop.mjs';
 
 const workflow = readJson('workflow/workflow.json');
@@ -165,7 +165,8 @@ test('review task records the isolated review; approve commit needs RED, GREEN, 
   assert.deepEqual(taskMissing(reviewed, tasks, 'tree', taskExit).map((m) => m.criterion), ['approval:commit']);
   assert.throws(() => approveCommit(reviewed, '', inReview(), 'tree', taskExit, now), /--by <dev>/);
   assert.throws(() => approveCommit(reviewed, 'Ana', inReview(), 'other', taskExit, now), /code changed after the checks/);
-  const approved = approveCommit(reviewed, 'Ana', inReview(), 'tree', taskExit, now);
+  const answered = inReview().replace('Review: —', 'Review: findings (isolated reviewer); nome do teste corrigido');
+  const approved = approveCommit(reviewed, 'Ana', answered, 'tree', taskExit, now);
   assert.deepEqual(approved.steps.implementation.commit, { task: 'T1', approvedBy: 'Ana', at: now, fingerprint: 'tree' });
   assert.deepEqual(taskMissing(approved, tasks, 'tree', taskExit), []);
   assert.match(taskMissing(approved, tasks, 'later', taskExit).at(-1).reason, /code changed after the dev approved the commit/);
@@ -249,7 +250,8 @@ test('Progress mirrors the script: ready lines in the output and approve commit 
   ]);
   assert.throws(() => approveCommit(state, 'Ana', withStatus(tasks, 'T1', 'green'), 'tree', taskExit, now),
     /Status: green in the Progress of T1 does not match the state \(in review\)/);
-  assert.equal(approveCommit(state, 'Ana', withStatus(tasks, 'T1', 'in review'), 'tree', taskExit, now).steps.implementation.commit.task, 'T1');
+  const answered = withStatus(tasks, 'T1', 'in review').replace('Review: —', 'Review: findings (isolated reviewer); corrigido');
+  assert.equal(approveCommit(state, 'Ana', answered, 'tree', taskExit, now).steps.implementation.commit.task, 'T1');
   const onlyRed = recordEvidence(startTask(implementationState(), 'T1', tasks, git, now), 'red', red, tasks, now);
   assert.throws(() => approveCommit(onlyRed, 'Ana', withStatus(tasks, 'T1', 'green'), 'tree', taskExit, now), /does not match the state \(red\)/);
 });
@@ -266,4 +268,78 @@ test('regression task: RED only with the delivered code sabotaged, GREEN only af
   assert.throws(() => recordEvidence(state, 'green', passing, regression, now, ['test/session.test.js', 'src/login.js']), /undo the sabotage .*src\/login\.js/);
   state = recordEvidence(state, 'green', passing, regression, now, ['test/session.test.js']);
   assert.equal(state.steps.implementation.green.exitCode, 0);
+});
+
+test('failed attempts: a failing GREEN is recorded and next points to debugging', () => {
+  const repo = storyRepo();
+  try {
+    repo.state('task', 'start', 'T1');
+    assert.equal(repo.state('evidence', 'red').status, 0);
+    const failed = repo.state('evidence', 'green');
+    assert.equal(failed.status, 1);
+    assert.match(failed.stderr, /GREEN needs exit 0/);
+    const attempt = repo.read().steps.implementation.failedAttempts;
+    assert.equal(attempt.count, 1);
+    assert.equal(attempt.last.kind, 'green');
+    assert.equal(attempt.last.exitCode, 1);
+    assert.match(attempt.last.output, /not ok 1/);
+    assert.deepEqual(JSON.parse(repo.state('next').stdout).task.debugging, { attempts: 1, max: 3, instructions: 'phases/debugging.md' });
+    repo.write('src/login.js', 'export const login = 1;\n');
+    assert.equal(repo.state('evidence', 'green').status, 0);
+    assert.equal(JSON.parse(repo.state('next').stdout).task.debugging, undefined);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test('failed attempts: the third failure refuses GREEN and checks until block', () => {
+  const repo = storyRepo();
+  try {
+    repo.state('task', 'start', 'T1');
+    repo.state('evidence', 'red');
+    assert.equal(repo.state('evidence', 'green').status, 1);
+    assert.equal(repo.state('checks').status, 1);
+    assert.equal(repo.state('evidence', 'green').status, 1);
+    assert.equal(repo.read().steps.implementation.failedAttempts.count, 3);
+    for (const command of [['evidence', 'green'], ['checks']]) {
+      const refused = repo.state(...command);
+      assert.equal(refused.status, 1);
+      assert.match(refused.stderr, /T1 has 3 failed attempts.*block --reason/s);
+      assert.doesNotMatch(refused.stderr, /exited with/, `${command.join(' ')} must not run the command`);
+    }
+    assert.equal(repo.read().steps.implementation.failedAttempts.count, 3);
+    assert.match(checkStop(repo.read(), readFileSync(join(repo.dir, repo.folder, 'tasks.md'), 'utf8'), 'tree').reason, /3 failed attempts.*block --reason/);
+    assert.equal(repo.state('block', '--reason', 'login.js não existe; o teste pede o módulo').status, 0);
+    assert.equal(repo.read().steps.implementation.failedAttempts, null);
+    assert.match(repo.state('evidence', 'green').stderr, /GREEN needs exit 0/);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test('review findings: approve commit needs what was done with them', () => {
+  const withReview = (line) => inReview().replace('Review: —', `Review: ${line}`);
+  const findings = recordTaskReview(readyForCommit(), 'findings', now);
+  assert.throws(() => approveCommit(findings, 'Ana', withReview('findings (isolated reviewer)'), 'tree', taskExit, now),
+    /T1: the review had findings.*Review:/s);
+  assert.throws(() => approveCommit(findings, 'Ana', inReview(), 'tree', taskExit, now), /the review had findings/);
+  const approved = approveCommit(findings, 'Ana', withReview('findings (isolated reviewer); R1 removido, R2 mantido — ADR-002'), 'tree', taskExit, now);
+  assert.equal(approved.steps.implementation.commit.approvedBy, 'Ana');
+  const ok = recordTaskReview(readyForCommit(), 'ok', now);
+  assert.equal(approveCommit(ok, 'Ana', inReview(), 'tree', taskExit, now).steps.implementation.commit.task, 'T1');
+});
+
+test('checklists: next lists the reviewer checklists the design asks for', () => {
+  const design = (trigger, concerns) => designDoc().replace('Trigger: new dependency', `Trigger: ${trigger}`)
+    .replace('Security: token on the server.', concerns);
+  assert.deepEqual(reviewChecklists(design('contract — a API muda o formato', 'Security: token no header · Privacy: not applicable')),
+    ['checklists/contract.md', 'checklists/security.md']);
+  assert.deepEqual(reviewChecklists(design('data/migration — coluna nova', 'Security: not applicable')), ['checklists/data.md']);
+  assert.deepEqual(reviewChecklists(design('trade-off — cache', 'Security: não se aplica\nMigration/rollback: script de volta da coluna')), ['checklists/data.md']);
+  assert.deepEqual(reviewChecklists(design('trade-off — cache', 'Security: <or "not applicable"> · Privacy: · Migration/rollback: Not applicable.')), []);
+  assert.deepEqual(reviewChecklists(null), []);
+  const state = startTask(implementationState(), 'T1', tasks, git, now);
+  const withDesign = { ...docs, 'design.md': design('contract — a API muda', 'Security: token no header') };
+  assert.deepEqual(taskView(state, tasks, 'tree', taskExit, withDesign['design.md']).task.checklists, ['checklists/contract.md', 'checklists/security.md']);
+  assert.deepEqual(taskView(state, tasks, 'tree', taskExit, null).task.checklists, []);
 });

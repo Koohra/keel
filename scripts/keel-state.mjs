@@ -15,7 +15,7 @@ import {
   checkCoverage, frozenBlock, openQuestions, readDocs, tasksDone, validateDoc,
 } from './validate-feature.mjs';
 import {
-  approveCommit, blockTask, checkCommands, evidenceCommand, failedChecks, recordChecks, recordEvidence, recordTaskReview,
+  approveCommit, blockTask, checkCommands, evidenceCommand, failedChecks, recordChecks, recordEvidence, recordFailure, recordTaskReview, requireAttempts,
   startTask, taskView,
 } from './task-loop.mjs';
 import { commitInHistory, gitOutput, gitPaths } from './git.mjs';
@@ -165,7 +165,7 @@ export function reconcile(state, workflow, docs) {
 export function nextStep(state, workflow, docs, tree = {}) {
   const { state: current, expired } = reconcile(state, workflow, docs);
   const phase = workflow.phases[phaseIndex(workflow, current.phase)];
-  const loop = phase.loop === 'tasks' ? taskView(current, docs['tasks.md'], tree.fingerprint, phase.taskExit) : {};
+  const loop = phase.loop === 'tasks' ? taskView(current, docs['tasks.md'], tree.fingerprint, phase.taskExit, docs['design.md']) : {};
   const closing = current.phase === 'closing' ? { closing: closingView(current) } : {};
   return {
     story: current.story.key,
@@ -442,11 +442,14 @@ function run(argv, root, now) {
       break;
     case 'evidence': {
       const verification = evidenceCommand(updated, arg, docs['tasks.md']);
-      updated = recordEvidence(updated, arg, runCommand(root, verification), docs['tasks.md'], now, changedFiles(root));
+      const run = runCommand(root, verification);
+      if (arg === 'green' && run.exitCode !== 0) writeState(folder, recordFailure(updated, 'green', run, now));
+      updated = recordEvidence(updated, arg, run, docs['tasks.md'], now, changedFiles(root));
       break;
     }
     case 'block': updated = blockTask(updated, values.reason, now); break;
     case 'checks': {
+      requireAttempts(updated, 'checks');
       const commands = checkCommands(readFileSync(join(root, 'keel', 'product.md'), 'utf8'));
       const runs = commands.map(({ name, command }) => ({ name, ...runCommand(root, command) }));
       updated = recordChecks(updated, runs, codeFingerprint(root), now);

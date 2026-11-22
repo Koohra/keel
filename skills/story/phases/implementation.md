@@ -23,6 +23,7 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" block --reason "<motivo>"`
 3. Grave a evidência:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" evidence green`
+   Se falhar, não tente outra coisa às cegas: o `next` passa a trazer `task.debugging` e você segue `${CLAUDE_SKILL_DIR}/phases/debugging.md`. O script conta GREEN e checagens que falham na task e, na terceira falha, recusa nova tentativa até o `block`.
 4. Copie de novo as linhas de `task.progress` para o "Progress".
 
 ## 4. REFACTOR
@@ -32,15 +33,20 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
    Arquivo em `outsideTask`, dependência nova ou tipo abstrato que a task não declarou: remova, ou explique na proposta de commit por que a task precisa.
 3. Rode as checagens do projeto ("Checks" do product.md), cada uma isolada, gravadas pelo script:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" checks`
-   Falha causada pela task: corrija na task e rode de novo. Falha fora do escopo da task: não corrija; grave com `block --reason` e reporte ao dev.
+   Falha causada pela task: corrija na task seguindo `${CLAUDE_SKILL_DIR}/phases/debugging.md` e rode de novo. Falha fora do escopo da task: não corrija; grave com `block --reason` e reporte ao dev.
 4. O que aprender e afetar as próximas tasks vai para "Implementation notes". Se mudar uma regra, siga "Changes after confirmation" do requirements.md e peça nova aprovação.
 
 ## 5. Review isolado
-1. Chame o agente `keel:reviewer` pedindo "revisão de task" e passe: o diff exato (`git diff HEAD` e os arquivos novos), o texto da task, as regras citadas, o caminho da seção "Engineering principles" do `keel/product.md`, o `design.md` se houver e a saída do `task-metrics.mjs`. Não passe o histórico da conversa.
+1. Chame o agente `keel:reviewer` pedindo "revisão de task" e passe: o diff exato (`git diff HEAD` e os arquivos novos), o texto da task, as regras citadas, o caminho da seção "Engineering principles" do `keel/product.md`, o `design.md` se houver, a saída do `task-metrics.mjs` e o caminho completo de cada checklist de `task.checklists` do `next` (`${CLAUDE_SKILL_DIR}/<checklist>`). Sem checklist na lista, não passe nenhum. Não passe o histórico da conversa.
 2. Grave o resultado:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" review task --result <ok|findings|unavailable>`
    Sem o revisor disponível, grave `unavailable`; nunca chame a sua própria revisão de independente.
-3. Achado BLOQUEIA ou relevante: volte ao GREEN, corrija e rode `checks` de novo. Achado menor pode ficar, com a justificativa em `Review:` no "Progress". Não corrija todo SUGERIR: abstração extra também é defeito.
+3. Responda a cada achado antes de mexer no código:
+   - Confira cada achado no código: abra o `arquivo:linha` citado e confirme que o problema existe. O revisor não viu a conversa e pode estar errado.
+   - Achado que não se confirma, ou que contraria o product.md, uma ADR ou o requisito: discorde com a fonte (`ADR-NNN`, `keel/product.md#seção`, `R#`) e não mude nada.
+   - Achado BLOQUEIA ou relevante que se confirma: volte ao GREEN, corrija só isso e rode `checks` de novo. Se a correção pedir mudar o teste do RED, nunca afrouxe o teste: grave o `block` e pergunte ao dev.
+   - Achado menor pode ficar, com a justificativa. Não corrija todo SUGERIR: abstração extra também é defeito.
+4. Registre o destino de cada achado em `Review:` no "Progress", depois do resultado: corrigido, removido ou mantido com a fonte. Com `findings`, o `approve commit` recusa um `Review:` só com o resultado.
 
 ## 6. Proposta de commit
 1. Copie as linhas de `task.progress` para o "Progress" (o Status fica `in review` depois do review gravado) e acrescente em `Review:` o que foi feito com cada achado.

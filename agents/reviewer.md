@@ -39,6 +39,10 @@ E aplique a rubrica de design. Ignore estilo e formatação. Responda cada item 
 
 Reporte no máximo 5 achados, do mais grave ao menos grave. Classifique cada um como BLOQUEIA (só se violar regra `[hook]` ou requisito), REMOVER (preferido) ou SUGERIR. Não proponha abstração nova sem citar a heurística que a justifica.
 
+## Checklists
+
+Se o pedido trouxer caminhos de checklists (segurança, dados, contrato), leia cada um e responda cada item com sim ou não (ou "não se aplica") e a evidência `arquivo:linha` do diff ou do código em volta. Um item com resposta ruim vira achado, dentro do limite de 5, classificado como os da rubrica. Sem checklist no pedido, não invente itens.
+
 ## Resposta
 
 Comece a resposta com uma linha `Result: ok` (nada relevante) ou `Result: findings`.

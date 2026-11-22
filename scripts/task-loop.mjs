@@ -4,7 +4,10 @@
 import { globToRegExp } from './arch-check.mjs';
 import { parseTasks } from './validate-feature.mjs';
 
-const TASK_RECORDS = { red: null, green: null, checks: null, review: null, commit: null };
+const TASK_RECORDS = { red: null, green: null, checks: null, review: null, commit: null, failedAttempts: null };
+
+// Failed GREEN or checks runs of the open task before the model must stop and call the dev.
+export const MAX_ATTEMPTS = 3;
 
 // state.json written before part 5 has only currentTask and blocked.
 function implementation(state) {
@@ -83,6 +86,7 @@ export function evidenceCommand(state, kind, tasksText) {
   const task = openTask(state, tasksText, `evidence ${kind}`);
   if (noTest(task)) throw new Error(`${task.id} has No test: it has no RED; its evidence is the project checks (run checks)`);
   if (kind === 'green' && !implementation(state).red) throw new Error(`${task.id} has no RED evidence yet: run evidence red first`);
+  if (kind === 'green') requireAttempts(state, 'evidence green');
   const command = task.fields.Verification?.match(/`([^`]+)`/)?.[1];
   if (!command) throw new Error(`${task.id} has no command in Verification:`);
   return command;
@@ -108,7 +112,25 @@ export function recordEvidence(state, kind, run, tasksText, now, changed = []) {
   const sabotage = regressionCheck(openTask(state, tasksText, `evidence ${kind}`), kind, changed);
   // A new RED makes the previous GREEN stale.
   const reset = kind === 'red' ? { green: null } : {};
-  return withImplementation(state, { ...reset, [kind]: { ...tail(run), ...sabotage, at: now }, blocked: null }, now);
+  const passed = kind === 'green' ? { failedAttempts: null } : {};
+  return withImplementation(state, { ...reset, ...passed, [kind]: { ...tail(run), ...sabotage, at: now }, blocked: null }, now);
+}
+
+// At MAX_ATTEMPTS failures the next GREEN or checks run is refused, before running, until the model
+// records what debugging found with block --reason and stops for the dev. block resets the count.
+export function requireAttempts(state, action) {
+  const impl = implementation(state);
+  const count = impl.failedAttempts?.count ?? 0;
+  if (count >= MAX_ATTEMPTS && !impl.blocked) {
+    throw new Error(`${impl.currentTask} has ${count} failed attempts (last: ${impl.failedAttempts.last.kind}, exit code ${impl.failedAttempts.last.exitCode}); ${action} is refused: stop guessing, record what debugging found with block --reason "<cause, hypotheses tried, question>" and ask the dev`);
+  }
+}
+
+// A GREEN or checks run that failed on the open task: counted, with the end of its output, so the
+// model debugs with method (phases/debugging.md) instead of retrying blind.
+export function recordFailure(state, kind, run, now) {
+  const count = (implementation(state).failedAttempts?.count ?? 0) + 1;
+  return withImplementation(state, { failedAttempts: { count, last: { kind, ...tail(run), at: now } } }, now);
 }
 
 // "### Checks" of keel/product.md: "Architecture: `<cmd>` · Lint/complexity: não se aplica · Tests: `<cmd>`".
@@ -126,8 +148,12 @@ export function checkCommands(productText) {
 // runs: [{ name, command, exitCode, output }]; fingerprint: of the code when they ran (see codeFingerprint).
 export function recordChecks(state, runs, fingerprint, now) {
   requireImplementation(state, 'checks');
+  requireAttempts(state, 'checks');
   const passed = runs.every((r) => r.exitCode === 0);
-  return withImplementation(state, { checks: { passed, fingerprint, at: now, results: runs.map(tail) }, blocked: null }, now);
+  const checks = { passed, fingerprint, at: now, results: runs.map(tail) };
+  if (passed) return withImplementation(state, { checks, failedAttempts: null, blocked: null }, now);
+  const failed = runs.find((r) => r.exitCode !== 0);
+  return withImplementation(recordFailure(state, 'checks', failed, now), { checks, blocked: null }, now);
 }
 
 export function failedChecks(checks) {
@@ -173,12 +199,36 @@ export function nextTask(tasksText) {
   return tasks.find((t) => !isDone(t) && t.deps.every((d) => ids.has(d)))?.id ?? null;
 }
 
+// A concern counts unless empty, a template placeholder or "not applicable" in either language.
+const applies = (value) => Boolean(value) && !/^(<|not applicable|não se aplica|nao se aplica|n\/a\b)/i.test(value.trim());
+
+// Value of "<name>:" in the "Cross-cutting concerns" section of design.md.
+function concern(designText, name) {
+  const section = designText.replace(/\r\n/g, '\n').match(/^## Cross-cutting concerns\n([\s\S]*?)(?=^## |(?![\s\S]))/m)?.[1] ?? '';
+  return section.match(new RegExp(`(?:^|·)\\s*${name}:([^·\\n]*)`, 'mi'))?.[1]?.trim() ?? '';
+}
+
+// Reviewer checklists (skills/story/checklists/) the design.md asks for: contract by its Trigger,
+// data by its Trigger or a Migration/rollback concern, security by its Security concern.
+export function reviewChecklists(designText) {
+  if (!designText) return [];
+  const trigger = designText.match(/^Trigger: (.*)$/m)?.[1]?.toLowerCase() ?? '';
+  const wanted = {
+    contract: trigger.startsWith('contract'),
+    data: trigger.startsWith('data/migration') || applies(concern(designText, 'Migration/rollback')),
+    security: applies(concern(designText, 'Security')),
+  };
+  return Object.keys(wanted).filter((name) => wanted[name]).map((name) => `checklists/${name}.md`);
+}
+
 // Task view of next: the open task and what it lacks, or the task to open.
-export function taskView(state, tasksText, fingerprint, taskExit) {
+export function taskView(state, tasksText, fingerprint, taskExit, designText = null) {
   const id = implementation(state).currentTask;
   if (!id || isDone(findTask(tasksText, id))) return { task: null, nextTask: nextTask(tasksText) };
+  const failures = implementation(state).failedAttempts?.count;
+  const debugging = failures ? { debugging: { attempts: failures, max: MAX_ATTEMPTS, instructions: 'phases/debugging.md' } } : {};
   return {
-    task: { id, missing: taskMissing(state, tasksText, fingerprint, taskExit), progress: progressLines(state, tasksText) },
+    task: { id, missing: taskMissing(state, tasksText, fingerprint, taskExit), progress: progressLines(state, tasksText), checklists: reviewChecklists(designText), ...debugging },
     nextTask: null,
   };
 }
@@ -226,6 +276,11 @@ export function approveCommit(state, by, tasksText, fingerprint, taskExit, now) 
   }
   const missing = taskMissing(state, tasksText, fingerprint, taskExit).filter((m) => m.criterion !== 'approval:commit');
   if (missing.length) throw new Error(`cannot approve the commit of ${id}: ${missing.map((m) => `${m.criterion} (${m.reason})`).join('; ')}`);
+  // What the dev reads besides the mirrored result; a lone dash is the template's empty value.
+  const disposition = (task.progress?.Review ?? '').replace(/^findings \(isolated reviewer\)/, '').replace(/^[\s;:,.—-]+/, '').trim();
+  if (implementation(state).review?.result === 'findings' && !disposition) {
+    throw new Error(`${id}: the review had findings: write in Review: of the Progress what was done with each one (fixed, removed, or kept with the source that justifies it) before approve commit`);
+  }
   return withImplementation(state, { commit: { task: id, approvedBy: by, at: now, fingerprint } }, now);
 }
 
@@ -259,7 +314,7 @@ export function checkGitCommit(state, tasksText, fingerprint) {
 export function blockTask(state, reason, now) {
   if (!reason?.trim()) throw new Error('say why with --reason "<reason>"');
   requireImplementation(state, 'block');
-  return withImplementation(state, { blocked: reason.trim() }, now);
+  return withImplementation(state, { blocked: reason.trim(), failedAttempts: null }, now);
 }
 
 const STOP_ORDER = ['evidence:red', 'evidence:green', 'checks:passed', 'review:task'];
@@ -271,6 +326,9 @@ export function checkStop(state, tasksText, fingerprint) {
   if (state.phase !== 'implementation' || !impl.currentTask || impl.blocked) return { action: 'allow' };
   // Approved commit: waiting for the commit itself or for Status: done (<hash>); the checks already passed.
   if (impl.commit?.task === impl.currentTask || isDone(findTask(tasksText, impl.currentTask))) return { action: 'allow' };
+  if ((impl.failedAttempts?.count ?? 0) >= MAX_ATTEMPTS) {
+    return { action: 'block', reason: `Keel: ${impl.currentTask} has ${impl.failedAttempts.count} failed attempts: record what debugging found with keel-state.mjs block --reason "<cause, hypotheses tried, question>" and ask the dev.` };
+  }
   const missing = taskMissing(state, tasksText, fingerprint, STOP_ORDER)[0];
   if (!missing) return { action: 'allow' };
   if (missing.criterion === 'checks:passed' && impl.checks?.fingerprint !== fingerprint) return { action: 'run-checks' };

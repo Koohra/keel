@@ -75,3 +75,24 @@ test('o fechamento copia a convergência, vira regra faltante em task, aprova de
   assert.match(text, /adicionado, modificado e removido/);
   assert.match(text, /ADR candidate\?/);
 });
+
+test('debugging, review answer and checklists are in the skill', () => {
+  const debugging = read('skills/story/phases/debugging.md');
+  for (const step of ['Reproduza', 'Isole', 'hipótese', 'uma mudança', 'teste do RED']) assert.match(debugging, new RegExp(step), step);
+  assert.match(debugging, /keel-state\.mjs"? block --reason/);
+  assert.match(debugging, /3 tentativas/);
+  const implementation = read('skills/story/phases/implementation.md');
+  assert.match(implementation, /phases\/debugging\.md/);
+  assert.match(implementation, /task\.debugging/);
+  assert.match(implementation, /task\.checklists/);
+  for (const answer of ['Confira cada achado no código', 'discorde com a fonte', 'nunca afrouxe o teste']) assert.match(implementation, new RegExp(answer), answer);
+  for (const name of ['security', 'data', 'contract']) {
+    const items = read(`skills/story/checklists/${name}.md`).split('\n').filter((line) => /^\d+\. /.test(line));
+    assert.ok(items.length >= 1 && items.length <= 5, `${name}: ${items.length} itens`);
+  }
+  const reviewer = read('agents/reviewer.md');
+  const section = reviewer.slice(reviewer.indexOf('## Checklists'));
+  assert.ok(reviewer.includes('## Checklists'));
+  assert.match(section, /sim ou não/);
+  assert.match(section, /arquivo:linha/);
+});

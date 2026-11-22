@@ -50,3 +50,14 @@ test('stage 10 has a case: a missing rule at closing becomes a new task, run on 
   assert.match(read(`${closing}/case.yaml`), /tags: \[phase-10\]/);
   assert.match(read(`${closing}/fixture.sh`), /prepare\.sh" APP-8 \S+ "[^"]+" closing$/m);
 });
+
+test('a stuck task has its own case: GREEN that cannot pass ends blocked with the RED test untouched', () => {
+  const stuck = cases.find((c) => c.endsWith('/implementation-stuck'));
+  assert.ok(stuck, 'implementation-stuck');
+  assert.match(read(`${stuck}/case.yaml`), /tags: \[phase-7\]/);
+  assert.match(read(`${stuck}/fixture.sh`), /prepare\.sh" APP-8 \S+ "[^"]+" stuck$/m);
+  assert.match(read('evals/phases/prepare.sh'), /"\$phase" = stuck/);
+  const graders = files.filter((f) => f.startsWith(`${stuck}/graders/`)).map(read).join('\n');
+  assert.match(graders, /blocked\\": /);
+  assert.match(graders, /path: test\/users\.test\.mjs/);
+});
