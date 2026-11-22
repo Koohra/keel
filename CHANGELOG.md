@@ -11,6 +11,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões: 
 - A marca `Status: done (<hash>)` vai num commit próprio, só da pasta da história, logo após o commit da task; o hook aceita esse commit quando não sobra código fora da pasta (#39, KEEL-38).
 - O fechamento mostra a descrição do PR na resposta e não deixa arquivo solto no projeto; a saída de implementation também sugere conversa nova; a pergunta sobre conflito com ADR nos requisitos diz que o design só rascunha a ADR e que ela nasce no fechamento (#40, #41, KEEL-40).
 
+### Fixed
+
+- `evidence red` aceita o RED que falha numa asserção mesmo quando um processo filho do teste imprime `SyntaxError`; o arquivo de teste que não compila continua recusado (#37, KEEL-37).
+
 ## [2.0.0-beta.0] - 2026-11-22
 
 Primeira versão completa do Keel 2: as 8 partes do plano estão na `main`. Falta o piloto numa história real antes da 2.0.0.
