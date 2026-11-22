@@ -21,7 +21,7 @@ Você conduz uma história do dev pelo fluxo do Keel. Quem decide a ordem das fa
 5. Quando o trabalho da fase terminar, peça para avançar:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" advance`
    Se o script recusar, mostre ao dev o que falta, com o motivo que ele deu, e resolva dentro da fase. Não tente outro caminho.
-6. Depois de cada `advance` aceito, volte ao passo 2.
+6. Depois de um `advance` aceito na saída de requirements, confirmation ou tasks, termine a resposta dizendo ao dev a fase nova e sugerindo seguir numa conversa nova (`/clear`): retomar a mesma conversa fica mais caro a cada resposta, e o `next` retoma de onde parou, porque o que essas fases produzem está nos arquivos da história. Na saída de triage, reading e design, siga na mesma conversa e volte ao passo 2: o texto original da história só existe na conversa até a leitura copiá-lo, os requisitos usam as fontes que a leitura abriu, e as tasks são planejadas sobre o design que acabou de ser escrito. Na implementação, a conversa nova é por task (passo 1.3 da fase).
 
 Se `expired` não estiver vazio, diga ao dev qual documento mudou depois da aprovação e que ele precisa ser confirmado de novo.
 

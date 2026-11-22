@@ -53,6 +53,8 @@ test('a implementação grava evidência por script, chama o revisor e só commi
   assert.match(text, /task-metrics\.mjs/);
   assert.match(text, /keel:reviewer/);
   assert.match(text, /git diff/);
+  assert.match(text, /mesma linha/);
+  assert.match(text, /`Review: findings \(isolated reviewer\); [^`]+`/);
 });
 
 test('o revisor tem a revisão de task com a rubrica de design', () => {
@@ -116,6 +118,15 @@ test('adr: the design drafts the ADR in the story folder and the closing writes 
   assert.match(step, /Não escreva em `keel\/adrs\/`/);
   const closing = read('skills/story/phases/closing.md');
   assert.match(closing, /`adr-draft\.md`[^\n]*`keel\/adrs\/ADR-NNN-<slug>\.md`/);
+});
+
+test('session: each gated phase ends suggesting a new conversation, like each task', () => {
+  const skill = read('skills/story/SKILL.md');
+  const flow = skill.slice(skill.indexOf('## Como andar no fluxo'), skill.indexOf('## O que nunca fazer'));
+  assert.match(flow, /`advance` aceito na saída de requirements, confirmation ou tasks[^\n]*conversa nova \(`\/clear`\)/);
+  assert.match(flow, /`next` retoma de onde parou/);
+  assert.match(flow, /Na saída de triage, reading e design, siga na mesma conversa/);
+  assert.match(read('docs/release.md'), /uma sessão nova por fase e por task/);
 });
 
 test('red: the tasks phase plans no test-only task without Regression', () => {

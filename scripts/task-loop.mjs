@@ -295,7 +295,7 @@ export function approveCommit(state, by, tasksText, fingerprint, taskExit, now, 
   // What the dev reads besides the mirrored result; a lone dash is the template's empty value.
   const disposition = (task.progress?.Review ?? '').replace(/^findings \(isolated reviewer\)/, '').replace(/^[\s;:,.—-]+/, '').trim();
   if (implementation(state).review?.result === 'findings' && !disposition) {
-    throw new Error(`${id}: the review had findings: write in Review: of the Progress what was done with each one (fixed, removed, or kept with the source that justifies it) before approve commit`);
+    throw new Error(`${id}: the review had findings: write on the same line of Review: in the Progress what was done with each one (fixed, removed, or kept with the source that justifies it) before approve commit, e.g. "Review: findings (isolated reviewer); F1 fixed; F2 kept [source: ADR-001]"`);
   }
   requireInsideFiles(task, changed);
   return withImplementation(state, { commit: { task: id, approvedBy: by, at: now, fingerprint } }, now);

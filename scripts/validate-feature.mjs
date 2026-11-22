@@ -112,6 +112,11 @@ export function openQuestions(text) {
   return (text.match(/\[QUESTION\]/g) ?? []).length;
 }
 
+// An [ASSUMPTION] still waiting for the dev: its line has no "accepted by" (templates/requirements.md).
+export function pendingAssumptions(text) {
+  return text.split('\n').filter((line) => line.includes('[ASSUMPTION]') && !/accepted by/i.test(line)).length;
+}
+
 const TRIGGERS = ['trade-off', 'contract', 'data/migration', 'new dependency', 'cross-cutting', 'pattern break', 'new structure', 'rung change'];
 const STRUCTURE_KINDS = ['interface', 'layer', 'mapper/DTO', 'module', 'helper', 'dependency'];
 const KIND_WORDS = ['interface', 'layer', 'mapper', 'dto', 'module', 'helper', 'dependency'];

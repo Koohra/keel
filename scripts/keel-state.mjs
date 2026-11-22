@@ -12,7 +12,7 @@ import { isAbsolute, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
-  checkCoverage, frozenBlock, openQuestions, readDocs, tasksDone, validateDoc,
+  checkCoverage, frozenBlock, openQuestions, pendingAssumptions, readDocs, tasksDone, validateDoc,
 } from './validate-feature.mjs';
 import {
   approveCommit, blockTask, checkCommands, evidenceCommand, failedChecks, recordChecks, recordEvidence, recordFailure, recordTaskReview, requireAttempts,
@@ -86,8 +86,11 @@ const CRITERIA = {
     return result(errors.length === 0, errors.join('; '));
   },
   noOpenQuestions: (_, { docs }) => {
-    const count = openQuestions(docs['requirements.md'] ?? '');
-    return result(count === 0, `${count} open [QUESTION](s) in requirements.md`);
+    const text = docs['requirements.md'] ?? '';
+    const count = openQuestions(text);
+    const assumptions = pendingAssumptions(text);
+    const apart = assumptions ? `; ${assumptions} [ASSUMPTION](s) awaiting the dev's acceptance are counted apart and do not block` : '';
+    return result(count === 0, `${count} open [QUESTION](s) in requirements.md${apart}`);
   },
   review: (target, { state }) => {
     if (target !== 'requirements') return null;

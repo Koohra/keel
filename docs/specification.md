@@ -47,7 +47,7 @@ O Keel transforma documentação mínima e cuidadosa em código bom, uma histór
 
 ### Estado da história (state.json)
 
-O `state.json` diz à IA em que etapa a história está e o que já foi gerado e aprovado. O Keel lê esse arquivo no início de toda interação, inclusive ao retomar uma história em outra sessão, e só avança de etapa se o estado permitir.
+O `state.json` diz à IA em que etapa a história está e o que já foi gerado e aprovado. O Keel lê esse arquivo no início de toda interação, inclusive ao retomar uma história em outra sessão, e só avança de etapa se o estado permitir. Por isso a saída de requirements, confirmation e tasks, e cada task, terminam sugerindo uma conversa nova: retomar a mesma conversa fica mais caro a cada resposta (na segunda história de ponta a ponta, de US$ 0,05 para US$ 2 por resposta curta).
 
 - **Quem escreve:** só o script de estado (`keel-state.mjs`), chamado pela skill com comandos como `next`, `advance` ou `approve requirements.md --by <dev>`. O modelo não edita o JSON diretamente.
 - **Aprovação presa ao conteúdo:** ao aprovar um documento, o script grava o hash dele. Se o arquivo mudar depois, a aprovação vence e a história volta para a confirmação daquele documento.
@@ -208,7 +208,7 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 - Deve garantir que cada task caiba num contexto limpo: se precisar de muito contexto além das regras citadas, provavelmente são duas tasks.
 - Não deve gerar todos os testes de uma vez antes de implementar.
 
-**Práticas:** walking skeleton (Cockburn); fatias verticais (Lawrence, SPIDR); rastreabilidade por IDs e cobertura (Spec Kit analyze); task focada por sessão (Osmani, Anthropic).
+**Práticas:** walking skeleton (Cockburn); fatias verticais (Lawrence, SPIDR); rastreabilidade por IDs e cobertura (Spec Kit analyze); fase e task focadas por sessão (Osmani, Anthropic).
 
 **Checagem por script:** toda regra coberta por ao menos uma task; toda task cobre ao menos uma regra; toda task com comportamento tem teste e comando; dependências sem ciclo.
 
