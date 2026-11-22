@@ -40,3 +40,4 @@ Se `expired` não estiver vazio, diga ao dev qual documento mudou depois da apro
 - Contexto mínimo: só as seções do product.md e as ADRs que a história toca; código sob demanda.
 - Checagem que não rodou é "não rodou", nunca "passou".
 - Decisão com consequência (contrato externo, modelo de dados, dependência, consistência, custo) é do dev: apresente opções, consequências e recomendação.
+- Foco: faça só o que a fase e a task pedem, e termine. Não proponha nem comece trabalho que ninguém pediu (melhoria, refatoração vizinha, teste ou feature a mais, "posso também..."). Achado fora do escopo vira uma linha em "Implementation notes" do tasks.md, sem oferta. A resposta ao dev termina no resultado ou na pergunta do portão.

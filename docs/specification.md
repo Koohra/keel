@@ -23,7 +23,7 @@ O Keel transforma documentação mínima e cuidadosa em código bom, uma histór
 1. **Fonte em todo fato.** Cada afirmação sobre o produto, uma decisão ou o código cita a origem (`product.md#seção`, `ADR-NNN`, `arquivo:linha`, `Jira`, `dev em AAAA-MM-DD`). Sem fonte, vira `[QUESTION]` ou `[ASSUMPTION]`.
 2. **Nada inventado.** Se uma categoria não tem informação, o Keel escreve "sem orientação encontrada". Se o resultado esperado de um exemplo não é conhecido, é uma pergunta, não um critério.
 3. **Evidência honesta.** Checagem que não rodou é `skipped`, nunca `passed`. Falha, waiver e indisponibilidade aparecem como o que são. "Todos os testes passam" sem comando e saída não conta.
-4. **Escopo é contrato.** O Keel só toca o que a etapa e a task autorizam. Trabalho fora do escopo é bloqueio reportado, não correção silenciosa.
+4. **Escopo é contrato.** O Keel só toca o que a etapa e a task autorizam, termina o que foi pedido e não propõe trabalho extra. Trabalho fora do escopo é bloqueio reportado ou uma linha em "Implementation notes", não correção silenciosa nem oferta. O `approve commit` recusa arquivo fora do `Files:` da task.
 5. **Decisão consequente é do dev.** Mudança de contrato externo, modelo de dados, dependência, garantia de consistência ou custo operacional para o fluxo até o dev escolher. O Keel apresenta opções, consequências e recomendação.
 6. **Perguntas uma por vez**, cada uma com a opção recomendada, no máximo cerca de cinco por documento.
 7. **Contexto mínimo.** Cada etapa carrega só as seções relevantes do product.md, as ADRs citadas e o código sob demanda. Nada de carregar a spec inteira em cada task.

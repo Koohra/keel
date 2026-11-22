@@ -264,8 +264,9 @@ export function progressLines(state, tasksText) {
   ].filter(Boolean);
 }
 
-// The dev's approval of the commit, tied to the code it saw (fingerprint).
-export function approveCommit(state, by, tasksText, fingerprint, taskExit, now) {
+// The dev's approval of the commit, tied to the code it saw (fingerprint). changed: code files that
+// differ from HEAD or are new, outside the story folder; each one must be in the task's Files:.
+export function approveCommit(state, by, tasksText, fingerprint, taskExit, now, changed = []) {
   if (!by) throw new Error('say who approved with --by <dev>');
   const task = openTask(state, tasksText, 'approve commit');
   const { id } = task;
@@ -280,6 +281,11 @@ export function approveCommit(state, by, tasksText, fingerprint, taskExit, now) 
   const disposition = (task.progress?.Review ?? '').replace(/^findings \(isolated reviewer\)/, '').replace(/^[\s;:,.—-]+/, '').trim();
   if (implementation(state).review?.result === 'findings' && !disposition) {
     throw new Error(`${id}: the review had findings: write in Review: of the Progress what was done with each one (fixed, removed, or kept with the source that justifies it) before approve commit`);
+  }
+  const patterns = filesOf(task);
+  const outside = changed.filter((path) => isOutsideTask(path, patterns));
+  if (outside.length) {
+    throw new Error(`${id} changed ${outside.join(', ')}, outside its Files: (${patterns.join(', ')}): undo that change, or, if the task needs it, propose to the dev the change of Files: in tasks.md`);
   }
   return withImplementation(state, { commit: { task: id, approvedBy: by, at: now, fingerprint } }, now);
 }
