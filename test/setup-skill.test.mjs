@@ -30,3 +30,14 @@ test('setup skill carries the guarantees agreed with the dev', () => {
     /--write-baseline/,
   ]) assert.match(skill, rule);
 });
+
+test('setup skill turns the structure findings into suggestions', () => {
+  for (const rule of [
+    /`commands`/,
+    /`sections`/,
+    /`emphasis`/,
+    /`rules`/,
+    /README/,
+    /\/doctor prompt-audit/,
+  ]) assert.match(skill, rule);
+});

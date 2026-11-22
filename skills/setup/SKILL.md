@@ -31,6 +31,14 @@ Modelos: `${CLAUDE_PLUGIN_ROOT}/templates/principles.md`, `${CLAUDE_PLUGIN_ROOT}
    outras ferramentas. Para cada conflito o dev escolhe: (a) mudar o próprio arquivo (você mostra o texto
    sugerido e não aplica), (b) a regra vale só fora das histórias do Keel, ou (c) manter, sabendo que o hook
    bloqueia durante uma história.
+5. Sugestões de estrutura, depois dos conflitos, uma linha cada, com a fonte. Só sugira; não edite:
+   - `commands`: sem comando de teste, build ou lint; peça os comandos exatos para a seção "Commands".
+   - `sections`: seções do modelo que faltam; o dev acrescenta só as que o projeto precisa. Se a mensagem
+     sugerir reestruturação, ofereça o passo 5.
+   - `emphasis` e `rules`: ênfase em maiúsculas ou itens demais; sugira texto simples com o motivo, e que
+     regra checável vire lint, teste ou hook do projeto.
+   - Compare a abertura do arquivo com o README: visão geral que o repete vira um link para o README.
+   - Indique o `/doctor prompt-audit` do Claude Code para achar regras velhas ou contraditórias.
 
 Visibilidade (o relatório diz qual caso é):
 - Só AGENTS.md: ok. Nunca crie CLAUDE.md nesse caso: com CLAUDE.md o Claude Code deixa de ler o AGENTS.md.
