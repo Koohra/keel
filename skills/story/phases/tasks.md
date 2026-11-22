@@ -15,14 +15,15 @@ Objetivo: quebrar a história em tasks pequenas, sequenciadas e testáveis. Port
    - `Done when:` a condição observável.
    - `Depends on:` `—` ou as tasks anteriores.
    - `Regression: delivered by T<n>` só quando o comportamento que a task testa já existe ou vai existir pelo código de uma task anterior (o teste passaria de primeira). A task traz só o teste: `Files:` lista só os arquivos de teste, e o RED vem de sabotar o código de T<n> (veja a implementação). Antes de planejar, procure no código e nas tasks anteriores se o comportamento já existe.
-6. Cada task cabe num contexto limpo: se precisa de muito mais do que as regras que cita, são duas tasks.
-7. Fora do bloco: `## Progress` com `### T<n>` e `Status: pending` para cada task, "Implementation notes" com "not applicable" e a tabela de "Convergence" só com o cabeçalho.
-8. Não escreva testes nem código agora: só o plano. Os testes nascem um por vez, na implementação.
-9. Valide por script e corrija até não haver erro (estrutura, cobertura regra → task → teste, AC citados, dependências sem ciclo e estrutura igual à do design):
+6. Toda task com `Test first:` precisa de RED possível: o teste falha antes do código dela. Para cada task, pergunte se o teste passaria com o código das tasks anteriores. Se passaria, amplie o `Test first:` da task que entrega o comportamento para verificar também aquele critério (e cite-o no `Covers:` dela) ou, se a regra merece task própria, use `Regression: delivered by T<n>`. Nunca planeje task "só teste" sem `Regression:`.
+7. Cada task cabe num contexto limpo: se precisa de muito mais do que as regras que cita, são duas tasks.
+8. Fora do bloco: `## Progress` com `### T<n>` e `Status: pending` para cada task, "Implementation notes" com "not applicable" e a tabela de "Convergence" só com o cabeçalho.
+9. Não escreva testes nem código agora: só o plano. Os testes nascem um por vez, na implementação.
+10. Valide por script e corrija até não haver erro (estrutura, cobertura regra → task → teste, AC citados, dependências sem ciclo e estrutura igual à do design):
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/validate-feature.mjs" keel/features/<KEY>-<slug>`
-10. Apresente ao dev, curto: uma linha por task (`T1 — título · Covers · Depends on`), e, se houver design, o gatilho, a estrutura nova e a candidata a ADR. Pergunte se ele aprova as tasks (e o design). Pare e espere.
-11. Se o dev pedir mudança, edite, valide de novo e mostre o que mudou.
-12. Só com a aprovação escrita do dev nesta conversa, e só do que ele aprovou:
+11. Apresente ao dev, curto: uma linha por task (`T1 — título · Covers · Depends on · RED`, em que RED diz de onde vem o RED: o código que falta ou a sabotagem de T<n>), e, se houver design, o gatilho, a estrutura nova e a candidata a ADR. Pergunte se ele aprova as tasks (e o design). Pare e espere.
+12. Se o dev pedir mudança, edite, valide de novo e mostre o que mudou.
+13. Só com a aprovação escrita do dev nesta conversa, e só do que ele aprovou:
     - troque os cabeçalhos: `Approved by <dev> on <YYYY-MM-DD>` no tasks.md e `Status: approved by <dev> on <YYYY-MM-DD>` no design.md;
     - se houver design: `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" approve design.md --by "<dev>"`;
     - `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" approve tasks.md --by "<dev>"`;
