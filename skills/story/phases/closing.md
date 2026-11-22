@@ -19,7 +19,7 @@ Objetivo: provar que a história está completa e levar o conhecimento durável 
 
 ## 4. Deltas de product.md e ADR
 1. Se a história mudou o produto (o que ele faz, glossário, módulos e degraus, checagens, exemplares), edite `keel/product.md` direto, só o que mudou, dentro do orçamento de cerca de 200 linhas e sem copiar o que o código já diz. Sem mudança no produto, não invente delta.
-2. Se o design.md diz `ADR candidate?` Yes e a decisão afeta estrutura, dependência, interface ou técnica de construção e sobrevive à feature (Nygard), escreva `keel/adrs/ADR-NNN-<slug>.md` com `## Status` (proposed), `## Context`, `## Decision`, `## Consequences` e `## Confirmation`.
+2. Se o design.md diz `ADR candidate?` Yes e a decisão afeta estrutura, dependência, interface ou técnica de construção e sobrevive à feature (Nygard), escreva a ADR a partir do rascunho `adr-draft.md` da pasta da história, atualizado com o que a implementação mudou, em `keel/adrs/ADR-NNN-<slug>.md` (o próximo número livre), com `## Status` (proposed), `## Context`, `## Decision`, `## Consequences` e `## Confirmation`.
 3. Rode `next` de novo: `closing.deltas.files` lista o que mudou desde a base da história e `closing.deltas.sections` traz o delta por seção do product.md e por arquivo de ADR (adicionado, modificado e removido). Mostre ao dev esse delta, com o `git diff` de cada seção modificada e o conteúdo das novas, e pergunte se aprova. Pare e espere.
 4. Só com a aprovação escrita do dev nesta conversa, depois de ele ver o delta:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" approve deltas --by "<dev>"`

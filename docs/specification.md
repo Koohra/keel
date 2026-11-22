@@ -23,7 +23,7 @@ O Keel transforma documentação mínima e cuidadosa em código bom, uma histór
 1. **Fonte em todo fato.** Cada afirmação sobre o produto, uma decisão ou o código cita a origem (`product.md#seção`, `ADR-NNN`, `arquivo:linha`, `Jira`, `dev em AAAA-MM-DD`). Sem fonte, vira `[QUESTION]` ou `[ASSUMPTION]`.
 2. **Nada inventado.** Se uma categoria não tem informação, o Keel escreve "sem orientação encontrada". Se o resultado esperado de um exemplo não é conhecido, é uma pergunta, não um critério.
 3. **Evidência honesta.** Checagem que não rodou é `skipped`, nunca `passed`. Falha, waiver e indisponibilidade aparecem como o que são. "Todos os testes passam" sem comando e saída não conta.
-4. **Escopo é contrato.** O Keel só toca o que a etapa e a task autorizam, termina o que foi pedido e não propõe trabalho extra. Trabalho fora do escopo é bloqueio reportado ou uma linha em "Implementation notes", não correção silenciosa nem oferta. O `approve commit` recusa arquivo fora do `Files:` da task.
+4. **Escopo é contrato.** O Keel só toca o que a etapa e a task autorizam, termina o que foi pedido e não propõe trabalho extra. Trabalho fora do escopo é bloqueio reportado ou uma linha em "Implementation notes", não correção silenciosa nem oferta. O `review task` e o `approve commit` recusam arquivo fora do `Files:` da task, para que o dev não seja chamado a aprovar um commit que não pode acontecer.
 5. **Decisão consequente é do dev.** Mudança de contrato externo, modelo de dados, dependência, garantia de consistência ou custo operacional para o fluxo até o dev escolher. O Keel apresenta opções, consequências e recomendação.
 6. **Perguntas uma por vez**, cada uma com a opção recomendada, no máximo cerca de cinco por documento.
 7. **Contexto mínimo.** Cada etapa carrega só as seções relevantes do product.md, as ADRs citadas e o código sob demanda. Nada de carregar a spec inteira em cada task.
@@ -190,7 +190,7 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 
 **Portão:** aprovado junto com as tasks, para não criar mais uma parada.
 
-**Saídas:** design.md; rascunho de ADR, se candidata.
+**Saídas:** design.md; rascunho de ADR em `adr-draft.md` na pasta da história, se candidata (a ADR em `keel/adrs/` nasce no fechamento).
 
 ## Etapa 6. Planejar as tasks
 
@@ -293,7 +293,7 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 - Deve comparar o entregue com a história original para apontar desvio de escopo.
 - Deve rodar a checagem de arquitetura completa e confirmar que a baseline não cresceu, e que exemplares e regras do product.md ainda valem. Sem `keel/architecture.json`, só passa com a dispensa `Architecture: não se aplica` no "### Checks" do product.md.
 - Se a história mudou o produto, deve editar o product.md direto; o script mostra o delta por seção (adicionado, modificado, removido) contra a base da história.
-- Se o design gerou candidata a ADR que atende o critério de Nygard, deve propor a ADR.
+- Se o design gerou candidata a ADR que atende o critério de Nygard, deve propor a ADR, escrita em `keel/adrs/` a partir do `adr-draft.md` da pasta da história.
 - Deve preparar a descrição do PR com resumo dos requisitos e a evidência por regra.
 
 **Práticas:** convergência com evidência (Spec Kit converge, SatisFix); deltas (OpenSpec); critério de ADR (Nygard, MADR).

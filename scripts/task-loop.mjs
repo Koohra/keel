@@ -233,13 +233,28 @@ export function taskView(state, tasksText, fingerprint, taskExit, designText = n
   };
 }
 
+// Every changed file must be in the task's Files:; the story folder is already left out of changed.
+function requireInsideFiles(task, changed) {
+  const patterns = filesOf(task);
+  const outside = changed.filter((path) => isOutsideTask(path, patterns));
+  if (!outside.length) return;
+  // keel/product.md and keel/adrs/ change in the closing, under the deltas approval (phases/closing.md).
+  const docs = outside.some((path) => path === 'keel/product.md' || path.startsWith('keel/adrs/'))
+    ? '; keel/product.md and keel/adrs/ change only in the closing, and an ADR draft stays in adr-draft.md in the story folder until then'
+    : '';
+  throw new Error(`${task.id} changed ${outside.join(', ')}, outside its Files: (${patterns.join(', ')}): undo that change, or, if the task needs it, propose to the dev the change of Files: in tasks.md${docs}`);
+}
+
 const REVIEW_RESULTS = ['ok', 'findings', 'unavailable'];
 
-export function recordTaskReview(state, result, now) {
+// changed: code files that differ from HEAD or are new, outside the story folder. Checked here too, so
+// the dev is never asked to approve a commit that approve commit would refuse.
+export function recordTaskReview(state, result, now, tasksText = null, changed = []) {
   if (!REVIEW_RESULTS.includes(result)) throw new Error(`invalid result "${result}"; use ${REVIEW_RESULTS.join(', ')}`);
   requireImplementation(state, 'review task');
   const { currentTask } = implementation(state);
   if (!currentTask) throw new Error('no open task: run task start <T#> before review task');
+  if (changed.length) requireInsideFiles(findTask(tasksText, currentTask), changed);
   return withImplementation(state, { review: { task: currentTask, result, at: now }, blocked: null }, now);
 }
 
@@ -282,11 +297,7 @@ export function approveCommit(state, by, tasksText, fingerprint, taskExit, now, 
   if (implementation(state).review?.result === 'findings' && !disposition) {
     throw new Error(`${id}: the review had findings: write on the same line of Review: in the Progress what was done with each one (fixed, removed, or kept with the source that justifies it) before approve commit, e.g. "Review: findings (isolated reviewer); F1 fixed; F2 kept [source: ADR-001]"`);
   }
-  const patterns = filesOf(task);
-  const outside = changed.filter((path) => isOutsideTask(path, patterns));
-  if (outside.length) {
-    throw new Error(`${id} changed ${outside.join(', ')}, outside its Files: (${patterns.join(', ')}): undo that change, or, if the task needs it, propose to the dev the change of Files: in tasks.md`);
-  }
+  requireInsideFiles(task, changed);
   return withImplementation(state, { commit: { task: id, approvedBy: by, at: now, fingerprint } }, now);
 }
 

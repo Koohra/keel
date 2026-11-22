@@ -30,7 +30,7 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
 1. Limpe mantendo tudo verde, com foco em remover: sobras, código morto, primeira tentativa, prints, duplicação do que já existia e abstração que não se paga. Extraia código compartilhado só na terceira ocorrência do mesmo conhecimento.
 2. Gere as métricas da task:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/task-metrics.mjs"`
-   Arquivo em `outsideTask`: desfaça a mudança; o `approve commit` recusa arquivo fora do `Files:` da task. Se a task precisa mesmo dele, pare e proponha ao dev a mudança do `Files:` no tasks.md, que pede nova aprovação. Dependência nova ou tipo abstrato que a task não declarou: remova, ou explique na proposta de commit por que a task precisa.
+   Arquivo em `outsideTask`: desfaça a mudança; o `approve commit` recusa arquivo fora do `Files:` da task. Se a task precisa mesmo dele, pare e proponha ao dev a mudança do `Files:` no tasks.md, que pede nova aprovação. `keel/product.md` e `keel/adrs/` só mudam no fechamento; o rascunho de ADR fica em `adr-draft.md` na pasta da história. Dependência nova ou tipo abstrato que a task não declarou: remova, ou explique na proposta de commit por que a task precisa.
 3. Rode as checagens do projeto ("Checks" do product.md), cada uma isolada, gravadas pelo script:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" checks`
    Falha causada pela task: corrija na task seguindo `${CLAUDE_SKILL_DIR}/phases/debugging.md` e rode de novo. Falha fora do escopo da task: não corrija; grave com `block --reason` e reporte ao dev.
@@ -40,7 +40,7 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
 1. Chame o agente `keel:reviewer` pedindo "revisão de task" e passe: o diff exato (`git diff HEAD` e os arquivos novos), o texto da task, as regras citadas, o caminho da seção "Engineering principles" do `keel/product.md`, o `design.md` se houver, a saída do `task-metrics.mjs` e o caminho completo de cada checklist de `task.checklists` do `next` (`${CLAUDE_SKILL_DIR}/<checklist>`). Sem checklist na lista, não passe nenhum. Não passe o histórico da conversa.
 2. Grave o resultado:
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" review task --result <ok|findings|unavailable>`
-   Sem o revisor disponível, grave `unavailable`; nunca chame a sua própria revisão de independente.
+   Sem o revisor disponível, grave `unavailable`; nunca chame a sua própria revisão de independente. O comando recusa gravar se a mudança tem arquivo fora do `Files:` da task: resolva como no passo 4.2 antes de propor o commit.
 3. Responda a cada achado antes de mexer no código:
    - Confira cada achado no código: abra o `arquivo:linha` citado e confirme que o problema existe. O revisor não viu a conversa e pode estar errado.
    - Achado que não se confirma, ou que contraria o product.md, uma ADR ou o requisito: discorde com a fonte (`ADR-NNN`, `keel/product.md#seção`, `R#`) e não mude nada.
