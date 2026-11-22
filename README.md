@@ -78,6 +78,18 @@ flowchart LR
 
 Os losangos são os portões: ali o fluxo para e espera você. Quem decide a ordem das fases é um script, não a IA. Se a IA tentar editar código antes da hora, um hook bloqueia. O design só entra quando a história pede, e a cerimônia acompanha o tamanho dela: uma correção trivial não passa pelas mesmas etapas de uma feature nova.
 
+## O que o Keel faz diferente
+
+Se você já viu outras ferramentas de desenvolvimento por especificação, os nomes `requirements.md`, `design.md` e `tasks.md` vão parecer familiares. Esse trio virou padrão de mercado com o Kiro. A diferença está no que acontece entre um arquivo e outro:
+
+- **A ordem é garantida por código, não por prompt.** Um script diz em que fase a história está, e um hook bloqueia código escrito antes da hora. A IA não tem como "esquecer" uma etapa.
+- **Aprovação vence quando o documento muda.** Cada OK seu fica preso ao conteúdo aprovado. Mexeu no requirements.md depois? O Keel pede a sua confirmação de novo.
+- **TDD em toda task, com prova.** Cada task diz qual teste vem primeiro, e os comandos do vermelho e do verde ficam registrados. A primeira task é sempre um caminho de ponta a ponta, por menor que seja.
+- **Review e commit por task.** Um revisor com contexto limpo olha cada task antes do commit. Nada de um PR gigante no fim para você aprovar no escuro.
+- **A cerimônia acompanha o tamanho.** Uma correção trivial não passa pelo mesmo ritual de uma feature nova, e o design só aparece quando a história pede.
+- **Princípios que viram teste.** O que dá para checar dos seus princípios de engenharia (dependências, ciclos, imports proibidos) vira teste de arquitetura, não fica só no papel.
+- **Fechamento que confere tudo.** No fim, um script verifica se cada regra e cada critério de aceite tem uma task e um teste cobrindo.
+
 ## O que o Keel não faz
 
 - Não gera o código inteiro a partir da spec de uma vez.
