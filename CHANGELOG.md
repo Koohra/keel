@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões: 
 
 ## [Unreleased]
 
+### Added
+
+- Manifesto portátil `plugin.json` para `keel` e `keel-docs` e marketplace do Codex em `.agents/plugins/marketplace.json`, sem mudar o layout do Claude Code; a versão é a mesma nos quatro manifestos (#51, KEEL-51).
+
 ### Changed
 
 - A skill `story` sugere uma conversa nova ao sair de requirements, confirmation e tasks, como já fazia a cada task, para retomar a história sem o custo da conversa longa (#32, KEEL-32).
