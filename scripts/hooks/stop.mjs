@@ -9,10 +9,11 @@ import { fileURLToPath } from 'node:url';
 import { codeFingerprint, findActiveStory, loadWorkflow, reconcile } from '../keel-state.mjs';
 import { checkStop } from '../task-loop.mjs';
 import { readDocs } from '../validate-feature.mjs';
+import { projectRoot } from './event.mjs';
 
 const input = readFileSync(0, 'utf8');
 const event = input.trim() ? JSON.parse(input) : {};
-const root = process.env.CLAUDE_PROJECT_DIR ?? event.cwd;
+const root = projectRoot(event);
 if (!root || event.stop_hook_active) process.exit(0);
 
 function decide() {

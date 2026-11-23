@@ -7,6 +7,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões: 
 ### Added
 
 - Manifesto portátil `plugin.json` para `keel` e `keel-docs` e marketplace do Codex em `.agents/plugins/marketplace.json`, sem mudar o layout do Claude Code; a versão é a mesma nos quatro manifestos (#51, KEEL-51).
+- Os hooks valem no Codex: o `apply_patch` é lido arquivo por arquivo (criar, alterar, apagar e renomear) com as mesmas regras do `Edit`, a raiz do projeto vem da raiz git do `cwd` quando falta `CLAUDE_PROJECT_DIR`, e o README explica a aprovação dos hooks em `/hooks` (#52, KEEL-52).
 
 ### Changed
 

@@ -3,13 +3,15 @@
 // the edited file (decision: block), the drift of the Keel block if the file is AGENTS.md or
 // CLAUDE.md, and a warning when the file is outside the Files: of the open task (context only). The edit already happened; the hook undoes nothing.
 // An invalid keel/architecture.json becomes a warning to the model, never an error that stops the session.
-import { readFileSync } from 'node:fs';
-import { basename, relative, resolve } from 'node:path';
+// A Codex apply_patch is checked file by file (deleted files skipped) and the feedback joined; see event.mjs.
+import { existsSync, readFileSync } from 'node:fs';
+import { basename, relative } from 'node:path';
 import { CONFIG_PATH, runCheck } from '../arch-check.mjs';
 import { check } from '../keel-context.mjs';
 import { findActiveStory, isProjectSource } from '../keel-state.mjs';
 import { isOutsideTask, taskFiles } from '../task-loop.mjs';
 import { readDocs } from '../validate-feature.mjs';
+import { editTargets, projectRoot } from './event.mjs';
 
 const INSTRUCTION_FILES = new Set(['AGENTS.md', 'CLAUDE.md']);
 
@@ -60,16 +62,25 @@ function merge(feedback, warning) {
   return context(`${feedback.hookSpecificOutput.additionalContext}\n${warning}`);
 }
 
+// One answer for several files: any block blocks, with every message; distinct texts only.
+function combine(feedbacks) {
+  const unique = [...new Set(feedbacks.map((f) => (f.decision === 'block' ? f.reason : f.hookSpecificOutput.additionalContext)))];
+  if (!unique.length) return null;
+  if (feedbacks.some((f) => f.decision === 'block')) return { decision: 'block', reason: unique.join('\n') };
+  return context(unique.join('\n'));
+}
+
 const input = readFileSync(0, 'utf8');
 const event = input.trim() ? JSON.parse(input) : {};
-const root = process.env.CLAUDE_PROJECT_DIR ?? event.cwd;
-const target = event.tool_input?.file_path;
-if (!root || !target) process.exit(0);
-const path = relative(root, resolve(root, target)).split('\\').join('/');
-if (path.startsWith('../')) process.exit(0);
+const root = projectRoot(event);
+if (!root) process.exit(0);
+const paths = editTargets(event)
+  .filter((target) => target.change !== 'delete' && (event.tool_name !== 'apply_patch' || existsSync(target.path)))
+  .map((target) => relative(root, target.path).split('\\').join('/'))
+  .filter((path) => !path.startsWith('../'));
 
-const feedback = merge(
+const feedback = combine(paths.map((path) => merge(
   INSTRUCTION_FILES.has(basename(path)) ? instructionFeedback(root) : architectureFeedback(root, path),
   scopeWarning(root, path),
-);
+)).filter(Boolean));
 if (feedback) console.log(JSON.stringify(feedback));
