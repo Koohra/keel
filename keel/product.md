@@ -76,4 +76,4 @@ Follow: os modelos em `templates/` e o fluxo de `workflow/workflow.json`. Do not
 (Keel 1), exceto o que a especificação mandar reaproveitar, como o revisor e o commit.
 
 ### Checks
-Architecture: `node scripts/arch-check.mjs` (regras em `keel/architecture.json`) · Lint/complexity: não se aplica ainda · Tests: `npm test`
+Architecture: `node scripts/arch-check.mjs` (regras em keel/architecture.json) · Lint/complexity: não se aplica ainda · Tests: `npm test`
