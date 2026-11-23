@@ -64,3 +64,22 @@ test('hooks.json registers the Stop hook', () => {
   const entry = readJson('hooks/hooks.json').hooks.Stop[0];
   assert.match(entry.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/hooks\/stop\.mjs/);
 });
+
+test('Stop in Codex, in a subfolder without CLAUDE_PROJECT_DIR, keeps the turn going with the reason (AC-2.3)', () => {
+  const repo = storyRepo();
+  try {
+    repo.state('task', 'start', 'T1');
+    repo.write('src/.keep', '');
+    const env = { ...process.env };
+    delete env.CLAUDE_PROJECT_DIR;
+    delete env.NODE_TEST_CONTEXT;
+    const result = spawnSync(process.execPath, [hook], {
+      input: JSON.stringify({ hook_event_name: 'Stop', turn_id: 't1', stop_hook_active: false, last_assistant_message: 'pronto', cwd: join(repo.dir, 'src') }),
+      encoding: 'utf8', env,
+    });
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /T1 has no RED evidence/);
+  } finally {
+    repo.cleanup();
+  }
+});

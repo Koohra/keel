@@ -78,3 +78,23 @@ test('hooks.json registers SessionStart on startup, resume, clear and compact', 
   assert.equal(entry.matcher, 'startup|resume|clear|compact');
   assert.match(entry.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/hooks\/session-start\.mjs/);
 });
+
+test('SessionStart in Codex, opened in a subfolder without CLAUDE_PROJECT_DIR, finds the story (AC-2.2)', () => {
+  const dir = project((d) => {
+    const folder = join(d, 'keel', 'features', 'APP-1-login');
+    mkdirSync(folder, { recursive: true });
+    mkdirSync(join(d, 'src'));
+    writeFileSync(join(folder, 'state.json'), JSON.stringify(newState({ key: 'APP-1', slug: 'login', title: 'Login', branch: 'feat/x', now: 'x' })));
+  });
+  try {
+    const env = { ...process.env };
+    delete env.CLAUDE_PROJECT_DIR;
+    const result = spawnSync(process.execPath, [hook], {
+      input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', model: 'gpt', cwd: join(dir, 'src') }), encoding: 'utf8', env,
+    });
+    assert.equal(result.status, 0);
+    assert.match(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, /story APP-1 in keel\/features\/APP-1-login/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
