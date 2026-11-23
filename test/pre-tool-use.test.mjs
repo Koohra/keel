@@ -140,3 +140,69 @@ test('hook blocks git commit in implementation until the dev approves the commit
     repo.cleanup();
   }
 });
+
+// Codex: edits arrive as apply_patch with the paths inside the patch, and there is no CLAUDE_PROJECT_DIR.
+function codexHook(event) {
+  const env = { ...process.env };
+  delete env.CLAUDE_PROJECT_DIR;
+  return spawnSync(process.execPath, [hook], {
+    input: JSON.stringify({ hook_event_name: 'PreToolUse', turn_id: 't1', tool_use_id: 'u1', ...event }), encoding: 'utf8', env,
+  });
+}
+
+function applyPatch(cwd, ...lines) {
+  return codexHook({ tool_name: 'apply_patch', tool_input: { command: ['*** Begin Patch', ...lines, '*** End Patch'].join('\n') }, cwd });
+}
+
+test('Codex apply_patch touching code outside the implementation is blocked like an Edit (AC-1.1, AC-1.2, AC-1.3, AC-2.1)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'keel-codex-'));
+  try {
+    mkdirSync(join(dir, '.git'));
+    writeFileSync(join(dir, '.git', 'HEAD'), 'ref: refs/heads/feat/x\n');
+    const folder = join(dir, 'keel', 'features', 'APP-1-login');
+    mkdirSync(folder, { recursive: true });
+    mkdirSync(join(dir, 'src'));
+    writeFileSync(join(folder, 'requirements.md'), requirementsDoc());
+    writeFileSync(join(folder, 'state.json'), JSON.stringify(storyIn('tasks')));
+    const update = applyPatch(dir, '*** Update File: src/app.js', '@@', '-a', '+b');
+    assert.equal(update.status, 2);
+    assert.match(update.stderr, /APP-1 is in phase triage; code edits only in phase implementation/);
+    const story = '*** Add File: keel/features/APP-1-login/tasks.md';
+    assert.equal(applyPatch(dir, story, '+# Tasks').status, 0, update.stderr);
+    for (const code of [['*** Add File: src/new.js', '+x'], ['*** Delete File: src/old.js'], ['*** Update File: keel/notes.md', '*** Move to: src/notes.js']]) {
+      const mixed = applyPatch(dir, story, '+# Tasks', ...code);
+      assert.equal(mixed.status, 2, code.join(' '));
+      assert.match(mixed.stderr, /phase triage/);
+    }
+    // Session opened in a subfolder: relative paths come from the cwd, the story from the git root.
+    const sub = applyPatch(join(dir, 'src'), '*** Update File: app.js', '@@', '-a', '+b');
+    assert.equal(sub.status, 2);
+    assert.match(sub.stderr, /phase triage/);
+    const state = applyPatch(dir, '*** Update File: keel/features/APP-1-login/state.json', '@@', '-a', '+b');
+    assert.equal(state.status, 2);
+    assert.match(state.stderr, /keel-state\.mjs/);
+    const shell = codexHook({ tool_name: 'Bash', tool_input: { command: 'echo {} > keel/features/APP-1-login/state.json' }, cwd: dir });
+    assert.equal(shell.status, 2);
+    assert.match(shell.stderr, /keel-state\.mjs/);
+    const inline = codexHook({ tool_name: 'Bash', tool_input: { command: "apply_patch <<'EOF'\n*** Begin Patch\n*** Add File: src/x.js\n+x\n*** End Patch\nEOF" }, cwd: dir });
+    assert.equal(inline.status, 2, 'a patch sent through the shell is read the same way');
+    writeFileSync(join(folder, 'state.json'), JSON.stringify(storyIn('tasks')).replace('"feat/x"', '"feat/other"'));
+    assert.equal(applyPatch(dir, '*** Update File: src/app.js', '@@', '-a', '+b').status, 0, 'no story on the branch');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('Codex git commit without the recorded approval is blocked (AC-3.1)', () => {
+  const repo = storyRepo();
+  try {
+    repo.state('task', 'start', 'T1');
+    repo.state('evidence', 'red');
+    repo.write('src/login.js', 'export const login = 1;\n');
+    const commit = codexHook({ tool_name: 'Bash', tool_input: { command: 'git commit -am "APP-1 T1"' }, cwd: join(repo.dir, 'src') });
+    assert.equal(commit.status, 2);
+    assert.match(commit.stderr, /T1/);
+  } finally {
+    repo.cleanup();
+  }
+});

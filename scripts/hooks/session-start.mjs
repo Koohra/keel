@@ -6,6 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { findActiveStory, loadWorkflow, nextStep } from '../keel-state.mjs';
 import { readDocs } from '../validate-feature.mjs';
+import { projectRoot } from './event.mjs';
 
 const MAX_CHARS = 1500;
 const PRECEDENCE = 'Precedence: during an active story, the flow order and the gates come from Keel '
@@ -39,7 +40,7 @@ function sessionContext(root) {
 
 const input = readFileSync(0, 'utf8');
 const event = input.trim() ? JSON.parse(input) : {};
-const root = process.env.CLAUDE_PROJECT_DIR ?? event.cwd ?? process.cwd();
+const root = projectRoot(event) ?? process.cwd();
 const context = sessionContext(root);
 if (context) {
   console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: context } }));

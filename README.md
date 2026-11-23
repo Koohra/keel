@@ -31,6 +31,12 @@ Opcional, o ajudante de documentação:
 /plugin install keel-docs@keel
 ```
 
+### Hooks no Codex
+
+No Codex, os hooks de um plugin só rodam depois que você os aprova. Depois de instalar o Keel, abra `/hooks` no Codex CLI (no app, "Review hooks") e aprove os quatro hooks do Keel. A aprovação vale para a versão do script: quando o Keel é atualizado e um hook muda, o Codex pede de novo.
+
+Se você não aprovar, as skills funcionam, mas o Keel fica sem os portões: nada impede código antes da implementação, um `state.json` editado à mão ou um commit sem a sua aprovação, e o fim do turno não confere a task aberta.
+
 ## Como é usar
 
 Uma vez por projeto, você prepara o terreno:
