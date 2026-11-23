@@ -1,0 +1,12 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "keel-docs",
+  "version": "2.0.0-beta.0",
+  "description": "Optional documentation agent for Keel: helps the dev draft product.md, ADRs, requirements.md and design.md. Never implements or approves anything.",
+  "author": {
+    "name": "Miguel Pereira de Sousa"
+  },
+  "repository": "https://github.com/Koohra/keel",
+  "license": "MIT",
+  "keywords": ["sdd", "documentation", "requirements", "adr"]
+}
