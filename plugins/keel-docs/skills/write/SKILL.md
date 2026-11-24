@@ -8,14 +8,16 @@ allowed-tools: Bash(node "${CLAUDE_PLUGIN_ROOT}/scripts/doc-check.mjs" *)
 
 Você ajuda o dev a escrever um documento que ele vai aprovar depois. Você é o redator; o dev é o autor e quem decide. Responda no idioma do dev.
 
+Caminhos: `<plugin>` é a pasta do plugin: no Claude Code, `${CLAUDE_PLUGIN_ROOT}`; em outro agente, a pasta dois níveis acima deste SKILL.md. Troque `<plugin>` pelo caminho antes de rodar um comando. Caminhos sem `<plugin>` (`guides/`) são relativos à pasta deste SKILL.md.
+
 ## Qual documento
 
 | Pedido | Arquivo | Guia | Modelo |
 |---|---|---|---|
-| Produto, visão, glossário, princípios | `keel/product.md` | `${CLAUDE_SKILL_DIR}/guides/product.md` | `${CLAUDE_PLUGIN_ROOT}/templates/product.md` |
-| Decisão que afeta o projeto inteiro | `keel/adrs/ADR-NNN-<slug>.md` | `${CLAUDE_SKILL_DIR}/guides/adr.md` | `${CLAUDE_PLUGIN_ROOT}/templates/adr.md` |
-| Regras e critérios de uma história | `keel/features/<KEY>-<slug>/requirements.md` | `${CLAUDE_SKILL_DIR}/guides/requirements.md` | `${CLAUDE_PLUGIN_ROOT}/templates/requirements.md` |
-| Como implementar uma história com escolha real | `keel/features/<KEY>-<slug>/design.md` | `${CLAUDE_SKILL_DIR}/guides/design.md` | `${CLAUDE_PLUGIN_ROOT}/templates/design.md` |
+| Produto, visão, glossário, princípios | `keel/product.md` | `guides/product.md` | `<plugin>/templates/product.md` |
+| Decisão que afeta o projeto inteiro | `keel/adrs/ADR-NNN-<slug>.md` | `guides/adr.md` | `<plugin>/templates/adr.md` |
+| Regras e critérios de uma história | `keel/features/<KEY>-<slug>/requirements.md` | `guides/requirements.md` | `<plugin>/templates/requirements.md` |
+| Como implementar uma história com escolha real | `keel/features/<KEY>-<slug>/design.md` | `guides/design.md` | `<plugin>/templates/design.md` |
 
 Leia só o guia do documento pedido. Se não estiver claro qual é, pergunte antes de abrir qualquer guia. Um documento por vez.
 
@@ -27,7 +29,7 @@ Leia só o guia do documento pedido. Se não estiver claro qual é, pergunte ant
 4. Nada inventado: categoria sem informação recebe "sem orientação encontrada"; seção sem conteúdo diz "not applicable" e não é removida.
 5. Pergunte ao dev uma pergunta por vez, sempre com a opção que você recomenda e o porquê, no máximo cerca de cinco por documento. Com a resposta, troque o `[QUESTION]` pelo texto com `[source: dev on YYYY-MM-DD]`. Pergunta sem resposta continua `[QUESTION]`.
 6. Confira a estrutura por script e corrija até não haver erro:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/doc-check.mjs" <arquivo>`
+   `node "<plugin>/scripts/doc-check.mjs" <arquivo>`
    O script não julga conteúdo; ele aponta seção faltando ou vazia, modelo não preenchido, regra sem fonte, regra fora de EARS, critério fora de Given/When/Then, nome de ADR e tamanho.
 7. Entregue em poucas linhas: o arquivo, os `[QUESTION]` e `[ASSUMPTION]` que ficaram abertos e o que o script disse. Diga que a aprovação é do dev: numa história, pelo fluxo do Keel (`keel:story`); no product.md e nas ADRs, editando o `Status` ele mesmo.
 

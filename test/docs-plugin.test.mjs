@@ -68,16 +68,24 @@ test('write skill has frontmatter with name, when-to-use description and only th
   assert.match(front[1], /^allowed-tools: Bash\(node "\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/doc-check\.mjs" \*\)$/m);
 });
 
-test('write skill and guides only cite plugin files that exist, one guide per document', () => {
+test('write skill cites guides relative to the skill and plugin files by <plugin>', () => {
   const texts = [`${SKILL}/SKILL.md`, ...['product', 'adr', 'requirements', 'design'].map((g) => `${SKILL}/guides/${g}.md`)];
+  let varLines = 0;
   for (const file of texts) {
-    const text = read(file);
-    for (const [, ref] of text.matchAll(/\$\{CLAUDE_PLUGIN_ROOT\}\/([\w./-]+)/g)) assert.ok(existsSync(join(root, PLUGIN, ref)), `${file}: ${ref}`);
-    for (const [, ref] of text.matchAll(/\$\{CLAUDE_SKILL_DIR\}\/([\w./-]+)/g)) assert.ok(existsSync(join(root, SKILL, ref)), `${file}: ${ref}`);
+    const body = read(file).replace(/^---\n[\s\S]*?\n---\n/, '');
+    for (const line of body.split('\n').filter((l) => /\$\{CLAUDE_(PLUGIN_ROOT|SKILL_DIR)\}/.test(l))) {
+      assert.ok(file === `${SKILL}/SKILL.md` && /^Caminhos:/.test(line), `${file}: Claude Code variable outside the "Caminhos" line: ${line}`);
+      varLines += 1;
+    }
+    assert.doesNotMatch(body, /`(templates|scripts)\//, `${file}: plugin files always carry <plugin>/`);
+    for (const [, ref] of body.matchAll(/<plugin>\/([\w./-]+)/g)) assert.ok(existsSync(join(root, SKILL, '..', '..', ref)), `${file}: <plugin>/${ref}`);
+    for (const [, ref] of body.matchAll(/`(guides\/[\w.-]+\.md)`/g)) assert.ok(existsSync(join(root, SKILL, ref)), `${file}: ${ref}`);
   }
+  assert.equal(varLines, 1, 'SKILL.md has one "Caminhos" line');
   const skill = read(`${SKILL}/SKILL.md`);
-  for (const g of ['product', 'adr', 'requirements', 'design']) assert.ok(skill.includes(`\${CLAUDE_SKILL_DIR}/guides/${g}.md`), g);
-  assert.ok(skill.includes('${CLAUDE_PLUGIN_ROOT}/scripts/doc-check.mjs'));
+  assert.match(skill, /^Caminhos: `<plugin>` é a pasta do plugin: no Claude Code, `\$\{CLAUDE_PLUGIN_ROOT\}`; em outro agente, a pasta dois níveis acima deste SKILL\.md\./m);
+  for (const g of ['product', 'adr', 'requirements', 'design']) assert.ok(skill.includes(`\`guides/${g}.md\``), g);
+  assert.ok(skill.includes('<plugin>/scripts/doc-check.mjs'));
 });
 
 test('write skill carries the agreed limits: no code, no approval, no state, sources and one question at a time', () => {
