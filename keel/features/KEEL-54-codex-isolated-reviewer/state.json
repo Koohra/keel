@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-54",
+    "title": "Codex: revisor isolado como subagente",
+    "source": "https://github.com/Koohra/keel/issues/54",
+    "folder": "keel/features/KEEL-54-codex-isolated-reviewer",
+    "branch": "feat/codex-isolated-reviewer",
+    "base": null
+  },
+  "level": "with-design",
+  "phase": "implementation",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-23T22:33:28.587Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-23T22:33:28.908Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-23T22:33:28.961Z",
+      "hash": "7d9861b3ee27309427acac49a51d085b090604bcb6340eade82be1db512f482e"
+    },
+    "design": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-24T08:14:52.707Z",
+      "hash": "70930491d6f58bcdbea23051b675d1f4483032cb2c3a9c559320ebea2e8b6539"
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-24T08:14:52.752Z",
+      "hash": "28c00a553dc5e5489336e8a8892912f98c9071c79dfc0b3c4ba29f650eba951c"
+    },
+    "implementation": {
+      "currentTask": "T1",
+      "blocked": null,
+      "red": {
+        "command": "node --test test/codex-reviewer.test.mjs",
+        "exitCode": 1,
+        "output": "  actual: 0\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///home/user/keel/test/codex-reviewer.test.mjs:82:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..6\n# tests 6\n# suites 0\n# pass 1\n# fail 5\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 171.267211",
+        "at": "2026-11-24T08:15:16.205Z"
+      },
+      "green": {
+        "command": "node --test test/codex-reviewer.test.mjs",
+        "exitCode": 0,
+        "output": "ok 5 - install refuses a different agent file without --force and overwrites it with --force\n  ---\n  duration_ms: 62.991157\n  type: 'test'\n  ...\n# Subtest: check passes for the generated file and names a missing or outdated one\nok 6 - check passes for the generated file and names a missing or outdated one\n  ---\n  duration_ms: 124.724498\n  type: 'test'\n  ...\n1..6\n# tests 6\n# suites 0\n# pass 6\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 309.829454",
+        "at": "2026-11-24T08:15:31.141Z"
+      },
+      "checks": {
+        "passed": true,
+        "fingerprint": "54749840b27ab0fb680dd480f8bfeaed44b9ea9ddf9deb3652ff95479ad0af74",
+        "at": "2026-11-24T09:47:46.778Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 56 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 235 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.129619\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 236 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.126398\n  type: 'test'\n  ...\n1..236\n# tests 236\n# suites 0\n# pass 236\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 26974.788874"
+          }
+        ]
+      },
+      "review": {
+        "task": "T1",
+        "result": "findings",
+        "at": "2026-11-24T08:18:32.752Z"
+      },
+      "commit": {
+        "task": "T1",
+        "approvedBy": "Miguel",
+        "at": "2026-11-24T09:48:33.940Z",
+        "fingerprint": "54749840b27ab0fb680dd480f8bfeaed44b9ea9ddf9deb3652ff95479ad0af74"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "convergence": null,
+      "arch": null,
+      "deltas": null,
+      "deltasApproved": null,
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-24T09:48:33.940Z"
+}
