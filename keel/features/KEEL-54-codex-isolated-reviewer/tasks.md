@@ -34,7 +34,7 @@ Depends on: T1
 
 ## Progress
 ### T1
-Status: in review
+Status: done (1f2e8fa)
 RED evidence: `node --test test/codex-reviewer.test.mjs` exited with 1 at 2026-11-24T08:15:16.205Z
 GREEN evidence: `node --test test/codex-reviewer.test.mjs` exited with 0 at 2026-11-24T08:15:31.141Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
