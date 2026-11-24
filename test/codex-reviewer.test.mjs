@@ -5,7 +5,7 @@ import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync, rmSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { root, read, listFiles } from './helpers.mjs';
-import { reviewerToml } from '../scripts/codex-reviewer.mjs';
+import { isReadOnlyCommand, reviewerToml } from '../scripts/codex-reviewer.mjs';
 
 const script = join(root, 'scripts', 'codex-reviewer.mjs');
 const agentPath = (project) => join(project, '.codex', 'agents', 'keel-reviewer.toml');
@@ -92,4 +92,22 @@ test('check passes for the generated file and names a missing or outdated one', 
   const outdated = run(project, 'check');
   assert.equal(outdated.status, 1);
   assert.match(outdated.stderr, /outdated/);
+});
+
+test('the reviewer shell allows only read commands (AC-3.2, AC-3.3)', () => {
+  for (const command of [
+    'cat agents/reviewer.md', 'rg -n "Result:" agents', 'grep -rn foo src', "sed -n '1,40p' scripts/x.mjs",
+    'ls -la', 'find . -name "*.mjs"', 'head -5 a', 'tail -n 3 a', 'wc -l a', 'git diff HEAD', 'git log --oneline -5',
+    'git show HEAD:a.js', 'git status --short', 'cd src && ls', 'pwd', 'git diff HEAD | head -80; git status',
+    'rg -n a || grep -n a b', 'cat "a > b"', "rg -n 'f(x)' src",
+  ]) assert.equal(isReadOnlyCommand(command), true, command);
+  for (const command of [
+    'rm a', 'mv a b', 'cp a b', 'tee a', 'awk 1 a', 'python -c 1', 'node -e 1', 'sh -c "ls"', 'bash', 'npm test',
+    'git commit -m x', 'git stash', 'git checkout a', 'apply_patch', 'cat a > b', 'cat a >> b', 'ls 2>err',
+    "sed -i 's/a/b/' a", "sed -n 'w out' a", "sed -n '1e date' a", "sed 's/a/b/' a",
+    'find . -delete', 'find . -exec rm {} ;', 'find . -execdir rm {} +', 'find . -ok rm {} ;', 'find . -fprint out', 'find . -fls out',
+    'git diff --output=out', 'git log --output out', 'rg --pre ./x a', 'cat $(echo a)', 'cat `echo a`', 'FOO=1 cat a',
+    'ls && rm a', 'cat a | sh', '', 'cat <(touch x)', 'grep a <(rm -rf y)', 'cat =(touch x)', "ls *(e:'touch x':)", 'ls *(+cmd)',
+    'cat a 3<>f', 'cat a &>f', 'cat a |& sh', 'cat a &',
+  ]) assert.equal(isReadOnlyCommand(command), false, command);
 });

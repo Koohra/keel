@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const AGENT_NAME = 'keel-reviewer';
+export const AGENT_NAME = 'keel-reviewer';
 const AGENT_FILE = join('.codex', 'agents', `${AGENT_NAME}.toml`);
 const SOURCE = fileURLToPath(new URL('../agents/reviewer.md', import.meta.url));
 
@@ -32,6 +32,68 @@ export function reviewerToml(markdown) {
 function agentStatus(current, expected) {
   if (current === null) return 'missing';
   return current === expected ? 'current' : 'outdated';
+}
+
+// Shell commands the reviewer may run: reading only. Anything else, an unquoted redirection or parenthesis,
+// a background & or a command substitution blocks; quotes are honored so a pattern can hold | or >.
+const READERS = new Set(['cat', 'grep', 'ls', 'head', 'tail', 'wc', 'cd', 'pwd']);
+const FIND_WRITERS = new Set(['-delete', '-exec', '-execdir', '-ok', '-okdir', '-fprint', '-fprint0', '-fprintf', '-fls']);
+const GIT_READERS = new Set(['diff', 'log', 'show', 'status']);
+const SED_PRINT = /^((\d+|\$)(,(\d+|\$))?|\/[^/]*\/)p$/;
+
+// Splits a command into segments (separated by &&, ||, ;, | or a newline) of words; null if it cannot be read safely.
+function segments(command) {
+  const result = [[]];
+  let word = null;
+  let quote = null;
+  const endWord = () => { if (word !== null) result.at(-1).push(word); word = null; };
+  for (let i = 0; i < command.length; i += 1) {
+    const char = command[i];
+    if (quote === "'") {
+      if (char === "'") quote = null; else word += char;
+      continue;
+    }
+    if (char === '`' || (char === '$' && command[i + 1] === '(')) return null;
+    if (quote === '"') {
+      if (char === '"') quote = null;
+      else if (char === '\\' && i + 1 < command.length) word += command[(i += 1)];
+      else word += char;
+      continue;
+    }
+    if (char === "'" || char === '"') { quote = char; word ??= ''; continue; }
+    if (char === '\\' && i + 1 < command.length) { word = (word ?? '') + command[(i += 1)]; continue; }
+    // Redirection, background, and ( which bash and zsh use for <(cmd), =(cmd) and glob qualifiers that run code.
+    if (char === '>' || char === '(' || char === ')' || (char === '&' && command[i + 1] !== '&')) return null;
+    if (/\s/.test(char) && char !== '\n') { endWord(); continue; }
+    if (char === '\n' || char === ';' || char === '|' || char === '&') {
+      endWord();
+      if ((char === '|' || char === '&') && command[i + 1] === char) i += 1;
+      result.push([]);
+      continue;
+    }
+    word = (word ?? '') + char;
+  }
+  if (quote) return null;
+  endWord();
+  return result;
+}
+
+function isReader([program, ...args]) {
+  if (READERS.has(program)) return true;
+  if (program === 'rg') return !args.some((arg) => arg.startsWith('--pre'));
+  if (program === 'find') return !args.some((arg) => FIND_WRITERS.has(arg));
+  if (program === 'git') return GIT_READERS.has(args[0]) && !args.some((arg) => arg.startsWith('--output'));
+  if (program === 'sed') {
+    const options = args.filter((arg) => arg.startsWith('-'));
+    const scripts = args.filter((arg) => !arg.startsWith('-'));
+    return options.includes('-n') && options.every((arg) => arg === '-n') && SED_PRINT.test(scripts[0] ?? '');
+  }
+  return false;
+}
+
+export function isReadOnlyCommand(command) {
+  const parts = segments(String(command ?? ''));
+  return Boolean(parts) && parts.every((words) => words.length > 0 && isReader(words));
 }
 
 function main([command, ...flags]) {

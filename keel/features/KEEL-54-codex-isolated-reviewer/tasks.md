@@ -40,7 +40,11 @@ GREEN evidence: `node --test test/codex-reviewer.test.mjs` exited with 0 at 2026
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (exports sem uso removidos); F2 fixed (pastas temporárias apagadas no t.after); F3 fixed (comando validado antes do I/O)
 ### T2
-Status: pending
+Status: in review
+RED evidence: `node --test test/codex-reviewer.test.mjs test/pre-tool-use.test.mjs` exited with 1 at 2026-11-24T09:49:11.382Z
+GREEN evidence: `node --test test/codex-reviewer.test.mjs test/pre-tool-use.test.mjs` exited with 0 at 2026-11-24T09:52:06.879Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (`(` e `)` fora de aspas bloqueiam: `<(cmd)`, `=(cmd)` e qualificador de glob do zsh, com teste); F2 kept [source: requirements.md Out of scope, ferramentas MCP]; F3 fixed (parênteses explícitos); F4 fixed (casos `3<>`, `&>`, `|&` no teste)
 ### T3
 Status: pending
 
