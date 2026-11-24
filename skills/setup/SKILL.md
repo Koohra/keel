@@ -9,12 +9,14 @@ Objetivo: o projeto ter o contexto durável antes da primeira história. Respond
 Tudo aqui é proposta: nada é gravado sem o dev aprovar o trecho exato. Faça uma pergunta por vez,
 com a opção recomendada.
 
-Scripts (Node, sem dependências), rodados na raiz do projeto:
-- `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-context.mjs" <command>`: AGENTS.md e CLAUDE.md.
-- `node "${CLAUDE_PLUGIN_ROOT}/scripts/arch-check.mjs"`: regras de `keel/architecture.json`.
+Caminhos: `<plugin>` é a pasta do plugin: no Claude Code, `${CLAUDE_PLUGIN_ROOT}`; em outro agente, a pasta dois níveis acima deste SKILL.md. Troque `<plugin>` pelo caminho antes de rodar um comando.
 
-Modelos: `${CLAUDE_PLUGIN_ROOT}/templates/principles.md`, `${CLAUDE_PLUGIN_ROOT}/templates/architecture.json`,
-`${CLAUDE_PLUGIN_ROOT}/templates/agents.md`.
+Scripts (Node, sem dependências), rodados na raiz do projeto:
+- `node "<plugin>/scripts/keel-context.mjs" <command>`: AGENTS.md e CLAUDE.md.
+- `node "<plugin>/scripts/arch-check.mjs"`: regras de `keel/architecture.json`.
+
+Modelos: `<plugin>/templates/principles.md`, `<plugin>/templates/architecture.json`,
+`<plugin>/templates/agents.md`.
 
 ## 1. Revisão do AGENTS.md e do CLAUDE.md (sempre, sem alterar nada)
 
@@ -46,7 +48,14 @@ Visibilidade (o relatório diz qual caso é):
   CLAUDE.md da raiz, `@../AGENTS.md` em `.claude/CLAUDE.md`) e só aplique com aprovação, com
   `keel-context.mjs import-agents [--file .claude/CLAUDE.md]`.
 - CLAUDE.md symlink para AGENTS.md: avise da carga dupla e sugira trocar por um CLAUDE.md com `@AGENTS.md`.
-- Nenhum dos dois: ofereça o modelo `templates/agents.md` (passo 5).
+- Nenhum dos dois: ofereça o modelo `<plugin>/templates/agents.md` (passo 5).
+
+No Codex (o relatório traz um achado `info` a mais quando o caso pede):
+- O Codex lê `AGENTS.md` (ou o override abaixo), nunca CLAUDE.md. Só AGENTS.md serve aos dois agentes.
+- Só CLAUDE.md: o Codex não vê as instruções. Se o dev usa o Codex, sugira mover o texto para um AGENTS.md
+  e deixar no CLAUDE.md só a linha `@AGENTS.md`; não aplique sem aprovação.
+- `AGENTS.override.md` na raiz: o Codex lê esse arquivo no lugar do AGENTS.md, e o Claude Code não o lê.
+  Avise o dev se as regras dos dois arquivos divergem.
 
 ## 2. product.md e ADRs
 
@@ -57,7 +66,7 @@ Visibilidade (o relatório diz qual caso é):
 
 ## 3. Engineering principles (seção do product.md)
 
-Parta de `templates/principles.md` e ajuste com o dev:
+Parta de `<plugin>/templates/principles.md` e ajuste com o dev:
 - No máximo 10 regras, cada uma marcada `[hook]` (checada por script) ou `[review]` (rubrica de design).
 - Degrau de arquitetura de cada módulo, com motivo. Clean Architecture e DDD não são o padrão: a regra
   universal é a direção das dependências; o resto segue o degrau.
@@ -66,7 +75,7 @@ Parta de `templates/principles.md` e ajuste com o dev:
 
 ## 4. keel/architecture.json e testes de arquitetura
 
-1. Proponha `keel/architecture.json` a partir das pastas reais, no formato de `templates/architecture.json`:
+1. Proponha `keel/architecture.json` a partir das pastas reais, no formato de `<plugin>/templates/architecture.json`:
    componentes, regras com `fix`, `noCycles` e `baseline`. Mostre e espere aprovação.
 2. Rode `arch-check.mjs`. Ele é um varredor de imports aproximado (JS/TS e Python); regra que casa com zero
    arquivos falha.
@@ -80,7 +89,7 @@ Parta de `templates/principles.md` e ajuste com o dev:
 
 ## 5. AGENTS.md (opcional)
 
-- Sem AGENTS.md: ofereça `templates/agents.md`. O dev preenche ou responde uma pergunta por seção; seção sem
+- Sem AGENTS.md: ofereça `<plugin>/templates/agents.md`. O dev preenche ou responde uma pergunta por seção; seção sem
   resposta sai. Não gere o conteúdo a partir do código.
 - Com AGENTS.md: se o dev quiser, proponha uma reestruturação nas seções do modelo que só move e remove
   linhas, sem reescrever o texto do dev. Escreva a proposta num arquivo temporário, rode

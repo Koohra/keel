@@ -58,7 +58,11 @@ GREEN evidence: `node --test test/story-skill.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (laço morto de ${CLAUDE_PLUGIN_ROOT} removido do teste antigo); F2 fixed (checagem repetida dos instructions removida); F3 kept [source: R1 AC-1.2, os checklists que o next cita]; F4 fixed (vírgula em implementation.md)
 ### T2
-Status: pending
+Status: in review
+RED evidence: `node --test test/setup-skill.test.mjs` exited with 1 at 2026-11-24T08:12:20.125Z
+GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11-24T08:13:49.892Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (4 modelos ganharam `<plugin>/` e o teste recusa `templates/` ou `scripts/` sem o prefixo); F2 kept, o setup só cita arquivos com `<plugin>/`, então a frase de caminhos relativos não se aplica [source: design.md Contracts and data]
 ### T3
 Status: pending
 ### T4
