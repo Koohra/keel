@@ -52,7 +52,7 @@ Depends on: T4
 
 ## Progress
 ### T1
-Status: in review
+Status: done (66d8b1b)
 RED evidence: `node --test test/story-skill.test.mjs` exited with 1 at 2026-11-23T22:33:39.862Z
 GREEN evidence: `node --test test/story-skill.test.mjs` exited with 0 at 2026-11-23T22:36:47.654Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
