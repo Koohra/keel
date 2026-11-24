@@ -8,18 +8,20 @@ allowed-tools: Bash(node "${CLAUDE_PLUGIN_ROOT}/scripts/*)
 
 Você conduz uma história do dev pelo fluxo do Keel. Quem decide a ordem das fases e os portões é o script de estado; você usa julgamento dentro de cada fase. Responda no idioma do dev.
 
+Caminhos: `<plugin>` é a pasta do plugin: no Claude Code, `${CLAUDE_PLUGIN_ROOT}`; em outro agente, a pasta dois níveis acima deste SKILL.md. Troque `<plugin>` pelo caminho antes de rodar um comando. Caminhos sem `<plugin>` (`phases/`, `checklists/`) são relativos à pasta deste SKILL.md.
+
 ## Como andar no fluxo
 
 1. Rode tudo a partir da raiz do projeto. Se `keel/product.md` não existe, pare: diga que o Keel precisa do product.md antes da primeira história e ofereça criá-lo com o dev.
 2. Pergunte a fase ao script, sempre antes de qualquer outra ação, inclusive ao retomar:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" next`
+   `node "<plugin>/scripts/keel-state.mjs" next`
    A saída diz `phase`, `instructions` (arquivo da fase), `missing` (o que falta para sair dela) e `expired` (aprovação que venceu porque o documento mudou).
 3. Se o `next` diz que não há história para a branch atual, é uma história nova. Confirme com o dev a chave (código do Jira ou parecido), um slug curto, o título, o link e a branch. A branch é criada pelo dev; se estiver na principal, peça que ele crie. Depois:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" init --key <KEY> --slug <slug> --title "<title>" [--source <link>]`
+   `node "<plugin>/scripts/keel-state.mjs" init --key <KEY> --slug <slug> --title "<title>" [--source <link>]`
    Passe `--source` só se a história tiver link; não invente um.
-4. Leia `${CLAUDE_SKILL_DIR}/<instructions>` (por exemplo `${CLAUDE_SKILL_DIR}/phases/triage.md`) e siga. Carregue só a fase atual. Se o arquivo da fase não existe nesta versão do Keel, diga ao dev em que fase a história está e pare.
+4. Leia `<instructions>` na pasta desta skill (por exemplo `phases/triage.md`) e siga. Carregue só a fase atual. Se o arquivo da fase não existe nesta versão do Keel, diga ao dev em que fase a história está e pare.
 5. Quando o trabalho da fase terminar, peça para avançar:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" advance`
+   `node "<plugin>/scripts/keel-state.mjs" advance`
    Se o script recusar, mostre ao dev o que falta, com o motivo que ele deu, e resolva dentro da fase. Não tente outro caminho.
 6. Depois de um `advance` aceito na saída de requirements, confirmation ou tasks, termine a resposta dizendo ao dev a fase nova e sugerindo seguir numa conversa nova (`/clear`): retomar a mesma conversa fica mais caro a cada resposta, e o `next` retoma de onde parou, porque o que essas fases produzem está nos arquivos da história. Na saída de triage, reading e design, siga na mesma conversa e volte ao passo 2: o texto original da história só existe na conversa até a leitura copiá-lo, os requisitos usam as fontes que a leitura abriu, e as tasks são planejadas sobre o design que acabou de ser escrito. Na implementação, a conversa nova é por task (passo 1.3 da fase). Na saída de implementation, com o `advance` para closing aceito, sugira também a conversa nova (`/clear`): o fechamento relê a história, o git e os scripts, e não precisa do histórico das tasks.
 

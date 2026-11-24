@@ -2,8 +2,8 @@
 
 Objetivo: decidir o "como" quando há escolha real. Só existe no nível `with-design`. Não há portão aqui: o dev aprova o design junto com as tasks, na fase seguinte.
 
-1. Leia o `requirements.md` confirmado, as ADRs que a história toca, a seção "Engineering principles" do `keel/product.md` e só os arquivos onde a história mexe. Se precisar achar o código de novo, rode o repo map (`node "${CLAUDE_PLUGIN_ROOT}/scripts/repo-map.mjs" --budget 1500 --focus <termos>`).
-2. Crie `keel/features/<KEY>-<slug>/design.md` a partir de `${CLAUDE_PLUGIN_ROOT}/templates/design.md`, com `Status: draft` no cabeçalho (fora do bloco congelado).
+1. Leia o `requirements.md` confirmado, as ADRs que a história toca, a seção "Engineering principles" do `keel/product.md` e só os arquivos onde a história mexe. Se precisar achar o código de novo, rode o repo map (`node "<plugin>/scripts/repo-map.mjs" --budget 1500 --focus <termos>`).
+2. Crie `keel/features/<KEY>-<slug>/design.md` a partir de `<plugin>/templates/design.md`, com `Status: draft` no cabeçalho (fora do bloco congelado).
 3. `Trigger:` com o tipo e o motivo, por exemplo `Trigger: data/migration — usuários passam a ser gravados em arquivo`. Tipos: trade-off, contract, data/migration, new dependency, cross-cutting, pattern break, new structure, rung change.
 4. "Approach": um parágrafo que cita as regras atendidas (R1, R2). Não repita o texto dos requisitos; cite os IDs.
 5. "Code map": o que muda, o que reaproveitar e o que não mexer, com `arquivo:linha`.
@@ -14,7 +14,7 @@ Objetivo: decidir o "como" quando há escolha real. Só existe no nível `with-d
 10. "ADR candidate?": `Yes — <motivo>` se a decisão afeta estrutura, dependência, interface ou técnica de construção e sobrevive à história, ou se contraria uma ADR existente; senão `No — <motivo>`. Com `Yes`, escreva o rascunho em `keel/features/<KEY>-<slug>/adr-draft.md` no formato das ADRs que já existem, com status proposto. Não escreva em `keel/adrs/` agora: o `approve commit` recusa esse arquivo nas tasks, e a ADR nasce no fechamento, sob a aprovação dos deltas pelo dev.
 11. Decisão com consequência (contrato externo, modelo de dados, dependência, consistência, custo) que as fontes não resolvem é do dev: pergunte uma por vez, com opções, consequências e a sua recomendação, e registre a resposta com `[source: dev on YYYY-MM-DD]`. O que as fontes já decidem, cite e siga.
 12. Valide por script e corrija até não haver erro (o script confere também as regras citadas contra o requirements.md):
-    `node "${CLAUDE_PLUGIN_ROOT}/scripts/validate-feature.mjs" keel/features/<KEY>-<slug>`
-13. Avance: `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" advance`. Diga ao dev que o design será aprovado junto com as tasks.
+    `node "<plugin>/scripts/validate-feature.mjs" keel/features/<KEY>-<slug>`
+13. Avance: `node "<plugin>/scripts/keel-state.mjs" advance`. Diga ao dev que o design será aprovado junto com as tasks.
 
 Orçamento: cerca de duas páginas. Não escreva código do projeto nesta fase.

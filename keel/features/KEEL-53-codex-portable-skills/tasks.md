@@ -1,0 +1,74 @@
+# Tasks — KEEL-53
+
+Requirements: requirements.md · Design: design.md
+Approved by Miguel on 2026-11-23
+
+<!-- frozen after approval: start -->
+## T1 — Walking skeleton: skill story acha scripts e fases pela linha "Caminhos"
+Covers: R1 (AC-1.1, AC-1.2), R2 (AC-2.1, AC-2.2)
+Files: `skills/story/SKILL.md`, `skills/story/phases/triage.md`, `skills/story/phases/reading.md`, `skills/story/phases/requirements.md`, `skills/story/phases/confirmation.md`, `skills/story/phases/design.md`, `skills/story/phases/tasks.md`, `skills/story/phases/implementation.md`, `skills/story/phases/debugging.md`, `skills/story/phases/closing.md`, `test/story-skill.test.mjs`
+New structure: none
+Test first: `story skill cites plugin files by <plugin> or relative to the skill folder` — todo caminho citado em SKILL.md e nas fases existe a partir da pasta da skill, `${CLAUDE_...}` só no frontmatter e na linha "Caminhos", e os `instructions` do workflow e os checklists existem na pasta da skill
+Verification: `node --test test/story-skill.test.mjs`
+Done when: o teste passa, o `allowed-tools` da story é o mesmo e `claude plugin validate .` aceita
+Depends on: —
+
+## T2 — Skill setup: caminhos, /doctor do Claude Code e visibilidade com o Codex
+Covers: R1 (AC-1.1), R3 (AC-3.1), R7 (AC-7.1)
+Files: `skills/setup/SKILL.md`, `test/setup-skill.test.mjs`
+New structure: none
+Test first: `setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Code, Codex visibility cases` — caminhos com `<plugin>` existem, `/doctor prompt-audit` aparece com "Claude Code" na mesma linha e a seção de visibilidade cita Codex, `AGENTS.override.md` e o caso só com `CLAUDE.md`
+Verification: `node --test test/setup-skill.test.mjs`
+Done when: o teste passa
+Depends on: T1
+
+## T3 — Skill keel-docs:write: guias, modelos e doc-check pela linha "Caminhos"
+Covers: R1 (AC-1.1), R2 (AC-2.1, AC-2.2)
+Files: `plugins/keel-docs/skills/write/SKILL.md`, `test/docs-plugin.test.mjs`
+New structure: none
+Test first: `write skill cites guides relative to the skill and plugin files by <plugin>` — cada guia e modelo citado existe, `${CLAUDE_...}` só no frontmatter e na linha "Caminhos", `allowed-tools` igual
+Verification: `node --test test/docs-plugin.test.mjs`
+Done when: o teste passa e `claude plugin validate plugins/keel-docs` aceita
+Depends on: T1
+
+## T4 — Review: visibilidade do Codex com só AGENTS.md e com só CLAUDE.md
+Covers: R4 (AC-4.1), R5 (AC-5.1)
+Files: `scripts/keel-context.mjs`, `test/keel-context.test.mjs`
+New structure: none
+Test first: `review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info` — um achado de visibilidade `info` com Codex no caso só AGENTS.md; no caso só CLAUDE.md, o achado atual mais um `info` do Codex, sem arquivo mudado
+Verification: `node --test test/keel-context.test.mjs`
+Done when: o teste passa e os testes de visibilidade atuais continuam passando
+Depends on: —
+
+## T5 — Review: AGENTS.override.md na raiz
+Covers: R6 (AC-6.1, AC-6.2)
+Files: `scripts/keel-context.mjs`, `test/keel-context.test.mjs`, `CHANGELOG.md`
+New structure: none
+Test first: `review lists AGENTS.override.md and says Codex reads it instead of AGENTS.md` — `files` inclui o override e há um `info` de visibilidade sobre ele, com ou sem AGENTS.md, sem sugerir criar CLAUDE.md
+Verification: `node --test test/keel-context.test.mjs`
+Done when: o teste passa e `npm test` passa
+Depends on: T4
+<!-- frozen after approval: end -->
+
+## Progress
+### T1
+Status: in review
+RED evidence: `node --test test/story-skill.test.mjs` exited with 1 at 2026-11-23T22:33:39.862Z
+GREEN evidence: `node --test test/story-skill.test.mjs` exited with 0 at 2026-11-23T22:36:47.654Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (laço morto de ${CLAUDE_PLUGIN_ROOT} removido do teste antigo); F2 fixed (checagem repetida dos instructions removida); F3 kept [source: R1 AC-1.2, os checklists que o next cita]; F4 fixed (vírgula em implementation.md)
+### T2
+Status: pending
+### T3
+Status: pending
+### T4
+Status: pending
+### T5
+Status: pending
+
+## Implementation notes
+not applicable
+
+## Convergence (filled at the end, checked by script)
+| Rule | Evidence | Outcome |
+|---|---|---|

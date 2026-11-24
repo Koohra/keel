@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-53",
+    "title": "Skills sem dependência do Claude Code (Codex)",
+    "source": "https://github.com/Koohra/keel/issues/53",
+    "folder": "keel/features/KEEL-53-codex-portable-skills",
+    "branch": "feat/codex-portable-skills",
+    "base": null
+  },
+  "level": "with-design",
+  "phase": "implementation",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-23T21:56:09.890Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-23T21:58:09.531Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-23T22:28:42.064Z",
+      "hash": "83154bd72af05cbfba89899305dc7826f8b0c4694b50b6b84de188e55fa1b9ac"
+    },
+    "design": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-23T22:33:27.004Z",
+      "hash": "478e64a36196b53bf9adacad328df3cef1f2f9f7bb6fb98edd43c95a8dd84c5d"
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-23T22:33:27.075Z",
+      "hash": "642ce2783976cedbbe0e4f23cb3c69c5545d4329408691c342e01ad61d9b1d0d"
+    },
+    "implementation": {
+      "currentTask": "T1",
+      "blocked": null,
+      "red": {
+        "command": "node --test test/story-skill.test.mjs",
+        "exitCode": 1,
+        "output": "  actual: false\n  operator: '=='\n  stack: |-\n    TestContext.<anonymous> (file:///home/user/keel/test/story-skill.test.mjs:161:14)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..14\n# tests 14\n# suites 0\n# pass 13\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 78.148833",
+        "at": "2026-11-23T22:33:39.862Z"
+      },
+      "green": {
+        "command": "node --test test/story-skill.test.mjs",
+        "exitCode": 0,
+        "output": "ok 13 - scope: confirmation review keeps the story inside its goal\n  ---\n  duration_ms: 0.099287\n  type: 'test'\n  ...\n# Subtest: story skill cites plugin files by <plugin> or relative to the skill folder\nok 14 - story skill cites plugin files by <plugin> or relative to the skill folder\n  ---\n  duration_ms: 0.791209\n  type: 'test'\n  ...\n1..14\n# tests 14\n# suites 0\n# pass 14\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 59.235155",
+        "at": "2026-11-23T22:36:47.654Z"
+      },
+      "checks": {
+        "passed": true,
+        "fingerprint": "373cf914eb4c17038c0a6138b53c0d468ccf4ec01c9bdb71d84756bb01fd5611",
+        "at": "2026-11-23T22:43:08.161Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 52 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 216 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.132184\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 217 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.214618\n  type: 'test'\n  ...\n1..217\n# tests 217\n# suites 0\n# pass 217\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 22521.654443"
+          }
+        ]
+      },
+      "review": {
+        "task": "T1",
+        "result": "findings",
+        "at": "2026-11-23T22:43:36.597Z"
+      },
+      "commit": {
+        "task": "T1",
+        "approvedBy": "Miguel",
+        "at": "2026-11-24T08:11:57.586Z",
+        "fingerprint": "373cf914eb4c17038c0a6138b53c0d468ccf4ec01c9bdb71d84756bb01fd5611"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "convergence": null,
+      "arch": null,
+      "deltas": null,
+      "deltasApproved": null,
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-24T08:11:57.586Z"
+}

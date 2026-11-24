@@ -15,9 +15,9 @@ Objetivo: transformar a história em obrigações explícitas e testáveis no `r
 6. Em "Conflicts found", liste cada divergência entre história, product.md, ADRs e código com as duas fontes. Seção sem conteúdo diz "not applicable"; não remova seção. Num conflito com uma ADR, se a recomendação for mudar a decisão, diga que o design a registra como candidata a ADR num rascunho `adr-draft.md` na pasta da história e que a ADR em `keel/adrs/` nasce no fechamento, com a aprovação dos deltas pelo dev; não diga que o design escreve a ADR.
 7. `[ASSUMPTION]` é algo que você assumiu e o dev precisa aceitar; `[QUESTION]` bloqueia o avanço.
 8. Valide por script e corrija até não haver erro:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/validate-feature.mjs" keel/features/<KEY>-<slug>`
+   `node "<plugin>/scripts/validate-feature.mjs" keel/features/<KEY>-<slug>`
 9. Faça as perguntas ao dev uma por vez, com a opção recomendada. Com a resposta, troque o `[QUESTION]` pela regra, critério ou decisão, com `[source: dev on YYYY-MM-DD]`.
 10. Sem `[QUESTION]` aberto e com o validador limpo, avance:
-    `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" advance`
+    `node "<plugin>/scripts/keel-state.mjs" advance`
 
 Orçamento: cerca de uma página. Não escreva arquitetura, classes, endpoints novos ou passos de implementação.
