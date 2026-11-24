@@ -64,7 +64,7 @@ GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (4 modelos ganharam `<plugin>/` e o teste recusa `templates/` ou `scripts/` sem o prefixo); F2 kept, o setup só cita arquivos com `<plugin>/`, então a frase de caminhos relativos não se aplica [source: design.md Contracts and data]
 ### T3
-Status: in review
+Status: done (f535c63)
 RED evidence: `node --test test/docs-plugin.test.mjs` exited with 1 at 2026-11-24T08:15:29.525Z
 GREEN evidence: `node --test test/docs-plugin.test.mjs` exited with 0 at 2026-11-24T08:15:34.224Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
