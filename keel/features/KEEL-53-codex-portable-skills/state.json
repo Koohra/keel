@@ -9,7 +9,7 @@
     "base": null
   },
   "level": "with-design",
-  "phase": "implementation",
+  "phase": "done",
   "steps": {
     "triage": {
       "done": true,
@@ -89,12 +89,71 @@
       "failedAttempts": null
     },
     "closing": {
-      "convergence": null,
-      "arch": null,
-      "deltas": null,
-      "deltasApproved": null,
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T1 `story skill cites plugin files by <plugin> or relative to the skill folder` (66d8b1b); T2 `setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Code, Codex visibility cases` (6fcb199); T3 `write skill cites guides relative to the skill and plugin files by <plugin>` (f535c63)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T1 `story skill cites plugin files by <plugin> or relative to the skill folder` (66d8b1b); T3 `write skill cites guides relative to the skill and plugin files by <plugin>` (f535c63)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T2 `setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Code, Codex visibility cases` (6fcb199)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T4 `review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info` (230484b)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R5",
+          "evidence": "T4 `review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info` (230484b)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R6",
+          "evidence": "T5 `review lists AGENTS.override.md and says Codex reads it instead of AGENTS.md` (9c90dcd)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R7",
+          "evidence": "T2 `setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Code, Codex visibility cases` (6fcb199)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": []
+      },
+      "deltas": {
+        "files": [
+          "keel/adrs/ADR-006-portable-skill-paths.md",
+          "keel/product.md"
+        ],
+        "sections": {
+          "added": [
+            "keel/adrs/ADR-006-portable-skill-paths.md"
+          ],
+          "modified": [
+            "keel/product.md#Decisions"
+          ],
+          "removed": []
+        },
+        "hash": "c6ccc7049586075be2caa40e1013a131757002a9607b1e3b09097b7a20a29d99"
+      },
+      "deltasApproved": {
+        "by": "Miguel",
+        "at": "2026-11-27T16:22:47.621Z",
+        "hash": "c6ccc7049586075be2caa40e1013a131757002a9607b1e3b09097b7a20a29d99"
+      },
       "pullRequest": null
     }
   },
-  "updatedAt": "2026-11-27T16:10:11.737Z"
+  "updatedAt": "2026-11-27T16:22:47.946Z"
 }

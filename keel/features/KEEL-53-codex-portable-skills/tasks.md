@@ -89,3 +89,10 @@ Review: findings (isolated reviewer); F1 fixed (a frase sobre regras divergentes
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
 |---|---|---|
+| R1 | T1 `story skill cites plugin files by <plugin> or relative to the skill folder` (66d8b1b); T2 `setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Code, Codex visibility cases` (6fcb199); T3 `write skill cites guides relative to the skill and plugin files by <plugin>` (f535c63) | met |
+| R2 | T1 `story skill cites plugin files by <plugin> or relative to the skill folder` (66d8b1b); T3 `write skill cites guides relative to the skill and plugin files by <plugin>` (f535c63) | met |
+| R3 | T2 `setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Code, Codex visibility cases` (6fcb199) | met |
+| R4 | T4 `review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info` (230484b) | met |
+| R5 | T4 `review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info` (230484b) | met |
+| R6 | T5 `review lists AGENTS.override.md and says Codex reads it instead of AGENTS.md` (9c90dcd) | met |
+| R7 | T2 `setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Code, Codex visibility cases` (6fcb199) | met |
