@@ -490,6 +490,7 @@ Cada parte é desenvolvida com TDD e, desde a parte 1, usando o próprio fluxo d
 | Delta de product.md e ADR | Edição direta; o script mostra o delta por seção e por arquivo de ADR (OpenSpec) | 2026-11-21 |
 | Sem architecture.json | Bloqueia o fechamento, salvo dispensa `Architecture: não se aplica` no product.md | 2026-11-21 |
 | Hosts | Só Claude Code; Codex adiado | 2026-11-18 |
+| Hosts | Claude Code e Codex, com os mesmos scripts, skills e hooks (épico #50) | 2026-11-27 |
 | Repo | Repo novo, do zero, com o nome Keel; keel-dev depreciado, sem tag rc.1 | 2026-11-18 |
 
 ---

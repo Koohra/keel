@@ -71,3 +71,37 @@ test('codex e2e grades each case by the workspace end state', async (t) => {
   const args = execArgs(ready);
   for (const flag of ['exec', '--json', '--dangerously-bypass-hook-trust', 'danger-full-access', ready, '-']) assert.ok(args.includes(flag), flag);
 });
+
+test('docs treat Codex as supported and the version ships in the changelog', () => {
+  const release = read('docs/release.md');
+  const codexVersion = read('.github/workflows/ci.yml').match(/@openai\/codex@(\S+)/)[1];
+  for (const text of ['codex plugin marketplace add', 'node evals/codex/run.mjs e2e', 'git clone', `npm install --global @openai/codex@${codexVersion}`, 'codex login', '3/3 cases passed']) {
+    assert.ok(release.includes(text), `release.md: ${text}`);
+  }
+  assert.match(release, /Codex[^\n]*US\$ \d+/);
+  for (const manifest of ['.claude-plugin/plugin.json', '`plugin.json`', 'plugins/keel-docs/.claude-plugin/plugin.json', 'plugins/keel-docs/plugin.json']) {
+    assert.ok(release.includes(manifest), `release.md step 6: ${manifest}`);
+  }
+
+  const readme = read('README.md');
+  const product = read('keel/product.md');
+  assert.doesNotMatch(readme, /Ainda não cobre o Codex/);
+  assert.doesNotMatch(product, /Não cobre o Codex nesta versão/);
+  assert.match(product.slice(product.indexOf('## Vision'), product.indexOf('## What it does')), /Codex/);
+  assert.ok(readme.includes('codex plugin marketplace add Koohra/keel'));
+  assert.ok(readme.includes('/hooks'));
+  const differences = readme.slice(readme.indexOf('### Diferenças entre o Claude Code e o Codex'));
+  assert.ok(readme.includes('### Diferenças entre o Claude Code e o Codex'), 'differences section');
+  for (const text of ['/hooks', '.codex/agents/keel-reviewer.toml', 'CLAUDE.md', 'claude plugin eval']) {
+    assert.ok(differences.slice(0, differences.indexOf('\n## ')).includes(text), `differences: ${text}`);
+  }
+
+  const spec = read('docs/specification.md');
+  assert.match(spec, /\| Hosts \| Claude Code e Codex[^\n]*#50[^\n]*\| 2026-11-27 \|/);
+  assert.match(spec, /\| Hosts \| Só Claude Code; Codex adiado \| 2026-11-18 \|/);
+
+  const version = JSON.parse(read('plugin.json')).version;
+  const changelog = read('CHANGELOG.md');
+  assert.match(changelog, new RegExp(`^## \\[${version.replace(/\./g, '\\.')}\\] - \\d{4}-\\d{2}-\\d{2}$`, 'm'));
+  assert.ok(changelog.includes(`[${version}]: https://github.com/Koohra/keel/`), 'changelog link');
+});

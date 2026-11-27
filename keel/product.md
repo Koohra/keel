@@ -3,9 +3,9 @@
 Versão 2 · Responsável: Miguel · Fonte detalhada: [docs/specification.md](../docs/specification.md)
 
 ## Vision
-O Keel é um plugin do Claude Code que transforma documentação mínima e cuidadosa em código bom, uma história e uma task pequena por vez, com TDD em cada task e evidência verificável em cada passo. [source: docs/specification.md#propósito]
+O Keel é um plugin do Claude Code e do Codex que transforma documentação mínima e cuidadosa em código bom, uma história e uma task pequena por vez, com TDD em cada task e evidência verificável em cada passo. [source: docs/specification.md#propósito]
 
-Para quem: devs que usam o Claude Code em projetos reais e querem que a IA siga um processo de engenharia sem gerar volume de texto para revisar.
+Para quem: devs que usam o Claude Code ou o Codex em projetos reais e querem que a IA siga um processo de engenharia sem gerar volume de texto para revisar.
 
 ## What it does
 - Prepara o projeto uma vez: `keel/product.md` e `keel/adrs/`.
@@ -18,7 +18,6 @@ Para quem: devs que usam o Claude Code em projetos reais e querem que a IA siga 
 - Não cria pacote de muitos artefatos por história (research, data-model, contracts, checklists).
 - Não commita sem aprovação nem decide trade-offs sozinho.
 - Não escreve documentação para o dev: isso é do agente de documentação, um plugin separado e opcional (`plugins/keel-docs/`).
-- Não cobre o Codex nesta versão.
 
 ## Glossary
 | Termo | Significado |

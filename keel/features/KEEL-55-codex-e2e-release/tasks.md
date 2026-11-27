@@ -40,15 +40,20 @@ GREEN evidence: `node --test test/codex-e2e.test.mjs` exited with 0 at 2026-11-2
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (caminho do repo sem barra no fim, que quebraria as aspas no Windows); F2 fixed (parâmetro `input` sem uso removido); F3 fixed (`git init` conferido); F4 fixed (exports sem uso removidos); F5 fixed in part (assert antes do slice; o slice até o fim do arquivo fica, o job codex é o último)
 ### T2
-Status: in review
+Status: done (e030d49)
 RED evidence: `node --test test/codex-e2e.test.mjs` exited with 1 at 2026-11-27T17:19:39.377Z
 GREEN evidence: `node --test test/codex-e2e.test.mjs` exited with 0 at 2026-11-27T17:37:03.840Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (timeout não vira "Codex não instalado": o caso falha por tempo, conferido numa rodada com chave falsa); F2 fixed (AC-2.2/2.3 leem o log da sessão, mudança aprovada por Miguel em 2026-11-27); F3 fixed (`head()` sem uso removida); F4 kept (o `CODEX_HOME` temporário é montado em `e2e()`, que precisa do Codex logado; o teste fica na parte pura); F5 kept (timeout no Windows anotado em Implementation notes)
 ### T3
-Status: pending
+Status: in review
+RED evidence: `npm test` exited with 1 at 2026-11-27T17:38:15.900Z
+GREEN evidence: `npm test` exited with 0 at 2026-11-27T17:42:09.862Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (teste confere `3/3 cases passed` e a versão do Codex igual à do ci.yml); F2 fixed (assert fixo da versão antiga removido); F3 fixed (README: "por padrão, não lê o `CLAUDE.md`")
 
 ## Implementation notes
+- Fora do escopo: `skills/setup/SKILL.md:54` diz que o Codex nunca lê o `CLAUDE.md`; é só por padrão (`project_doc_fallback_filenames`).
 - No Windows, o `codex` do npm roda por um `.cmd` via shell; o timeout de 10 minutos mata o `cmd.exe` e talvez não o `codex` filho (não conferido). Se a rodada no Windows travar, rodar no Linux ou no macOS.
 
 ## Convergence (filled at the end, checked by script)
