@@ -111,3 +111,21 @@ test('the reviewer shell allows only read commands (AC-3.2, AC-3.3)', () => {
     'cat a 3<>f', 'cat a &>f', 'cat a |& sh', 'cat a &',
   ]) assert.equal(isReadOnlyCommand(command), false, command);
 });
+
+test('setup and phases call keel-reviewer in Codex without the conversation (AC-2.3, AC-4.1, AC-4.2, AC-4.3)', () => {
+  const setup = read('skills/setup/SKILL.md');
+  const step = setup.slice(setup.indexOf('## 6.')).split('\n## ')[0];
+  assert.ok(setup.includes('## 6.'), 'setup has no Codex reviewer step');
+  assert.match(step, /codex-reviewer\.mjs" install/);
+  assert.match(step, /Só com a aprovação do dev/);
+  assert.match(step, /--force/);
+  for (const phase of ['confirmation', 'implementation']) {
+    const text = read(`skills/story/phases/${phase}.md`);
+    assert.match(text, /Chame o agente `keel:reviewer`/, `${phase}: the Claude Code call changed`);
+    const codex = text.split('\n').find((line) => line.includes('No Codex'));
+    assert.ok(codex, `${phase}: no Codex instruction`);
+    for (const required of ['codex-reviewer.mjs" check', '`keel-reviewer`', '`fork_turns`', '`none`', 'unknown agent_type', '`Result:`', '`unavailable`']) {
+      assert.ok(codex.includes(required), `${phase}: Codex line misses ${required}`);
+    }
+  }
+});
