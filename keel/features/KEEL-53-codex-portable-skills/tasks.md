@@ -70,7 +70,7 @@ GREEN evidence: `node --test test/docs-plugin.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 kept, as skills citam arquivos sempre entre crases e não há caso sem crase hoje [source: design.md Contracts and data]
 ### T4
-Status: in review
+Status: done (230484b)
 RED evidence: `node --test test/keel-context.test.mjs` exited with 1 at 2026-11-24T09:47:58.811Z
 GREEN evidence: `node --test test/keel-context.test.mjs` exited with 0 at 2026-11-24T10:51:32.660Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
