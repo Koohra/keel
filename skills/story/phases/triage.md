@@ -11,7 +11,7 @@ Objetivo: dosar a cerimônia pelo tamanho e o risco da história. O dev confirma
 4. Se a história tem mais de cerca de 6 regras, ou uma regra com muitos exemplos, sugira fatiar e diga por onde (por regra, por variação de dado, por caminho feliz e exceções).
 5. Mostre ao dev, curto: nível proposto, motivo, gatilhos encontrados (cada um com o trecho da história) ou "nenhum gatilho", e a sugestão de fatiar se houver. Pergunte se ele confirma ou quer outro nível. Pare e espere.
 6. Só depois da resposta do dev, registre o nível que ele escolheu:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" level <trivial|standard|with-design> --by "<dev>"`
-   e avance com `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" advance`.
+   `node "<plugin>/scripts/keel-state.mjs" level <trivial|standard|with-design> --by "<dev>"`
+   e avance com `node "<plugin>/scripts/keel-state.mjs" advance`.
 
 Não crie requirements.md nem tasks.md nesta fase.

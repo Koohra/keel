@@ -285,3 +285,54 @@ test('review flags piled-up emphasis and too many list items', () => {
   assert.equal(many[0].severity, 'info');
   assert.deepEqual(findingsOf({ 'AGENTS.md': `# A\n${items(39)}\n` }, 'rules'), []);
 });
+
+test('review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info', () => {
+  const visibility = (files) => {
+    const dir = project(files);
+    const before = hashes(dir);
+    try {
+      const found = review(dir).findings.filter((f) => f.kind === 'visibility');
+      assert.deepEqual(hashes(dir), before, 'review changes no file');
+      return found;
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  };
+  const agentsOnly = visibility({ 'AGENTS.md': '# A\n' });
+  assert.equal(agentsOnly.length, 1);
+  assert.equal(agentsOnly[0].severity, 'info');
+  assert.match(agentsOnly[0].message, /Codex/);
+  assert.match(agentsOnly[0].message, /Keel does not create CLAUDE\.md/);
+  for (const claude of ['CLAUDE.md', '.claude/CLAUDE.md']) {
+    const claudeOnly = visibility({ [claude]: '# C\n' });
+    assert.equal(claudeOnly.length, 2, claude);
+    assert.equal(claudeOnly[0].message, `Only ${claude} exists; Claude reads it.`);
+    assert.equal(claudeOnly[1].severity, 'info');
+    assert.match(claudeOnly[1].message, /Codex does not read/);
+  }
+  assert.equal(visibility({ 'AGENTS.md': '# A\n', 'CLAUDE.md': '# C\n' }).length, 1, 'Codex reads AGENTS.md: no Codex finding');
+});
+
+test('review lists AGENTS.override.md and says Codex reads it instead of AGENTS.md', () => {
+  const reviewOf = (files) => {
+    const dir = project(files);
+    try { return review(dir); } finally { rmSync(dir, { recursive: true, force: true }); }
+  };
+  for (const files of [{ 'AGENTS.md': '# A\n', 'AGENTS.override.md': '# O\n' }, { 'AGENTS.override.md': '# O\n' }]) {
+    const result = reviewOf(files);
+    assert.ok(scanFiles(files).includes('AGENTS.override.md'), 'scan lists the override');
+    const override = result.findings.filter((f) => f.kind === 'visibility' && f.file === 'AGENTS.override.md');
+    assert.equal(override.length, 1);
+    assert.equal(override[0].severity, 'info');
+    assert.match(override[0].message, /Codex reads AGENTS\.override\.md instead of AGENTS\.md/);
+    assert.match(override[0].message, /Claude Code does not read it/);
+    for (const f of result.findings) assert.doesNotMatch(f.message, /(add|suggest|should|create) a CLAUDE\.md/i);
+  }
+  const claudeAndOverride = reviewOf({ 'CLAUDE.md': '# C\n', 'AGENTS.override.md': '# O\n' }).findings.filter((f) => f.kind === 'visibility');
+  assert.ok(!claudeAndOverride.some((f) => /Codex does not read CLAUDE\.md/.test(f.message)), 'with the override Codex has instructions');
+  const claudeOnly = reviewOf({ 'CLAUDE.md': '# C\n' }).findings.find((f) => /Codex does not read/.test(f.message));
+  assert.doesNotMatch(claudeOnly.message, /reads only AGENTS\.md/);
+});
+
+function scanFiles(files) {
+  const dir = project(files);
+  try { return scan(dir).files.map((f) => f.path); } finally { rmSync(dir, { recursive: true, force: true }); }
+}

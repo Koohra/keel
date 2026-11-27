@@ -3,7 +3,7 @@
 Objetivo: provar que a história está completa e levar o conhecimento durável para o projeto. O script calcula a convergência, roda a arquitetura e acha os deltas; você confere o que só a leitura pega e propõe. Portão: o dev aprova os deltas de product.md e ADR. Código não muda nesta fase: o hook bloqueia.
 
 ## 1. Convergência
-1. Rode `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" next`. A saída traz `closing.convergence` (as linhas da tabela), `closing.arch` e `closing.deltas`.
+1. Rode `node "<plugin>/scripts/keel-state.mjs" next`. A saída traz `closing.convergence` (as linhas da tabela), `closing.arch` e `closing.deltas`.
 2. Troque a tabela da seção "Convergence" do tasks.md pelas linhas de `closing.convergence`, sem editar. O `advance` confere que a tabela é a mesma do script.
 3. Para cada regra `met`, leia o teste citado e confira que ele verifica a regra e os critérios dela. Se não verifica, trate como regra faltante.
 4. Regra `missing` (ou que o teste não prova): não mexa no código e não marque `met`. Acrescente ao tasks.md uma task nova, dentro do bloco congelado, com todos os campos e o `Covers:` citando a regra e o AC que faltam, e a entrada `### T<n>` com `Status: pending` no "Progress". Isso vence a aprovação do tasks.md e a história volta à fase tasks: mostre a task nova ao dev, peça a aprovação e pare.
@@ -22,19 +22,19 @@ Objetivo: provar que a história está completa e levar o conhecimento durável 
 2. Se o design.md diz `ADR candidate?` Yes e a decisão afeta estrutura, dependência, interface ou técnica de construção e sobrevive à feature (Nygard), escreva a ADR a partir do rascunho `adr-draft.md` da pasta da história, atualizado com o que a implementação mudou, em `keel/adrs/ADR-NNN-<slug>.md` (o próximo número livre), com `## Status` (proposed), `## Context`, `## Decision`, `## Consequences` e `## Confirmation`.
 3. Rode `next` de novo: `closing.deltas.files` lista o que mudou desde a base da história e `closing.deltas.sections` traz o delta por seção do product.md e por arquivo de ADR (adicionado, modificado e removido). Mostre ao dev esse delta, com o `git diff` de cada seção modificada e o conteúdo das novas, e pergunte se aprova. Pare e espere.
 4. Só com a aprovação escrita do dev nesta conversa, depois de ele ver o delta:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" approve deltas --by "<dev>"`
+   `node "<plugin>/scripts/keel-state.mjs" approve deltas --by "<dev>"`
    Se o delta mudar depois, a aprovação vence: mostre de novo.
 
 ## 5. Avançar
-`node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" advance`
+`node "<plugin>/scripts/keel-state.mjs" advance`
 Se recusar, mostre ao dev o que falta e resolva aqui. Aceito, a história fica `done`: siga para o passo 6 nesta fase, sem procurar instruções de `done`.
 
 ## 6. Conferência e PR
 1. Rode a conferência de ponta a ponta e mostre o resultado ao dev:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/check-feature.mjs" <pasta-da-história>`
+   `node "<plugin>/scripts/check-feature.mjs" <pasta-da-história>`
    Item `FAIL` é o que é: diga qual e por quê, sem chamar de passou.
 2. Gere a descrição do PR e troque os dois comentários pelo que você levantou no passo 2:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/check-feature.mjs" <pasta-da-história> --pr`
+   `node "<plugin>/scripts/check-feature.mjs" <pasta-da-história> --pr`
 3. Proponha o commit do fechamento (`<KEY>: fechamento`), com a pasta da história e os deltas aprovados, mostrando o diff. Commite só com a palavra do dev.
 4. Mostre a descrição do PR na resposta ao dev. Não grave arquivo com ela no projeto: o commit do fechamento já passou e ele ficaria solto. Se o dev pedir para abrir o PR com `gh pr create --body-file`, grave o arquivo fora da árvore do projeto (na pasta temporária do sistema), nunca na raiz do projeto nem na pasta da história.
 

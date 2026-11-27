@@ -10,12 +10,12 @@ Carregue este arquivo quando o `next` trouxer `task.debugging`: o GREEN ou as ch
 ## A tentativa
 1. Faça uma mudança, a menor que testa a hipótese, só nos arquivos de `Files:` da task.
 2. Nunca mude, afrouxe ou apague o teste do RED para ele passar. Se a hipótese é que o teste está errado, pare e siga o GREEN passo 2 da implementação (bloqueio e pergunta ao dev).
-3. Grave de novo: `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" evidence green` (ou `checks`, se foi a checagem que falhou).
+3. Grave de novo: `node "<plugin>/scripts/keel-state.mjs" evidence green` (ou `checks`, se foi a checagem que falhou).
 4. Se falhou, volte ao passo 1 com o que aprendeu; desfaça a mudança que não confirmou a hipótese antes da próxima.
 
 ## Depois de 3 tentativas
 Três tentativas falhas na mesma task dizem que o problema é outro: requisito ambíguo, task grande demais, desenho errado ou dependência fora da task. Não tente uma quarta.
 1. Grave o bloqueio com o que a depuração achou:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/keel-state.mjs" block --reason "<causa provável; hipóteses testadas; pergunta>"`
+   `node "<plugin>/scripts/keel-state.mjs" block --reason "<causa provável; hipóteses testadas; pergunta>"`
 2. Mostre ao dev a falha (comando e trecho da saída), as hipóteses testadas com o resultado de cada uma e as opções: mudar a task, dividir a task, revisar o requisito ou o design. Recomende uma. Pare e espere.
 3. O `block` zera a contagem. Só tente de novo depois da resposta do dev.

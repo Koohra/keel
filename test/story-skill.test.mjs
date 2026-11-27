@@ -30,9 +30,6 @@ test('cada fase da triagem ao fechamento tem instruções na skill', () => {
 test('comandos do keel-state.mjs e scripts citados pela skill existem', () => {
   for (const file of skillFiles) {
     const text = read(file);
-    for (const [, script] of text.matchAll(/\$\{CLAUDE_PLUGIN_ROOT\}\/([\w/.-]+)/g)) {
-      assert.ok(existsSync(join(root, script)), `${file}: ${script} não existe`);
-    }
     for (const [, command] of text.matchAll(/keel-state\.mjs"? ([a-z]+)/g)) {
       assert.ok(COMMANDS.includes(command), `${file}: comando "${command}" não existe no keel-state.mjs`);
     }
@@ -148,4 +145,27 @@ test('scope: confirmation review keeps the story inside its goal', () => {
   assert.match(confirmation, /contraria o "Out of scope"/);
   assert.match(confirmation, /não se testa de verdade/);
   assert.match(confirmation, /quantas regras a história tinha e quantas terá/);
+});
+
+test('story skill cites plugin files by <plugin> or relative to the skill folder', () => {
+  const skillDir = join(root, 'skills/story');
+  const pluginDir = join(skillDir, '..', '..');
+  let pathLines = 0;
+  for (const file of skillFiles.filter((f) => f.endsWith('.md'))) {
+    const body = read(file).replace(/^---\n[\s\S]*?\n---\n/, '');
+    for (const line of body.split('\n')) {
+      if (!/\$\{CLAUDE_(PLUGIN_ROOT|SKILL_DIR)\}/.test(line)) continue;
+      assert.ok(file === 'skills/story/SKILL.md' && /^Caminhos:/.test(line), `${file}: variável do Claude Code fora da linha "Caminhos": ${line}`);
+      pathLines += 1;
+    }
+    for (const [, ref] of body.matchAll(/<plugin>\/([\w./-]+)/g)) {
+      assert.ok(existsSync(join(pluginDir, ref)), `${file}: <plugin>/${ref} não existe`);
+    }
+    for (const [, ref] of body.matchAll(/`((?:phases|checklists)\/[\w.-]+\.md)`/g)) {
+      assert.ok(existsSync(join(skillDir, ref)), `${file}: ${ref} não existe na pasta da skill`);
+    }
+  }
+  assert.equal(pathLines, 1, 'SKILL.md tem uma linha "Caminhos" que define <plugin>');
+  assert.match(read('skills/story/SKILL.md'), /^Caminhos: `<plugin>` é a pasta do plugin: no Claude Code, `\$\{CLAUDE_PLUGIN_ROOT\}`; em outro agente, a pasta dois níveis acima deste SKILL\.md\./m);
+  for (const name of ['security', 'data', 'contract']) assert.ok(existsSync(join(skillDir, 'checklists', `${name}.md`)), name);
 });

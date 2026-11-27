@@ -39,6 +39,7 @@ As decisões que afetam o projeto inteiro estão em [adrs/](adrs/):
 - [ADR-003](adrs/ADR-003-four-layer-tests.md) Testes enxutos em quatro camadas.
 - [ADR-004](adrs/ADR-004-dependency-free-node-scripts.md) Scripts em Node sem dependências.
 - [ADR-005](adrs/ADR-005-project-docs-in-keel.md) Documentos que o Keel lê ficam em `keel/`.
+- [ADR-006](adrs/ADR-006-portable-skill-paths.md) Skills citam arquivos do plugin por `<plugin>` e por caminho relativo à skill.
 
 ## Engineering principles
 

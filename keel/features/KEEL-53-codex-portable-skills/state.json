@@ -1,0 +1,159 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-53",
+    "title": "Skills sem dependência do Claude Code (Codex)",
+    "source": "https://github.com/Koohra/keel/issues/53",
+    "folder": "keel/features/KEEL-53-codex-portable-skills",
+    "branch": "feat/codex-portable-skills",
+    "base": null
+  },
+  "level": "with-design",
+  "phase": "done",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-23T21:56:09.890Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-23T21:58:09.531Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-23T22:28:42.064Z",
+      "hash": "83154bd72af05cbfba89899305dc7826f8b0c4694b50b6b84de188e55fa1b9ac"
+    },
+    "design": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-23T22:33:27.004Z",
+      "hash": "478e64a36196b53bf9adacad328df3cef1f2f9f7bb6fb98edd43c95a8dd84c5d"
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-23T22:33:27.075Z",
+      "hash": "642ce2783976cedbbe0e4f23cb3c69c5545d4329408691c342e01ad61d9b1d0d"
+    },
+    "implementation": {
+      "currentTask": "T5",
+      "blocked": null,
+      "red": {
+        "command": "node --test test/keel-context.test.mjs",
+        "exitCode": 1,
+        "output": "  actual: false\n  operator: '=='\n  stack: |-\n    TestContext.<anonymous> (file:///home/user/keel/test/keel-context.test.mjs:321:12)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..19\n# tests 19\n# suites 0\n# pass 18\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 399.097901",
+        "at": "2026-11-27T14:18:50.287Z"
+      },
+      "green": {
+        "command": "node --test test/keel-context.test.mjs",
+        "exitCode": 0,
+        "output": "ok 18 - review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info\n  ---\n  duration_ms: 3.493718\n  type: 'test'\n  ...\n# Subtest: review lists AGENTS.override.md and says Codex reads it instead of AGENTS.md\nok 19 - review lists AGENTS.override.md and says Codex reads it instead of AGENTS.md\n  ---\n  duration_ms: 5.120489\n  type: 'test'\n  ...\n1..19\n# tests 19\n# suites 0\n# pass 19\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 441.321806",
+        "at": "2026-11-27T14:20:12.627Z"
+      },
+      "checks": {
+        "passed": true,
+        "fingerprint": "66c9b704d6c19b031b21ca29ee4e298e740ac39f753fdccf24c8a728e90c4f08",
+        "at": "2026-11-27T14:20:13.193Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 52 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 218 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.121251\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 219 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.17038\n  type: 'test'\n  ...\n1..219\n# tests 219\n# suites 0\n# pass 219\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 26291.224714"
+          }
+        ]
+      },
+      "review": {
+        "task": "T5",
+        "result": "findings",
+        "at": "2026-11-27T14:20:39.808Z"
+      },
+      "commit": {
+        "task": "T5",
+        "approvedBy": "Miguel",
+        "at": "2026-11-27T16:10:11.737Z",
+        "fingerprint": "66c9b704d6c19b031b21ca29ee4e298e740ac39f753fdccf24c8a728e90c4f08"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T1 `story skill cites plugin files by <plugin> or relative to the skill folder` (66d8b1b); T2 `setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Code, Codex visibility cases` (6fcb199); T3 `write skill cites guides relative to the skill and plugin files by <plugin>` (f535c63)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T1 `story skill cites plugin files by <plugin> or relative to the skill folder` (66d8b1b); T3 `write skill cites guides relative to the skill and plugin files by <plugin>` (f535c63)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T2 `setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Code, Codex visibility cases` (6fcb199)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T4 `review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info` (230484b)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R5",
+          "evidence": "T4 `review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info` (230484b)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R6",
+          "evidence": "T5 `review lists AGENTS.override.md and says Codex reads it instead of AGENTS.md` (9c90dcd)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R7",
+          "evidence": "T2 `setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Code, Codex visibility cases` (6fcb199)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": []
+      },
+      "deltas": {
+        "files": [
+          "keel/adrs/ADR-006-portable-skill-paths.md",
+          "keel/product.md"
+        ],
+        "sections": {
+          "added": [
+            "keel/adrs/ADR-006-portable-skill-paths.md"
+          ],
+          "modified": [
+            "keel/product.md#Decisions"
+          ],
+          "removed": []
+        },
+        "hash": "c6ccc7049586075be2caa40e1013a131757002a9607b1e3b09097b7a20a29d99"
+      },
+      "deltasApproved": {
+        "by": "Miguel",
+        "at": "2026-11-27T16:22:47.621Z",
+        "hash": "c6ccc7049586075be2caa40e1013a131757002a9607b1e3b09097b7a20a29d99"
+      },
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-27T16:22:47.946Z"
+}

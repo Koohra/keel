@@ -186,7 +186,7 @@ function realpath(path) {
 }
 
 function instructionPaths(root) {
-  const paths = ['AGENTS.md', 'CLAUDE.md', '.claude/CLAUDE.md', 'CLAUDE.local.md'];
+  const paths = ['AGENTS.md', 'AGENTS.override.md', 'CLAUDE.md', '.claude/CLAUDE.md', 'CLAUDE.local.md'];
   const rules = join(root, '.claude', 'rules');
   if (lstat(rules)?.isDirectory()) {
     for (const name of readdirSync(rules).sort()) if (name.endsWith('.md')) paths.push(`.claude/rules/${name}`);
@@ -255,10 +255,27 @@ function finding(kind, severity, file, line, quote, message) {
   return { kind, severity, file, line, quote, message };
 }
 
+// The Claude Code finding, then the Codex one when Codex sees other instructions than Claude.
 function visibility(root, facts) {
   const has = (path) => facts.files.some((file) => file.path === path && !file.broken);
   const agents = has('AGENTS.md');
   const claude = CLAUDE_FILES.find(has);
+  const override = has('AGENTS.override.md');
+  const findings = [claudeVisibility(root, facts, agents, claude)];
+  if (override) {
+    findings.push(finding('visibility', 'info', 'AGENTS.override.md', null, null, 'Codex reads AGENTS.override.md instead of '
+      + 'AGENTS.md in the project root; Claude Code does not read it.'
+      + (agents ? ' Rules that differ between the two files apply to one agent only.' : '')));
+  }
+  if (claude && !agents && !override) {
+    findings.push(finding('visibility', 'info', claude, null, null, `Codex does not read ${claude}: it reads AGENTS.override.md or AGENTS.md. `
+      + `If the project also uses Codex, the instructions can move to AGENTS.md with ${claude} keeping the line \`${importLine(claude)}\` `
+      + '(Keel applies nothing without approval).'));
+  }
+  return findings;
+}
+
+function claudeVisibility(root, facts, agents, claude) {
   const kind = 'visibility';
   const claudeLink = facts.files.find((file) => file.path === 'CLAUDE.md')?.symlink;
   if (agents && claudeLink && realpath(join(root, 'CLAUDE.md')) === realpath(join(root, 'AGENTS.md'))) {
@@ -276,7 +293,7 @@ function visibility(root, facts) {
   }
   if (agents) {
     return finding(kind, 'info', 'AGENTS.md', null, null, 'Only AGENTS.md exists: Claude Code reads it natively when there is no '
-      + 'CLAUDE.md. Keel does not create CLAUDE.md.');
+      + 'CLAUDE.md, and Codex reads it too. Keel does not create CLAUDE.md.');
   }
   if (claude) return finding(kind, 'info', claude, null, null, `Only ${claude} exists; Claude reads it.`);
   return finding(kind, 'info', null, null, null, 'There is no AGENTS.md or CLAUDE.md. Keel can offer the templates/agents.md template.');
@@ -384,7 +401,7 @@ function keelBlockFinding(file, text, templates) {
 
 export function review(root, { templates = loadTemplates() } = {}) {
   const facts = scan(root);
-  const findings = [visibility(root, facts)];
+  const findings = visibility(root, facts);
   const texts = [];
   if (facts.otherAgents.length) {
     findings.push(finding('other-agents', 'info', null, null, null, `Other agents read this repository `

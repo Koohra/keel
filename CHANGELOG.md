@@ -16,6 +16,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões: 
 - A proposta de commit da task traz o `git diff --stat` e o diff no próprio texto da resposta; saída de ferramenta e "o diff está acima" não contam (#38, KEEL-38).
 - A marca `Status: done (<hash>)` vai num commit próprio, só da pasta da história, logo após o commit da task; o hook aceita esse commit quando não sobra código fora da pasta (#39, KEEL-38).
 - O fechamento mostra a descrição do PR na resposta e não deixa arquivo solto no projeto; a saída de implementation também sugere conversa nova; a pergunta sobre conflito com ADR nos requisitos diz que o design só rascunha a ADR e que ela nasce no fechamento (#40, #41, KEEL-40).
+- As skills `story`, `setup` e `keel-docs:write` citam os arquivos do plugin por `<plugin>` (no Claude Code, `${CLAUDE_PLUGIN_ROOT}`) e por caminhos relativos à pasta da skill, e funcionam no Codex; o review do setup diz o que o Codex lê (`AGENTS.md`, `AGENTS.override.md`, nunca `CLAUDE.md`) (#53, KEEL-53).
 
 ### Fixed
 
