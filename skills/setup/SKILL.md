@@ -91,6 +91,15 @@ Parta de `templates/principles.md` e ajuste com o dev:
   nada fora do bloco muda. `block remove --file <file>` tira.
 - Depois de qualquer mudança nesses arquivos, rode `keel-context.mjs check`.
 
+## 6. Revisor no Codex (só para quem usa o Codex)
+
+Plugin do Codex não traz subagente: o revisor isolado vai para o projeto, em `.codex/agents/keel-reviewer.toml`, gerado de `agents/reviewer.md` do Keel.
+1. Pergunte se o dev usa o Codex neste projeto. Se não, pule.
+2. Mostre o caminho e diga que o arquivo é gerado e não deve ser editado à mão. Só com a aprovação do dev, rode
+   `node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-reviewer.mjs" install`.
+3. Se o comando disser que o arquivo difere, mostre isso ao dev; só com nova aprovação rode o mesmo comando com `--force`.
+4. Diga que o Codex carrega o agente na próxima sessão e só em projeto confiável, e que o hook do Keel o mantém só leitura.
+
 ## Portão
 
 O dev aprova o product.md e as ADRs iniciais. Sem isso, nenhuma história começa.

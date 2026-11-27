@@ -206,3 +206,30 @@ test('Codex git commit without the recorded approval is blocked (AC-3.1)', () =>
     repo.cleanup();
   }
 });
+
+// The Keel reviewer as a Codex subagent: Codex sends agent_type on the events of its tool calls.
+test('Codex keel-reviewer apply_patch is blocked in any phase (AC-3.1, AC-3.2, AC-3.3, AC-3.4)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'keel-codex-reviewer-'));
+  try {
+    mkdirSync(join(dir, '.git'));
+    writeFileSync(join(dir, '.git', 'HEAD'), 'ref: refs/heads/feat/x\n');
+    const reviewer = (event) => codexHook({ agent_id: 'a1', agent_type: 'keel-reviewer', cwd: dir, ...event });
+    const patch = { tool_name: 'apply_patch', tool_input: { command: '*** Begin Patch\n*** Add File: notes.md\n+x\n*** End Patch' } };
+    // No active story: the reviewer is blocked anyway, everyone else is not.
+    for (const tool of ['apply_patch', 'Edit', 'Write']) {
+      const edit = reviewer({ ...patch, tool_name: tool });
+      assert.equal(edit.status, 2, tool);
+      assert.match(edit.stderr, /read-only/);
+    }
+    assert.equal(codexHook({ ...patch, cwd: dir }).status, 0, 'without agent_type the decision is today\'s');
+    assert.equal(codexHook({ ...patch, cwd: dir, agent_type: 'worker' }).status, 0, 'another agent keeps today\'s decision');
+    const read = reviewer({ tool_name: 'Bash', tool_input: { command: 'rg -n reviewer scripts && git diff HEAD | head -50' } });
+    assert.equal(read.status, 0, read.stderr);
+    const write = reviewer({ tool_name: 'Bash', tool_input: { command: 'cat a > b' } });
+    assert.equal(write.status, 2);
+    assert.match(write.stderr, /read-only/);
+    assert.equal(codexHook({ tool_name: 'Bash', tool_input: { command: 'cat a > b' }, cwd: dir }).status, 0);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

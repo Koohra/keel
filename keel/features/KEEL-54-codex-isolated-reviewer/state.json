@@ -1,0 +1,133 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-54",
+    "title": "Codex: revisor isolado como subagente",
+    "source": "https://github.com/Koohra/keel/issues/54",
+    "folder": "keel/features/KEEL-54-codex-isolated-reviewer",
+    "branch": "feat/codex-isolated-reviewer",
+    "base": null
+  },
+  "level": "with-design",
+  "phase": "done",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-23T22:33:28.587Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-23T22:33:28.908Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-23T22:33:28.961Z",
+      "hash": "7d9861b3ee27309427acac49a51d085b090604bcb6340eade82be1db512f482e"
+    },
+    "design": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-24T08:14:52.707Z",
+      "hash": "70930491d6f58bcdbea23051b675d1f4483032cb2c3a9c559320ebea2e8b6539"
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-24T08:14:52.752Z",
+      "hash": "28c00a553dc5e5489336e8a8892912f98c9071c79dfc0b3c4ba29f650eba951c"
+    },
+    "implementation": {
+      "currentTask": "T3",
+      "blocked": null,
+      "red": {
+        "command": "npm test",
+        "exitCode": 1,
+        "output": "ok 238 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.148704\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 239 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.157085\n  type: 'test'\n  ...\n1..239\n# tests 239\n# suites 0\n# pass 238\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 25047.249425",
+        "at": "2026-11-24T10:50:55.399Z"
+      },
+      "green": {
+        "command": "npm test",
+        "exitCode": 0,
+        "output": "ok 238 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.121269\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 239 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.13205\n  type: 'test'\n  ...\n1..239\n# tests 239\n# suites 0\n# pass 239\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 21126.147087",
+        "at": "2026-11-26T20:03:46.388Z"
+      },
+      "checks": {
+        "passed": true,
+        "fingerprint": "3958a7e2f32c9c72caa734d35e37a88859fb58f75d638946816f20a7fda78d62",
+        "at": "2026-11-26T20:04:07.733Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 56 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 238 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.106802\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 239 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.110232\n  type: 'test'\n  ...\n1..239\n# tests 239\n# suites 0\n# pass 239\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 21475.394327"
+          }
+        ]
+      },
+      "review": {
+        "task": "T3",
+        "result": "findings",
+        "at": "2026-11-26T20:04:29.468Z"
+      },
+      "commit": {
+        "task": "T3",
+        "approvedBy": "Miguel",
+        "at": "2026-11-27T14:18:36.794Z",
+        "fingerprint": "3958a7e2f32c9c72caa734d35e37a88859fb58f75d638946816f20a7fda78d62"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T1 `reviewer TOML carries the reviewer.md body byte for byte` (1f2e8fa)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T1 `reviewer TOML carries the reviewer.md body byte for byte` (1f2e8fa); T3 `setup and phases call keel-reviewer in Codex without the conversation` (55d9f45)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T2 `Codex keel-reviewer apply_patch is blocked in any phase` (acadd72)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T3 `setup and phases call keel-reviewer in Codex without the conversation` (55d9f45)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": []
+      },
+      "deltas": {
+        "files": [],
+        "sections": {
+          "added": [],
+          "modified": [],
+          "removed": []
+        },
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "deltasApproved": null,
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-27T14:18:49.927Z"
+}
