@@ -46,7 +46,7 @@ GREEN evidence: `node --test test/codex-e2e.test.mjs` exited with 0 at 2026-11-2
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (timeout não vira "Codex não instalado": o caso falha por tempo, conferido numa rodada com chave falsa); F2 fixed (AC-2.2/2.3 leem o log da sessão, mudança aprovada por Miguel em 2026-11-27); F3 fixed (`head()` sem uso removida); F4 kept (o `CODEX_HOME` temporário é montado em `e2e()`, que precisa do Codex logado; o teste fica na parte pura); F5 kept (timeout no Windows anotado em Implementation notes)
 ### T3
-Status: in review
+Status: done (7f69043)
 RED evidence: `npm test` exited with 1 at 2026-11-27T17:38:15.900Z
 GREEN evidence: `npm test` exited with 0 at 2026-11-27T17:42:09.862Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
@@ -59,3 +59,8 @@ Review: findings (isolated reviewer); F1 fixed (teste confere `3/3 cases passed`
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
 |---|---|---|
+| R1 | T1 `codex install check names the missing skills` (ffdb134) | met |
+| R2 | T2 `codex e2e grades each case by the workspace end state` (e030d49) | met |
+| R3 | T3 `docs treat Codex as supported and the version ships in the changelog` (7f69043) | met |
+| R4 | T3 `docs treat Codex as supported and the version ships in the changelog` (7f69043) | met |
+| R5 | T3 `docs treat Codex as supported and the version ships in the changelog` (7f69043) | met |

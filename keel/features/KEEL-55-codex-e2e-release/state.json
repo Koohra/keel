@@ -9,7 +9,7 @@
     "base": null
   },
   "level": "standard",
-  "phase": "implementation",
+  "phase": "done",
   "steps": {
     "triage": {
       "done": true,
@@ -89,12 +89,59 @@
       "failedAttempts": null
     },
     "closing": {
-      "convergence": null,
-      "arch": null,
-      "deltas": null,
-      "deltasApproved": null,
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T1 `codex install check names the missing skills` (ffdb134)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T2 `codex e2e grades each case by the workspace end state` (e030d49)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T3 `docs treat Codex as supported and the version ships in the changelog` (7f69043)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T3 `docs treat Codex as supported and the version ships in the changelog` (7f69043)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R5",
+          "evidence": "T3 `docs treat Codex as supported and the version ships in the changelog` (7f69043)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": []
+      },
+      "deltas": {
+        "files": [
+          "keel/product.md"
+        ],
+        "sections": {
+          "added": [],
+          "modified": [
+            "keel/product.md#Vision",
+            "keel/product.md#What it does not do"
+          ],
+          "removed": []
+        },
+        "hash": "7ab3ca31c50798c2fd9fb1192e6d8a6dd621a46374bb215a2b77e892c76c5926"
+      },
+      "deltasApproved": {
+        "by": "Miguel",
+        "at": "2026-11-27T17:48:51.659Z",
+        "hash": "7ab3ca31c50798c2fd9fb1192e6d8a6dd621a46374bb215a2b77e892c76c5926"
+      },
       "pullRequest": null
     }
   },
-  "updatedAt": "2026-11-27T17:48:40.101Z"
+  "updatedAt": "2026-11-27T17:48:51.847Z"
 }
