@@ -186,7 +186,7 @@ function realpath(path) {
 }
 
 function instructionPaths(root) {
-  const paths = ['AGENTS.md', 'CLAUDE.md', '.claude/CLAUDE.md', 'CLAUDE.local.md'];
+  const paths = ['AGENTS.md', 'AGENTS.override.md', 'CLAUDE.md', '.claude/CLAUDE.md', 'CLAUDE.local.md'];
   const rules = join(root, '.claude', 'rules');
   if (lstat(rules)?.isDirectory()) {
     for (const name of readdirSync(rules).sort()) if (name.endsWith('.md')) paths.push(`.claude/rules/${name}`);
@@ -260,9 +260,15 @@ function visibility(root, facts) {
   const has = (path) => facts.files.some((file) => file.path === path && !file.broken);
   const agents = has('AGENTS.md');
   const claude = CLAUDE_FILES.find(has);
+  const override = has('AGENTS.override.md');
   const findings = [claudeVisibility(root, facts, agents, claude)];
-  if (claude && !agents) {
-    findings.push(finding('visibility', 'info', claude, null, null, `Codex does not read ${claude}: it reads only AGENTS.md. `
+  if (override) {
+    findings.push(finding('visibility', 'info', 'AGENTS.override.md', null, null, 'Codex reads AGENTS.override.md instead of '
+      + 'AGENTS.md in the project root; Claude Code does not read it.'
+      + (agents ? ' Rules that differ between the two files apply to one agent only.' : '')));
+  }
+  if (claude && !agents && !override) {
+    findings.push(finding('visibility', 'info', claude, null, null, `Codex does not read ${claude}: it reads AGENTS.override.md or AGENTS.md. `
       + `If the project also uses Codex, the instructions can move to AGENTS.md with ${claude} keeping the line \`${importLine(claude)}\` `
       + '(Keel applies nothing without approval).'));
   }

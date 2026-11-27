@@ -76,7 +76,11 @@ GREEN evidence: `node --test test/keel-context.test.mjs` exited with 0 at 2026-1
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (`has`, `agents` e `claude` calculados uma vez em `visibility`); F2 kept para a T5, que inclui o override na condição e no texto [source: R5, R6]; F3 kept, a sugestão de mover para AGENTS.md é a mesma que a skill setup mostra [source: R7, skills/setup/SKILL.md]; F4 kept, a asserção foi trocada com aprovação do dev [source: dev on 2026-11-24]
 ### T5
-Status: pending
+Status: in review
+RED evidence: `node --test test/keel-context.test.mjs` exited with 1 at 2026-11-27T14:18:50.287Z
+GREEN evidence: `node --test test/keel-context.test.mjs` exited with 0 at 2026-11-27T14:20:12.627Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (a frase sobre regras divergentes só sai quando AGENTS.md também existe); F2 kept, duas ocorrências do padrão de projeto temporário no teste, abaixo da terceira [source: keel/product.md#engineering-principles]
 
 ## Implementation notes
 - T4: o RED usava `doesNotMatch(/creat(e|ing) CLAUDE.md/)`, que pegava a frase atual "Keel does not create CLAUDE.md"; trocado por `match` da frase, com aprovação do dev em 2026-11-24.
