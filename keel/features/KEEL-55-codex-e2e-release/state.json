@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-55",
+    "title": "Codex: ponta a ponta, CI, release e README",
+    "source": "https://github.com/Koohra/keel/issues/55",
+    "folder": "keel/features/KEEL-55-codex-e2e-release",
+    "branch": "feat/codex-e2e-release",
+    "base": null
+  },
+  "level": "standard",
+  "phase": "implementation",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-27T16:56:45.964Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-27T16:57:45.297Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-27T16:59:39.641Z",
+      "hash": "4cf5c06769cb67d15da2904c8729c601ef27676f722da239c60f22e980041f24"
+    },
+    "design": {
+      "approved": false,
+      "approvedBy": null,
+      "approvedAt": null,
+      "hash": null
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-27T16:59:39.807Z",
+      "hash": "9317437e3d128e6845cf543e278820da4c5ff3e85a84b9c3e85d73fe6bfa8155"
+    },
+    "implementation": {
+      "currentTask": "T1",
+      "blocked": null,
+      "red": {
+        "command": "node --test test/codex-e2e.test.mjs",
+        "exitCode": 1,
+        "output": "  expected:\n    0: 'keel-docs:write'\n  actual:\n  operator: 'deepStrictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///home/user/keel/test/codex-e2e.test.mjs:9:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 70.895802",
+        "at": "2026-11-27T16:59:52.374Z"
+      },
+      "green": {
+        "command": "node --test test/codex-e2e.test.mjs",
+        "exitCode": 0,
+        "output": "TAP version 13\n# Subtest: codex install check names the missing skills\nok 1 - codex install check names the missing skills\n  ---\n  duration_ms: 1.932775\n  type: 'test'\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 1\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 72.333176",
+        "at": "2026-11-27T17:02:32.223Z"
+      },
+      "checks": {
+        "passed": true,
+        "fingerprint": "1f2fd0b94536aabaf05ddd697db2987a97c25922f06737407b9db8a88cf4cce3",
+        "at": "2026-11-27T17:18:19.805Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 58 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 242 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.124615\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 243 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.138215\n  type: 'test'\n  ...\n1..243\n# tests 243\n# suites 0\n# pass 243\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 26530.667851"
+          }
+        ]
+      },
+      "review": {
+        "task": "T1",
+        "result": "findings",
+        "at": "2026-11-27T17:18:46.735Z"
+      },
+      "commit": {
+        "task": "T1",
+        "approvedBy": "Miguel",
+        "at": "2026-11-27T17:18:46.805Z",
+        "fingerprint": "1f2fd0b94536aabaf05ddd697db2987a97c25922f06737407b9db8a88cf4cce3"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "convergence": null,
+      "arch": null,
+      "deltas": null,
+      "deltasApproved": null,
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-27T17:18:46.805Z"
+}
