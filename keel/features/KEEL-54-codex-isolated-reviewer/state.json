@@ -9,7 +9,7 @@
     "base": null
   },
   "level": "with-design",
-  "phase": "implementation",
+  "phase": "done",
   "steps": {
     "triage": {
       "done": true,
@@ -89,12 +89,45 @@
       "failedAttempts": null
     },
     "closing": {
-      "convergence": null,
-      "arch": null,
-      "deltas": null,
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T1 `reviewer TOML carries the reviewer.md body byte for byte` (1f2e8fa)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T1 `reviewer TOML carries the reviewer.md body byte for byte` (1f2e8fa); T3 `setup and phases call keel-reviewer in Codex without the conversation` (55d9f45)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T2 `Codex keel-reviewer apply_patch is blocked in any phase` (acadd72)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T3 `setup and phases call keel-reviewer in Codex without the conversation` (55d9f45)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": []
+      },
+      "deltas": {
+        "files": [],
+        "sections": {
+          "added": [],
+          "modified": [],
+          "removed": []
+        },
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
       "deltasApproved": null,
       "pullRequest": null
     }
   },
-  "updatedAt": "2026-11-27T14:18:36.794Z"
+  "updatedAt": "2026-11-27T14:18:49.927Z"
 }

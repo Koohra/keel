@@ -58,3 +58,7 @@ Review: findings (isolated reviewer); F1 fixed (o teste do setup corta o passo 6
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
 |---|---|---|
+| R1 | T1 `reviewer TOML carries the reviewer.md body byte for byte` (1f2e8fa) | met |
+| R2 | T1 `reviewer TOML carries the reviewer.md body byte for byte` (1f2e8fa); T3 `setup and phases call keel-reviewer in Codex without the conversation` (55d9f45) | met |
+| R3 | T2 `Codex keel-reviewer apply_patch is blocked in any phase` (acadd72) | met |
+| R4 | T3 `setup and phases call keel-reviewer in Codex without the conversation` (55d9f45) | met |
