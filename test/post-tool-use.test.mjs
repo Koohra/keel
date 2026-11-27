@@ -102,3 +102,31 @@ test('PostToolUse warns without blocking when the edit is outside the Files: of 
     repo.cleanup();
   }
 });
+
+test('PostToolUse checks every file a Codex apply_patch leaves on disk (AC-4.1)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'keel-post-'));
+  try {
+    mkdirSync(join(dir, '.git'));
+    write(dir, 'keel/architecture.json', JSON.stringify(architecture));
+    write(dir, 'src/infra/repo.js', 'export const repo = {};\n');
+    write(dir, 'src/domain/clean.js', 'export const x = 1;\n');
+    write(dir, 'src/domain/invoice.js', "import { repo } from '../infra/repo.js';\n");
+    const env = { ...process.env };
+    delete env.CLAUDE_PROJECT_DIR;
+    const codex = (cwd, ...lines) => {
+      const result = spawnSync(process.execPath, [hook], {
+        input: JSON.stringify({ hook_event_name: 'PostToolUse', tool_name: 'apply_patch', tool_input: { command: ['*** Begin Patch', ...lines, '*** End Patch'].join('\n') }, tool_response: 'Success', cwd }),
+        encoding: 'utf8', env,
+      });
+      return { status: result.status, output: result.stdout ? JSON.parse(result.stdout) : null };
+    };
+    const planted = codex(join(dir, 'src'), '*** Update File: domain/clean.js', '@@', '+x', '*** Add File: domain/invoice.js', "+import { repo } from '../infra/repo.js';");
+    assert.equal(planted.status, 0);
+    assert.equal(planted.output.decision, 'block');
+    assert.match(planted.output.reason, /src\/domain\/invoice\.js:1/);
+    assert.deepEqual(codex(dir, '*** Delete File: src/domain/gone.js'), { status: 0, output: null });
+    assert.deepEqual(codex(dir, '*** Update File: src/domain/clean.js', '@@', '+x'), { status: 0, output: null });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

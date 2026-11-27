@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 // PreToolUse hook: blocks writes to state.json (by edit or terminal), code edits outside the
 // phase that allows them and, in the implementation, git commit without the dev's approval.
+// Works with Claude Code (Write, Edit, Bash...) and Codex (apply_patch, Bash); see event.mjs.
 // Reads the event from stdin; exits with 2 (block, reason on stderr) or 0 (allow).
 import { readFileSync } from 'node:fs';
-import { relative, resolve } from 'node:path';
+import { relative } from 'node:path';
 import {
   changedFiles, checkCommand, checkEdit, codeFingerprint, findActiveStory, isProjectSource, loadWorkflow, reconcile,
 } from '../keel-state.mjs';
 import { checkGitCommit, isGitCommit } from '../task-loop.mjs';
 import { readDocs } from '../validate-feature.mjs';
+import { editTargets, projectRoot, shellCommand } from './event.mjs';
 
 function block(reason) {
   console.error(reason);
@@ -26,9 +28,9 @@ function gitCommitDecision(root) {
 }
 
 const event = JSON.parse(readFileSync(0, 'utf8'));
-const root = process.env.CLAUDE_PROJECT_DIR ?? event.cwd;
-if (event.tool_name === 'Bash') {
-  const command = event.tool_input?.command ?? '';
+const root = projectRoot(event);
+const command = shellCommand(event);
+if (command !== null) {
   const decision = checkCommand(command);
   if (decision.block) block(decision.reason);
   if (isGitCommit(command)) {
@@ -40,12 +42,12 @@ if (event.tool_name === 'Bash') {
     }
     if (commit.block) block(commit.reason);
   }
-  process.exit(0);
 }
-const target = event.tool_input?.file_path ?? event.tool_input?.notebook_path;
-if (!target) process.exit(0);
+// A shell command can carry a Codex patch (apply_patch <<'EOF'); its files go through the edit rule.
+if (!root) process.exit(0);
+const paths = editTargets(event).map((target) => relative(root, target.path));
+if (!paths.length) process.exit(0);
 
-const path = relative(root, resolve(root, target));
 const workflow = loadWorkflow();
 let state = null;
 try {
@@ -54,14 +56,10 @@ try {
   if (active) state = reconcile(active.state, workflow, readDocs(active.folder)).state;
 } catch (error) {
   // Without knowing the phase, block only what would depend on it: project code.
-  if (checkEdit(path, null, workflow).block || isProjectSource(path)) {
-    console.error(error.message);
-    process.exit(2);
-  }
+  if (paths.some((path) => checkEdit(path, null, workflow).block || isProjectSource(path))) block(error.message);
   process.exit(0);
 }
-const decision = checkEdit(path, state, workflow);
-if (decision.block) {
-  console.error(decision.reason);
-  process.exit(2);
+for (const path of paths) {
+  const decision = checkEdit(path, state, workflow);
+  if (decision.block) block(decision.reason);
 }

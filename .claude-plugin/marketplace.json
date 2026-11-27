@@ -1,6 +1,6 @@
 {
   "name": "keel",
-  "description": "Keel: spec-driven development for Claude Code.",
+  "description": "Keel: spec-driven development for Claude Code and Codex.",
   "owner": {
     "name": "Miguel Pereira de Sousa"
   },
