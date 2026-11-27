@@ -17,7 +17,7 @@ Depends on: —
 Covers: R2 (AC-2.1, AC-2.2, AC-2.3, AC-2.4, AC-2.5)
 Files: `evals/codex/run.mjs`, `test/codex-e2e.test.mjs`
 New structure: none
-Test first: `codex e2e grades each case by the workspace end state` — para cada caso, uma pasta e um `--json` no estado esperado passam, e falham com o motivo: estado errado, nenhuma tentativa da ação, `codex exec` com erro ou sem `turn.completed`, e tempo esgotado; o preparo das fases de requisitos e de commit usa o `keel-state.mjs`; e o comando do `codex exec` usa `CODEX_HOME` temporário, `--dangerously-bypass-hook-trust` e `--json`
+Test first: `codex e2e grades each case by the workspace end state` — para cada caso, uma pasta e um log de sessão no estado esperado passam, e falham com o motivo: estado errado, nenhuma tentativa da ação, `codex exec` com erro ou sem `turn.completed`, e tempo esgotado; o preparo das fases de requisitos e de commit usa o `keel-state.mjs`; e o comando do `codex exec` usa `CODEX_HOME` temporário, `--dangerously-bypass-hook-trust` e `--json`
 Verification: `node --test test/codex-e2e.test.mjs`
 Done when: os testes novos passam; a rodada de verdade (`node evals/codex/run.mjs e2e`) fica para a máquina com o Codex logado
 Depends on: T1
@@ -34,18 +34,22 @@ Depends on: T2
 
 ## Progress
 ### T1
-Status: in review
+Status: done (ffdb134)
 RED evidence: `node --test test/codex-e2e.test.mjs` exited with 1 at 2026-11-27T16:59:52.374Z
 GREEN evidence: `node --test test/codex-e2e.test.mjs` exited with 0 at 2026-11-27T17:02:32.223Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (caminho do repo sem barra no fim, que quebraria as aspas no Windows); F2 fixed (parâmetro `input` sem uso removido); F3 fixed (`git init` conferido); F4 fixed (exports sem uso removidos); F5 fixed in part (assert antes do slice; o slice até o fim do arquivo fica, o job codex é o último)
 ### T2
-Status: pending
+Status: in review
+RED evidence: `node --test test/codex-e2e.test.mjs` exited with 1 at 2026-11-27T17:19:39.377Z
+GREEN evidence: `node --test test/codex-e2e.test.mjs` exited with 0 at 2026-11-27T17:37:03.840Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (timeout não vira "Codex não instalado": o caso falha por tempo, conferido numa rodada com chave falsa); F2 fixed (AC-2.2/2.3 leem o log da sessão, mudança aprovada por Miguel em 2026-11-27); F3 fixed (`head()` sem uso removida); F4 kept (o `CODEX_HOME` temporário é montado em `e2e()`, que precisa do Codex logado; o teste fica na parte pura); F5 kept (timeout no Windows anotado em Implementation notes)
 ### T3
 Status: pending
 
 ## Implementation notes
-- none yet
+- No Windows, o `codex` do npm roda por um `.cmd` via shell; o timeout de 10 minutos mata o `cmd.exe` e talvez não o `codex` filho (não conferido). Se a rodada no Windows travar, rodar no Linux ou no macOS.
 
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
