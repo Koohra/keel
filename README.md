@@ -1,8 +1,8 @@
 # Keel
 
-Um plugin do Claude Code para desenvolver por especificação: uma história e uma task pequena por vez, com TDD em cada task e você aprovando cada passo.
+Um plugin do Claude Code e do Codex para desenvolver por especificação: uma história e uma task pequena por vez, com TDD em cada task e você aprovando cada passo.
 
-Keel 2, pronto para uso no Claude Code.
+Keel 2, pronto para uso no Claude Code e no Codex.
 
 ## Por que o Keel existe
 
@@ -31,11 +31,31 @@ Opcional, o ajudante de documentação:
 /plugin install keel-docs@keel
 ```
 
+No Codex CLI:
+
+```
+codex plugin marketplace add Koohra/keel
+codex plugin add keel@keel
+codex plugin add keel-docs@keel
+```
+
+O `keel-docs` é opcional também no Codex. Depois de instalar, aprove os hooks (abaixo) e rode o setup uma vez por projeto, que no Codex também instala o revisor isolado.
+
 ### Hooks no Codex
 
 No Codex, os hooks de um plugin só rodam depois que você os aprova. Depois de instalar o Keel, abra `/hooks` no Codex CLI (no app, "Review hooks") e aprove os quatro hooks do Keel. A aprovação vale para a versão do script: quando o Keel é atualizado e um hook muda, o Codex pede de novo.
 
 Se você não aprovar, as skills funcionam, mas o Keel fica sem os portões: nada impede código antes da implementação, um `state.json` editado à mão ou um commit sem a sua aprovação, e o fim do turno não confere a task aberta.
+
+### Diferenças entre o Claude Code e o Codex
+
+O fluxo, os scripts e os portões são os mesmos nos dois. O que muda:
+
+- **Hooks:** no Codex, só rodam depois da sua aprovação em `/hooks`, e ela vale para a versão do script. No Claude Code, rodam ao instalar o plugin.
+- **Revisor isolado:** no Claude Code, ele vem com o plugin (`keel:reviewer`). No Codex, o plugin não traz agentes: o setup instala o revisor no projeto em `.codex/agents/keel-reviewer.toml`, e um hook o mantém só leitura.
+- **Instruções do projeto:** o Codex lê o `AGENTS.md` (ou o `AGENTS.override.md`) e, por padrão, não lê o `CLAUDE.md`. Se as suas regras estão só no `CLAUDE.md`, o setup avisa que o Codex não as vê.
+- **Comandos:** a skill se chama `keel:story` nos dois, e `/clear` abre conversa nova nos dois. O `/doctor prompt-audit`, sugerido no setup, é só do Claude Code.
+- **Evals:** os evals de acionamento e de fases usam o `claude plugin eval`, que só existe no Claude Code. No Codex, a release roda um ponta a ponta com `codex exec` ([docs/release.md](docs/release.md#ponta-a-ponta-no-codex)).
 
 ## Como é usar
 
@@ -102,7 +122,6 @@ Se você já viu outras ferramentas de desenvolvimento por especificação, os n
 - Não cria uma pilha de documentos por história. São no máximo três, e o design só quando precisa.
 - Não commita sem você e não decide trade-offs sozinho.
 - Não escreve a documentação por você. Para isso existe o keel-docs.
-- Ainda não cobre o Codex. O foco desta versão é o Claude Code.
 
 ## keel-docs, o ajudante de documentação
 

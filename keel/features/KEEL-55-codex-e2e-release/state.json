@@ -1,0 +1,147 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-55",
+    "title": "Codex: ponta a ponta, CI, release e README",
+    "source": "https://github.com/Koohra/keel/issues/55",
+    "folder": "keel/features/KEEL-55-codex-e2e-release",
+    "branch": "feat/codex-e2e-release",
+    "base": null
+  },
+  "level": "standard",
+  "phase": "done",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-27T16:56:45.964Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-27T16:57:45.297Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-27T17:36:59.953Z",
+      "hash": "d5144a01e704b4399dd8d3d54838ad46ef5f72db9ac0af99af2f2d4fc69c53fa"
+    },
+    "design": {
+      "approved": false,
+      "approvedBy": null,
+      "approvedAt": null,
+      "hash": null
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-27T17:37:00.064Z",
+      "hash": "efe7ad5274f703de42c0d5dbe6d5cec1fcbc008884857a66c78bacd7cafed7c1"
+    },
+    "implementation": {
+      "currentTask": "T3",
+      "blocked": null,
+      "red": {
+        "command": "npm test",
+        "exitCode": 1,
+        "output": "ok 244 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.128532\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 245 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.141194\n  type: 'test'\n  ...\n1..245\n# tests 245\n# suites 0\n# pass 244\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 25647.740894",
+        "at": "2026-11-27T17:38:15.900Z"
+      },
+      "green": {
+        "command": "npm test",
+        "exitCode": 0,
+        "output": "ok 244 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.126523\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 245 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.142496\n  type: 'test'\n  ...\n1..245\n# tests 245\n# suites 0\n# pass 245\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 27363.629725",
+        "at": "2026-11-27T17:42:09.862Z"
+      },
+      "checks": {
+        "passed": true,
+        "fingerprint": "d6c29d2f682fd73201ba82f9aae2622e134d767288e72fe419abaeb0c6ae635d",
+        "at": "2026-11-27T17:42:37.506Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 58 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 244 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.173038\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 245 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.151419\n  type: 'test'\n  ...\n1..245\n# tests 245\n# suites 0\n# pass 245\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 27373.825322"
+          }
+        ]
+      },
+      "review": {
+        "task": "T3",
+        "result": "findings",
+        "at": "2026-11-27T17:43:05.219Z"
+      },
+      "commit": {
+        "task": "T3",
+        "approvedBy": "Miguel",
+        "at": "2026-11-27T17:48:40.101Z",
+        "fingerprint": "d6c29d2f682fd73201ba82f9aae2622e134d767288e72fe419abaeb0c6ae635d"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T1 `codex install check names the missing skills` (ffdb134)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T2 `codex e2e grades each case by the workspace end state` (e030d49)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T3 `docs treat Codex as supported and the version ships in the changelog` (7f69043)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T3 `docs treat Codex as supported and the version ships in the changelog` (7f69043)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R5",
+          "evidence": "T3 `docs treat Codex as supported and the version ships in the changelog` (7f69043)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": []
+      },
+      "deltas": {
+        "files": [
+          "keel/product.md"
+        ],
+        "sections": {
+          "added": [],
+          "modified": [
+            "keel/product.md#Vision",
+            "keel/product.md#What it does not do"
+          ],
+          "removed": []
+        },
+        "hash": "7ab3ca31c50798c2fd9fb1192e6d8a6dd621a46374bb215a2b77e892c76c5926"
+      },
+      "deltasApproved": {
+        "by": "Miguel",
+        "at": "2026-11-27T17:48:51.659Z",
+        "hash": "7ab3ca31c50798c2fd9fb1192e6d8a6dd621a46374bb215a2b77e892c76c5926"
+      },
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-27T17:48:51.847Z"
+}
