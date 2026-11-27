@@ -70,12 +70,17 @@ GREEN evidence: `node --test test/docs-plugin.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 kept, as skills citam arquivos sempre entre crases e não há caso sem crase hoje [source: design.md Contracts and data]
 ### T4
-Status: pending
+Status: in review
+RED evidence: `node --test test/keel-context.test.mjs` exited with 1 at 2026-11-24T09:47:58.811Z
+GREEN evidence: `node --test test/keel-context.test.mjs` exited with 0 at 2026-11-24T10:51:32.660Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (`has`, `agents` e `claude` calculados uma vez em `visibility`); F2 kept para a T5, que inclui o override na condição e no texto [source: R5, R6]; F3 kept, a sugestão de mover para AGENTS.md é a mesma que a skill setup mostra [source: R7, skills/setup/SKILL.md]; F4 kept, a asserção foi trocada com aprovação do dev [source: dev on 2026-11-24]
 ### T5
 Status: pending
 
 ## Implementation notes
-not applicable
+- T4: o RED usava `doesNotMatch(/creat(e|ing) CLAUDE.md/)`, que pegava a frase atual "Keel does not create CLAUDE.md"; trocado por `match` da frase, com aprovação do dev em 2026-11-24.
+- T5 precisa tirar "it reads only AGENTS.md" do achado do Codex e excluir o override da condição do R5 (achado F2 da T4).
 
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |

@@ -42,24 +42,24 @@
       "hash": "642ce2783976cedbbe0e4f23cb3c69c5545d4329408691c342e01ad61d9b1d0d"
     },
     "implementation": {
-      "currentTask": "T3",
+      "currentTask": "T4",
       "blocked": null,
       "red": {
-        "command": "node --test test/docs-plugin.test.mjs",
+        "command": "node --test test/keel-context.test.mjs",
         "exitCode": 1,
-        "output": "ok 10 - write skill carries the agreed limits: no code, no approval, no state, sources and one question at a time\n  ---\n  duration_ms: 0.70413\n  type: 'test'\n  ...\n# Subtest: keel-docs evals: triggering cases that call write and that do not, plus writing and refusal cases\nok 11 - keel-docs evals: triggering cases that call write and that do not, plus writing and refusal cases\n  ---\n  duration_ms: 4.169328\n  type: 'test'\n  ...\n1..11\n# tests 11\n# suites 0\n# pass 10\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 75.30912",
-        "at": "2026-11-24T08:15:29.525Z"
+        "output": "  actual: 'Only AGENTS.md exists: Claude Code reads it natively when there is no CLAUDE.md. Keel does not create CLAUDE.md.'\n  operator: 'match'\n  stack: |-\n    TestContext.<anonymous> (file:///home/user/keel/test/keel-context.test.mjs:302:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..18\n# tests 18\n# suites 0\n# pass 17\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 435.102505",
+        "at": "2026-11-24T09:47:58.811Z"
       },
       "green": {
-        "command": "node --test test/docs-plugin.test.mjs",
+        "command": "node --test test/keel-context.test.mjs",
         "exitCode": 0,
-        "output": "ok 10 - write skill carries the agreed limits: no code, no approval, no state, sources and one question at a time\n  ---\n  duration_ms: 0.485391\n  type: 'test'\n  ...\n# Subtest: keel-docs evals: triggering cases that call write and that do not, plus writing and refusal cases\nok 11 - keel-docs evals: triggering cases that call write and that do not, plus writing and refusal cases\n  ---\n  duration_ms: 4.092895\n  type: 'test'\n  ...\n1..11\n# tests 11\n# suites 0\n# pass 11\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 74.115957",
-        "at": "2026-11-24T08:15:34.224Z"
+        "output": "ok 17 - review flags piled-up emphasis and too many list items\n  ---\n  duration_ms: 4.356543\n  type: 'test'\n  ...\n# Subtest: review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info\nok 18 - review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info\n  ---\n  duration_ms: 4.118852\n  type: 'test'\n  ...\n1..18\n# tests 18\n# suites 0\n# pass 18\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 513.052072",
+        "at": "2026-11-24T10:51:32.660Z"
       },
       "checks": {
         "passed": true,
-        "fingerprint": "517df6b548257f6abc48a2596debc8789683b9a65634019fe8bd6d22d9a08c87",
-        "at": "2026-11-24T08:15:37.726Z",
+        "fingerprint": "78d598ac21a64defc8aba4015b5f5d93fd3c0e9ca2123698d3ee757da8b25489",
+        "at": "2026-11-24T10:51:33.304Z",
         "results": [
           {
             "name": "Architecture",
@@ -71,20 +71,20 @@
             "name": "Tests",
             "command": "npm test",
             "exitCode": 0,
-            "output": "ok 216 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.162243\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 217 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.17841\n  type: 'test'\n  ...\n1..217\n# tests 217\n# suites 0\n# pass 217\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 26611.249288"
+            "output": "ok 217 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.182818\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 218 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.228933\n  type: 'test'\n  ...\n1..218\n# tests 218\n# suites 0\n# pass 218\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 27896.599458"
           }
         ]
       },
       "review": {
-        "task": "T3",
+        "task": "T4",
         "result": "findings",
-        "at": "2026-11-24T08:16:45.787Z"
+        "at": "2026-11-24T10:52:01.575Z"
       },
       "commit": {
-        "task": "T3",
+        "task": "T4",
         "approvedBy": "Miguel",
-        "at": "2026-11-24T09:47:46.058Z",
-        "fingerprint": "517df6b548257f6abc48a2596debc8789683b9a65634019fe8bd6d22d9a08c87"
+        "at": "2026-11-27T14:18:41.542Z",
+        "fingerprint": "78d598ac21a64defc8aba4015b5f5d93fd3c0e9ca2123698d3ee757da8b25489"
       },
       "failedAttempts": null
     },
@@ -96,5 +96,5 @@
       "pullRequest": null
     }
   },
-  "updatedAt": "2026-11-24T09:47:46.058Z"
+  "updatedAt": "2026-11-27T14:18:41.542Z"
 }

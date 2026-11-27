@@ -285,3 +285,28 @@ test('review flags piled-up emphasis and too many list items', () => {
   assert.equal(many[0].severity, 'info');
   assert.deepEqual(findingsOf({ 'AGENTS.md': `# A\n${items(39)}\n` }, 'rules'), []);
 });
+
+test('review tells Codex visibility: AGENTS.md only is info for both agents, CLAUDE.md only adds a Codex info', () => {
+  const visibility = (files) => {
+    const dir = project(files);
+    const before = hashes(dir);
+    try {
+      const found = review(dir).findings.filter((f) => f.kind === 'visibility');
+      assert.deepEqual(hashes(dir), before, 'review changes no file');
+      return found;
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  };
+  const agentsOnly = visibility({ 'AGENTS.md': '# A\n' });
+  assert.equal(agentsOnly.length, 1);
+  assert.equal(agentsOnly[0].severity, 'info');
+  assert.match(agentsOnly[0].message, /Codex/);
+  assert.match(agentsOnly[0].message, /Keel does not create CLAUDE\.md/);
+  for (const claude of ['CLAUDE.md', '.claude/CLAUDE.md']) {
+    const claudeOnly = visibility({ [claude]: '# C\n' });
+    assert.equal(claudeOnly.length, 2, claude);
+    assert.equal(claudeOnly[0].message, `Only ${claude} exists; Claude reads it.`);
+    assert.equal(claudeOnly[1].severity, 'info');
+    assert.match(claudeOnly[1].message, /Codex does not read/);
+  }
+  assert.equal(visibility({ 'AGENTS.md': '# A\n', 'CLAUDE.md': '# C\n' }).length, 1, 'Codex reads AGENTS.md: no Codex finding');
+});
