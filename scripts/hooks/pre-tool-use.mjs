@@ -8,6 +8,7 @@ import { relative } from 'node:path';
 import {
   changedFiles, checkCommand, checkEdit, codeFingerprint, findActiveStory, isProjectSource, loadWorkflow, reconcile,
 } from '../keel-state.mjs';
+import { AGENT_NAME, isReadOnlyCommand } from '../codex-reviewer.mjs';
 import { checkGitCommit, isGitCommit } from '../task-loop.mjs';
 import { readDocs } from '../validate-feature.mjs';
 import { editTargets, projectRoot, shellCommand } from './event.mjs';
@@ -30,6 +31,11 @@ function gitCommitDecision(root) {
 const event = JSON.parse(readFileSync(0, 'utf8'));
 const root = projectRoot(event);
 const command = shellCommand(event);
+// The Keel reviewer as a Codex subagent has no tools list: the hook keeps it read-only, in any phase.
+if (event.agent_type === AGENT_NAME) {
+  if (command === null) block(`${AGENT_NAME} is read-only: it cannot edit files`);
+  if (!isReadOnlyCommand(command)) block(`${AGENT_NAME} is read-only: only reading commands (cat, rg, grep, sed -n, ls, find, head, tail, wc, git diff/log/show/status) without redirection`);
+}
 if (command !== null) {
   const decision = checkCommand(command);
   if (decision.block) block(decision.reason);

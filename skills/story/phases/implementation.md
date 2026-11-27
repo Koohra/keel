@@ -38,6 +38,7 @@ Objetivo: cada task do tasks.md entregue em TDD, revisada por um revisor isolado
 
 ## 5. Review isolado
 1. Chame o agente `keel:reviewer` pedindo "revisão de task" e passe: o diff exato (`git diff HEAD` e os arquivos novos), o texto da task, as regras citadas, o caminho da seção "Engineering principles" do `keel/product.md`, o `design.md` se houver, a saída do `task-metrics.mjs` e o caminho completo de cada checklist de `task.checklists` do `next` (a pasta da skill mais `<checklist>`). Sem checklist na lista, não passe nenhum. Não passe o histórico da conversa.
+   No Codex, o agente vem do projeto, não do plugin: antes rode `node "<plugin>/scripts/codex-reviewer.mjs" check` e, se sair com erro, grave `unavailable` e diga ao dev que o passo 6 do setup instala o revisor. Com o check ok, peça ao Codex um subagente com `agent_type` `keel-reviewer` e `fork_turns` `none` (o padrão `all` passa a conversa), com o mesmo pedido. Se o Codex recusar o agente (`unknown agent_type`, por exemplo instalado nesta sessão) ou a resposta não começar com `Result:`, grave `unavailable` e siga.
 2. Grave o resultado:
    `node "<plugin>/scripts/keel-state.mjs" review task --result <ok|findings|unavailable>`
    Sem o revisor disponível, grave `unavailable`; nunca chame a sua própria revisão de independente. O comando recusa gravar se a mudança tem arquivo fora do `Files:` da task: resolva como no passo 4.2 antes de propor o commit.

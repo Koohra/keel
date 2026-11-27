@@ -3,6 +3,7 @@
 Objetivo: o dev concorda com o que vai ser construído antes de qualquer design, plano ou código.
 
 1. Peça ao revisor isolado que procure bordas, exemplos e erros faltantes, com olhar de teste. Chame o agente `keel:reviewer` passando só o caminho do `requirements.md` e o pedido "revisão de requisitos"; não passe o histórico da conversa nem a sua opinião. Ele não reescreve o documento.
+   No Codex, o agente vem do projeto, não do plugin: antes rode `node "<plugin>/scripts/codex-reviewer.mjs" check` e, se sair com erro, grave `unavailable` e diga ao dev que o passo 6 do setup instala o revisor. Com o check ok, peça ao Codex um subagente com `agent_type` `keel-reviewer` e `fork_turns` `none` (o padrão `all` passa a conversa), com o mesmo pedido. Se o Codex recusar o agente (`unknown agent_type`, por exemplo instalado nesta sessão) ou a resposta não começar com `Result:`, grave `unavailable` e siga.
 2. Registre o resultado, com o que de fato aconteceu:
    `node "<plugin>/scripts/keel-state.mjs" review requirements --result <ok|findings|unavailable>`
    Use `unavailable` se o agente não pôde rodar. Nunca chame a sua própria leitura de revisão independente.
