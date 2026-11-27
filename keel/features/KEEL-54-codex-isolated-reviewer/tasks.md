@@ -46,7 +46,7 @@ GREEN evidence: `node --test test/codex-reviewer.test.mjs test/pre-tool-use.test
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (`(` e `)` fora de aspas bloqueiam: `<(cmd)`, `=(cmd)` e qualificador de glob do zsh, com teste); F2 kept [source: requirements.md Out of scope, ferramentas MCP]; F3 fixed (parênteses explícitos); F4 fixed (casos `3<>`, `&>`, `|&` no teste)
 ### T3
-Status: in review
+Status: done (55d9f45)
 RED evidence: `npm test` exited with 1 at 2026-11-24T10:50:55.399Z
 GREEN evidence: `npm test` exited with 0 at 2026-11-26T20:03:46.388Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
