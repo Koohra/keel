@@ -15,12 +15,13 @@ Objetivo: provar que a história está completa e levar o conhecimento durável 
 
 ## 3. Arquitetura
 1. `closing.arch.status`: `ok`, `skipped` ou `fail`. `skipped` (sem `keel/architecture.json`) só passa se o "### Checks" do product.md diz `Architecture: não se aplica`, a dispensa explícita do dev; sem ela, diga ao dev que a checagem não rodou e ofereça rodar a skill de setup ou registrar a dispensa, com a palavra dele. Em `fail` (violação nova ou baseline maior que antes da primeira task), não corrija código nem a baseline: mostre ao dev a violação, com a correção da regra, e proponha uma task nova como no passo 1.4.
+   Dois casos pedem delta do `keel/architecture.json`, não task: arquivo órfão (`closing.arch.orphans`: coberto pelo `coverage` e fora de todo componente) e história que criou código-fonte sem nenhum componente ativo (`closing.arch.created`, que vence a dispensa). Proponha ao dev o componente no `keel/architecture.json` e quanta estrutura ele pede (o degrau) na tabela "Rungs per module" do product.md, ou, se o arquivo está no lugar errado, uma task para movê-lo. O delta entra no passo 4.
 2. Confira se os exemplares e as regras de "Engineering principles" do `keel/product.md` ainda valem com o código entregue. Se não valem mais, é delta do product.md.
 
-## 4. Deltas de product.md e ADR
+## 4. Deltas de product.md, ADR e architecture.json
 1. Se a história mudou o produto (o que ele faz, glossário, módulos e degraus, checagens, exemplares), edite `keel/product.md` direto, só o que mudou, dentro do orçamento de cerca de 200 linhas e sem copiar o que o código já diz. Sem mudança no produto, não invente delta.
 2. Se o design.md diz `ADR candidate?` Yes e a decisão afeta estrutura, dependência, interface ou técnica de construção e sobrevive à feature (Nygard), escreva a ADR a partir do rascunho `adr-draft.md` da pasta da história, atualizado com o que a implementação mudou, em `keel/adrs/ADR-NNN-<slug>.md` (o próximo número livre), com `## Status` (proposed), `## Context`, `## Decision`, `## Consequences` e `## Confirmation`.
-3. Rode `next` de novo: `closing.deltas.files` lista o que mudou desde a base da história e `closing.deltas.sections` traz o delta por seção do product.md e por arquivo de ADR (adicionado, modificado e removido). Mostre ao dev esse delta, com o `git diff` de cada seção modificada e o conteúdo das novas, e pergunte se aprova. Pare e espere.
+3. Rode `next` de novo: `closing.deltas.files` lista o que mudou desde a base da história e `closing.deltas.sections` traz o delta por seção do product.md e por arquivo de ADR e do `keel/architecture.json` (adicionado, modificado e removido). Mostre ao dev esse delta, com o `git diff` de cada seção modificada e o conteúdo das novas, e pergunte se aprova. Pare e espere.
 4. Só com a aprovação escrita do dev nesta conversa, depois de ele ver o delta:
    `node "<plugin>/scripts/keel-state.mjs" approve deltas --by "<dev>"`
    Se o delta mudar depois, a aprovação vence: mostre de novo.

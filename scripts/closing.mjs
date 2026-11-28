@@ -4,7 +4,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseBaseline, runCheck } from './arch-check.mjs';
+import { isSourcePath, parseBaseline, runCheck } from './arch-check.mjs';
 import { parseRules, parseTasks, sections, tableRows } from './validate-feature.mjs';
 import { doneHash, testName } from './task-loop.mjs';
 import { commitInHistory, gitOutput, gitPaths } from './git.mjs';
@@ -74,6 +74,13 @@ export function convergenceResult(state, docs) {
   return result(table === JSON.stringify(rows) ? null : 'the Convergence table in tasks.md differs from the script: copy closing.convergence from next');
 }
 
+// Source files the story created: added lines of git diff --name-status -M (a rename is not new;
+// a copy is) plus untracked paths, outside keel/.
+export function createdSources(nameStatus, untracked = []) {
+  const added = nameStatus.map((line) => line.split('\t')).filter(([status]) => /^[AC]/.test(status)).map((parts) => parts.at(-1));
+  return [...new Set([...added, ...untracked])].filter((path) => !path.startsWith('keel/') && isSourcePath(path)).sort();
+}
+
 // Keys in the baseline now that were not there at the story base.
 export function baselineGrowth(before, after) {
   return [...after].filter((key) => !before.has(key)).sort();
@@ -82,24 +89,31 @@ export function baselineGrowth(before, after) {
 export function archResult(state) {
   const arch = closingOf(state).arch;
   if (!arch) return result('architecture not checked: run next in the closing phase');
+  const created = arch.created ?? [];
+  if (created.length && (arch.status === 'skipped' || arch.noActive)) {
+    return result(`the story created source code (${created.join(', ')}) and keel/architecture.json has no active component: declare the components in keel/architecture.json and their rungs in "Rungs per module" of keel/product.md, and show the delta to the dev; "Architecture: não se aplica" does not cover new code`);
+  }
   if (arch.status === 'skipped' && !arch.waived) {
     return result('keel/architecture.json does not exist and the "### Checks" of keel/product.md does not say "Architecture: não se aplica": run the setup skill to declare the rules, or ask the dev to declare the waiver');
   }
   const grown = arch.grown.length ? [`the baseline grew since the story base: ${arch.grown.join(', ')}; fix the violation instead of adding it to the baseline`] : [];
-  return result([...arch.violations, ...grown].join('; '));
+  const orphans = (arch.orphans ?? []).length
+    ? [`orphan file(s) outside every component: ${arch.orphans.map((o) => o.split(' is covered by ')[0]).join(', ')}; propose to the dev the delta of keel/architecture.json (the component) and of "Rungs per module" in keel/product.md (its rung), or a task to move the file`]
+    : [];
+  return result([...arch.violations, ...grown, ...orphans].join('; '));
 }
 
-// The dev's approval of the product.md/ADR delta, tied to the content it saw.
+// The dev's approval of the product.md/ADR/architecture.json delta, tied to the content it saw.
 export function approveDeltas(state, by, now) {
   if (!by) throw new Error('say who approved with --by <dev>');
   if (state.phase !== 'closing') throw new Error(`approve deltas only in phase closing; the story is in ${state.phase}`);
   const { deltas } = closingOf(state);
-  if (!deltas?.files.length) throw new Error('no product.md or ADR delta to approve: keel/product.md and keel/adrs/ did not change since the story base');
+  if (!deltas?.files.length) throw new Error('no product.md, ADR or architecture.json delta to approve: keel/product.md, keel/adrs/ and keel/architecture.json did not change since the story base');
   const closing = { ...closingOf(state), deltasApproved: { by, at: now, hash: deltas.hash } };
   return { ...state, steps: { ...state.steps, closing }, updatedAt: now };
 }
 
-// Applies only when keel/product.md or keel/adrs/ changed since the story base.
+// Applies only when keel/product.md, keel/adrs/ or keel/architecture.json changed since the story base.
 export function deltasResult(state) {
   const { deltas, deltasApproved } = closingOf(state);
   if (!deltas) return result('deltas not computed: run next in the closing phase');
@@ -126,11 +140,11 @@ function headingSections(text) {
   return new Map([...result].map(([k, v]) => [k, v.join('\n').trim()]));
 }
 
-// Delta of one file against the story base, as OpenSpec's ADDED/MODIFIED/REMOVED: an ADR as a whole
-// file, product.md by "##"/"###" section. before/after are null when the file does not exist.
+// Delta of one file against the story base, as OpenSpec's ADDED/MODIFIED/REMOVED: an ADR or
+// keel/architecture.json as a whole file, product.md by "##"/"###" section. before/after are null when the file does not exist.
 export function sectionDelta(file, before, after) {
   const delta = { added: [], modified: [], removed: [] };
-  if (file.startsWith('keel/adrs/') || before == null || after == null) {
+  if (file !== 'keel/product.md' || before == null || after == null) {
     const kind = before == null ? 'added' : after == null ? 'removed' : before === after ? null : 'modified';
     if (kind) delta[kind].push(file);
     return delta;
@@ -174,8 +188,20 @@ export function storyBase(root, docs, inHistory, baseBranch = null) {
   return git(root, ['rev-parse', '--verify', '-q', `${first}^`])?.trim() || EMPTY_TREE;
 }
 
+function createdSince(root, base) {
+  const tokens = gitPaths(root, ['diff', '--name-status', '-M', '-z', base]);
+  const nameStatus = [];
+  for (let i = 0; i < tokens.length;) {
+    const size = /^[RC]/.test(tokens[i]) ? 3 : 2; // a rename or copy carries the old and the new path
+    nameStatus.push(tokens.slice(i, i + size).join('\t'));
+    i += size;
+  }
+  return createdSources(nameStatus, gitPaths(root, ['ls-files', '--others', '--exclude-standard', '-z']));
+}
+
 function checkArch(root, base) {
   if (base == null) return { status: 'fail', violations: [NO_BASE], grown: [] };
+  const created = createdSince(root, base);
   let check;
   try {
     check = runCheck(root);
@@ -185,19 +211,21 @@ function checkArch(root, base) {
   if (check.status === 'skipped') {
     const product = join(root, 'keel', 'product.md');
     const waived = architectureWaived(existsSync(product) ? readFileSync(product, 'utf8') : '');
-    return { status: 'skipped', waived, violations: [], grown: [] };
+    return { status: 'skipped', waived, violations: [], grown: [], created };
   }
   const file = join(root, ...check.baselinePath.split('/'));
   const now = existsSync(file) ? parseBaseline(readFileSync(file, 'utf8')) : new Set();
   const before = parseBaseline(git(root, ['show', `${base}:${check.baselinePath}`]) ?? '');
   const violations = check.violations.map((v) => v.message);
+  const orphans = check.orphans.map((o) => o.message);
   const grown = baselineGrowth(before, now);
-  return { status: violations.length || grown.length ? 'fail' : 'ok', violations, grown };
+  const failed = violations.length || grown.length || orphans.length;
+  return { status: failed ? 'fail' : 'ok', violations, grown, orphans, created, noActive: !check.active.length };
 }
 
-const PROJECT_DOCS = ['keel/product.md', 'keel/adrs'];
+const PROJECT_DOCS = ['keel/product.md', 'keel/adrs', 'keel/architecture.json'];
 
-// Files of keel/product.md and keel/adrs/ that differ from the base, and the hash of their content.
+// Files of keel/product.md, keel/adrs/ and keel/architecture.json that differ from the base, and the hash of their content.
 function projectDeltas(root, base) {
   if (base == null) return { files: [], sections: null, hash: null, error: NO_BASE };
   const changed = gitPaths(root, ['diff', '--name-only', '-z', base, '--', ...PROJECT_DOCS]);

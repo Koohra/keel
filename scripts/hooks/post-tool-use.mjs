@@ -33,9 +33,12 @@ function architectureFeedback(root, path) {
     const message = `${CONFIG_PATH} invalid, architecture check turned off: ${error.message}`;
     return path === CONFIG_PATH ? { decision: 'block', reason: message } : context(`Keel: ${message}`);
   }
-  if (result.status !== 'fail') return null;
+  if (result.status === 'skipped') return null;
+  // An orphan (covered file outside every component) is only a warning; the closing asks for the delta.
+  const orphans = result.orphans.map((o) => `Keel: ${o.message}.`).join('\n');
+  if (result.status !== 'fail') return orphans ? context(orphans) : null;
   const reason = ['Architecture violation (keel/architecture.json, approximate scanner):',
-    ...result.violations.map((v) => `- ${v.message}`)].join('\n');
+    ...result.violations.map((v) => `- ${v.message}`), ...(orphans ? [orphans] : [])].join('\n');
   return { decision: 'block', reason };
 }
 

@@ -130,3 +130,28 @@ test('PostToolUse checks every file a Codex apply_patch leaves on disk (AC-4.1)'
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('PostToolUse warns about an orphan file without blocking', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'keel-post-'));
+  try {
+    write(dir, 'keel/architecture.json', JSON.stringify({ ...architecture, coverage: ['src/**'] }));
+    write(dir, 'src/infra/repo.js', 'export const repo = {};\n');
+    write(dir, 'src/domain/a.js', 'export const a = 1;\n');
+    write(dir, 'src/novo/x.js', 'export const x = 1;\n');
+    const orphan = run(dir, 'src/novo/x.js');
+    assert.equal(orphan.status, 0);
+    assert.equal(orphan.output.decision, undefined);
+    assert.match(orphan.output.hookSpecificOutput.additionalContext, /src\/novo\/x\.js .*declare the component or move the file/);
+    assert.deepEqual(run(dir, 'src/domain/a.js'), { status: 0, output: null });
+
+    // An orphan in a cycle (noCycles does not depend on components): the violation blocks and the warning goes along.
+    write(dir, 'keel/architecture.json', JSON.stringify({ ...architecture, coverage: ['src/**'], noCycles: ['src/*'] }));
+    write(dir, 'src/novo/x.js', "import { y } from '../outro/y.js';\nexport const x = 1;\n");
+    write(dir, 'src/outro/y.js', "import { x } from '../novo/x.js';\nexport const y = 1;\n");
+    const both = run(dir, 'src/novo/x.js');
+    assert.equal(both.output.decision, 'block');
+    assert.match(both.output.reason, /cycle between modules[\s\S]*src\/novo\/x\.js .*declare the component or move the file/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
