@@ -212,8 +212,16 @@ function concern(designText, name) {
   return section.match(new RegExp(`(?:^|·)\\s*${name}:([^·\\n]*)`, 'mi'))?.[1]?.trim() ?? '';
 }
 
+// Rows of the "New structure and rationale" table, without the header, the separator and template placeholders.
+function newStructureRows(designText) {
+  const section = designText.replace(/\r\n/g, '\n').match(/^## New structure and rationale\n([\s\S]*?)(?=^## |(?![\s\S]))/m)?.[1] ?? '';
+  const rows = section.split('\n').filter((line) => line.startsWith('|')).slice(1).filter((line) => !/^\|[\s:|-]+$/.test(line));
+  return rows.map((line) => line.split('|')[1].trim()).filter((cell) => cell && !cell.startsWith('<'));
+}
+
 // Reviewer checklists (skills/story/checklists/) the design.md asks for: contract by its Trigger,
-// data by its Trigger or a Migration/rollback concern, security by its Security concern.
+// data by its Trigger or a Migration/rollback concern, security by its Security concern, structure
+// by its Trigger (new structure, rung change) or a row in "New structure and rationale".
 export function reviewChecklists(designText) {
   if (!designText) return [];
   const trigger = designText.match(/^Trigger: (.*)$/m)?.[1]?.toLowerCase() ?? '';
@@ -221,6 +229,7 @@ export function reviewChecklists(designText) {
     contract: trigger.startsWith('contract'),
     data: trigger.startsWith('data/migration') || applies(concern(designText, 'Migration/rollback')),
     security: applies(concern(designText, 'Security')),
+    structure: trigger.startsWith('new structure') || trigger.startsWith('rung change') || newStructureRows(designText).length > 0,
   };
   return Object.keys(wanted).filter((name) => wanted[name]).map((name) => `checklists/${name}.md`);
 }

@@ -61,10 +61,14 @@ GREEN evidence: `node --test test/story-skill.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: ok (isolated reviewer)
 ### T4
-Status: pending
-
+Status: in review
+RED evidence: `node --test test/task-loop.test.mjs test/story-skill.test.mjs` exited with 1 at 2026-11-28T02:21:30.679Z
+GREEN evidence: `node --test test/task-loop.test.mjs test/story-skill.test.mjs` exited with 0 at 2026-11-28T02:23:42.877Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (separador com alinhamento não conta, com teste); F2 kept (agents/reviewer.md fora do Files:; anotado em Implementation notes)
 ## Implementation notes
 - T1: o `Files:` ganhou `test/story-repo.mjs`. O `closingRepo` com componente só planejado ficava preso na triagem pelo gatilho novo; o fixture passa a gravar o `architecture.json` depois do `level`, e o tasks.md teve nova aprovação.
+- T4: `agents/reviewer.md:62` cita como exemplo só os checklists de segurança, dados e contrato. Fica fora do `Files:` da T4; o revisor lê qualquer caminho que recebe, então o de estrutura já funciona.
 
 ## Story review
 Review: <ok | findings and what became of each one | unavailable> (filled in the closing)

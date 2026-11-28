@@ -253,7 +253,7 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 **Comportamentos**
 - Deve chamar um revisor isolado, só com leitura (Read, Grep, Glob), que recebe o diff, a task, as regras citadas, a seção de princípios do product.md, o design.md (se houver) e o relatório de métricas.
 - O revisor deve procurar bugs concretos, regras não atendidas, teste afrouxado e mudança fora do escopo, e aplicar a rubrica de design do anexo; deve ignorar estilo e reportar no máximo 5 achados.
-- Quando o design.md pede (`Trigger: contract`; `Trigger: data/migration` ou "Migration/rollback" preenchido; "Security" preenchido), o `next` lista em `task.checklists` os checklists de contrato, dados ou segurança (`skills/story/checklists/`, até 5 itens cada), e o revisor responde cada item com sim ou não e evidência ([Spec Kit](https://www.mintlify.com/github/spec-kit/commands/overview), `/speckit.checklist`).
+- Quando o design.md pede (`Trigger: contract`; `Trigger: data/migration` ou "Migration/rollback" preenchido; "Security" preenchido; `Trigger: new structure`, `Trigger: rung change` ou linha em "New structure and rationale"), o `next` lista em `task.checklists` os checklists de contrato, dados, segurança ou estrutura (`skills/story/checklists/`, até 5 itens cada), e o revisor responde cada item com sim ou não e evidência ([Spec Kit](https://www.mintlify.com/github/spec-kit/commands/overview), `/speckit.checklist`).
 - Cada achado é conferido no código antes de mexer; achado que não se confirma ou contraria o product.md, uma ADR ou o requisito recebe discordância com a fonte; nunca se afrouxa o teste para atender um achado. O destino de cada achado (corrigido, removido, mantido com a fonte) vai em `Review:` no "Progress", e o `approve commit` recusa review `findings` sem esse destino (Superpowers, receiving-code-review).
 - Cada achado é BLOQUEIA (só se violar regra `[hook]` ou requisito), REMOVER (preferido) ou SUGERIR. O revisor não propõe abstração nova sem citar a heurística que a justifica.
 - Deve corrigir achados relevantes voltando ao GREEN; achados menores podem ser registrados e não corrigidos, com justificativa.
@@ -397,7 +397,7 @@ keel/                                  # repo novo
 │   └── story/
 │       ├── SKILL.md                   # entra no fluxo, pergunta ao script o próximo passo
 │       ├── phases/*.md                # instruções de cada fase, carregadas só quando a fase chega (e debugging.md, quando o GREEN falha)
-│       └── checklists/*.md            # segurança, dados e contrato, passados ao revisor pelo gatilho do design.md
+│       └── checklists/*.md            # segurança, dados, contrato e estrutura, passados ao revisor pelo gatilho do design.md
 ├── agents/reviewer.md                 # revisor isolado, só leitura (Read, Grep, Glob)
 ├── hooks/hooks.json                   # PreToolUse, PostToolUse, Stop
 ├── workflow/workflow.json             # fases e portões
