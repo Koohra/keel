@@ -2,6 +2,7 @@
 // Metrics of the open task, for REFACTOR and the isolated review: lines, new files, files outside
 // the task's Files:, new abstract types, new dependencies in package.json and an approximate
 // complexity (decision points in added lines). Reads the uncommitted code against HEAD.
+// Other manifests (requirements.txt, pyproject.toml, go.mod, *.csproj, pom.xml) count when the task changed them.
 // Usage (from the project root): node scripts/task-metrics.mjs
 import { spawnSync } from 'node:child_process';
 import { lstatSync, readFileSync } from 'node:fs';
@@ -42,8 +43,78 @@ function dependencyNames(manifest) {
   return DEPENDENCY_SECTIONS.flatMap((section) => Object.keys(parsed[section] ?? {}));
 }
 
+// Python requirement "name[extra]>=1 ; marker" -> name.
+const pythonName = (spec) => spec.trim().match(/^[A-Za-z0-9][A-Za-z0-9._-]*/)?.[0];
+const quoted = (text) => [...text.matchAll(/"([^"]*)"|'([^']*)'/g)].map((m) => m[1] ?? m[2]);
+
+function requirementsTxt(text) {
+  return text.split('\n').map((line) => line.replace(/#.*$/, '').trim())
+    .filter((line) => line && !line.startsWith('-')).map(pythonName);
+}
+
+// "dependencies = [" in [project], or any "<group> = [" in [project.optional-dependencies].
+const opensDependencyArray = (section, line) => (section === 'project' && /^dependencies\s*=\s*\[/.test(line))
+  || (section === 'project.optional-dependencies' && /^[\w-]+\s*=\s*\[/.test(line));
+const closesArray = (text) => text.replace(/"[^"]*"|'[^']*'/g, '').includes(']');
+
+// [project] dependencies, [project.optional-dependencies] and the Poetry dependency tables (without python).
+function pyprojectToml(text) {
+  const names = [];
+  let section = '';
+  let inArray = false;
+  for (const line of text.split('\n').map((l) => l.replace(/#.*$/, '').trim())) {
+    if (!inArray && /^\[.+\]$/.test(line)) { section = line.slice(1, -1).trim(); continue; }
+    if (inArray || opensDependencyArray(section, line)) {
+      const items = inArray ? line : line.slice(line.indexOf('[') + 1);
+      names.push(...quoted(items).map(pythonName));
+      inArray = !closesArray(items);
+    } else if (/^tool\.poetry\.(dependencies|dev-dependencies|group\.[^.]+\.dependencies)$/.test(section)) {
+      const key = line.match(/^([A-Za-z0-9][A-Za-z0-9._-]*)\s*=/)?.[1];
+      if (key && key !== 'python') names.push(key);
+    }
+  }
+  return names;
+}
+
+function goMod(text) {
+  const names = [];
+  let block = false;
+  for (const line of text.split('\n').map((l) => l.replace(/\/\/.*$/, '').trim())) {
+    if (line === 'require (') { block = true; continue; }
+    if (block && line === ')') { block = false; continue; }
+    const spec = block ? line : line.match(/^require\s+(.+)$/)?.[1];
+    if (spec) names.push(spec.split(/\s+/)[0]);
+  }
+  return names;
+}
+
+const csproj = (text) => [...text.matchAll(/<PackageReference\b[^>]*\bInclude="([^"]+)"/g)].map((m) => m[1]);
+
+function pomXml(text) {
+  return [...text.matchAll(/<dependency>([\s\S]*?)<\/dependency>/g)].map(([, body]) => {
+    const tag = (name) => body.match(new RegExp(`<${name}>\\s*([^<]+?)\\s*</${name}>`))?.[1];
+    return `${tag('groupId')}:${tag('artifactId')}`;
+  });
+}
+
+const MANIFEST_READERS = [
+  [/(^|\/)requirements\.txt$/, requirementsTxt],
+  [/(^|\/)pyproject\.toml$/, pyprojectToml],
+  [/(^|\/)go\.mod$/, goMod],
+  [/\.csproj$/, csproj],
+  [/(^|\/)pom\.xml$/, pomXml],
+];
+
+const manifestReader = (path) => MANIFEST_READERS.find(([pattern]) => pattern.test(path))?.[1] ?? null;
+
+function newNames(read, before, after) {
+  const known = new Set(before == null ? [] : read(before.replace(/\r\n?/g, '\n')));
+  return after == null ? [] : read(after.replace(/\r\n?/g, '\n')).filter((name) => name && !known.has(name));
+}
+
 // changes: parseDiff output plus new untracked files; taskFiles: paths or globs of the task's Files:.
-export function taskMetrics({ changes, taskFiles: patterns, manifest = {} }) {
+// manifests: [{ path, before, after }] of the other manifests the task changed (null when absent).
+export function taskMetrics({ changes, taskFiles: patterns, manifest = {}, manifests = [] }) {
   const before = new Set(dependencyNames(manifest.before));
   const decisionPoints = {};
   for (const { path, added } of changes) {
@@ -58,7 +129,10 @@ export function taskMetrics({ changes, taskFiles: patterns, manifest = {} }) {
     outsideTask: changes.map((c) => c.path).filter((path) => isOutsideTask(path, patterns)),
     newAbstractTypes: changes.flatMap(({ path, added }) => added.flatMap((line) => ABSTRACT
       .map((regex) => line.match(regex)?.[1]).filter(Boolean).map((name) => ({ file: path, name })))),
-    newDependencies: dependencyNames(manifest.after).filter((name) => !before.has(name)),
+    newDependencies: [...new Set([
+      ...dependencyNames(manifest.after).filter((name) => !before.has(name)),
+      ...manifests.flatMap(({ path, before: old, after }) => newNames(manifestReader(path), old, after)),
+    ])],
     complexity: { approximate: true, decisionPoints },
   };
 }
@@ -90,13 +164,27 @@ function readManifest(root) {
   return { before: headVersion.status === 0 ? headVersion.stdout : null, after };
 }
 
+function readManifests(root, changes) {
+  return changes.filter(({ path }) => manifestReader(path)).map(({ path }) => {
+    const head = spawnSync('git', ['show', `HEAD:${path}`], { cwd: root, encoding: 'utf8' });
+    let after = null;
+    try {
+      after = readFileSync(join(root, path), 'utf8');
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error; // deleted by the task
+    }
+    return { path, before: head.status === 0 ? head.stdout : null, after };
+  });
+}
+
 function main() {
   const root = process.cwd();
   const active = findActiveStory(root);
   const id = active?.state.steps.implementation?.currentTask;
   if (!id) throw new Error('no open task: run keel-state.mjs task start <T#> first');
   const tasks = readDocs(active.folder)['tasks.md'];
-  const metrics = taskMetrics({ changes: readChanges(root), taskFiles: taskFiles(tasks, id), manifest: readManifest(root) });
+  const changes = readChanges(root);
+  const metrics = taskMetrics({ changes, taskFiles: taskFiles(tasks, id), manifest: readManifest(root), manifests: readManifests(root, changes) });
   console.log(JSON.stringify({ task: id, ...metrics }, null, 2));
 }
 

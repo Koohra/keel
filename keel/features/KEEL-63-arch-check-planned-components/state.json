@@ -42,24 +42,24 @@
       "hash": "181c624c2af076cbd4f342336752970c755498caf711e5d3c393682b93fb45b3"
     },
     "implementation": {
-      "currentTask": "T5",
+      "currentTask": "T6",
       "blocked": null,
       "red": {
-        "command": "node --test test/closing.test.mjs",
+        "command": "node --test test/task-metrics.test.mjs",
         "exitCode": 1,
-        "output": "  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    TestContext.<anonymous> (file:///home/user/keel/test/closing.test.mjs:247:48)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..15\n# tests 15\n# suites 0\n# pass 13\n# fail 2\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 34160.109762",
-        "at": "2026-11-28T00:49:43.129Z"
+        "output": "  actual:\n  operator: 'deepStrictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///home/user/keel/test/task-metrics.test.mjs:62:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..4\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 869.302174",
+        "at": "2026-11-28T00:54:50.438Z"
       },
       "green": {
-        "command": "node --test test/closing.test.mjs",
+        "command": "node --test test/task-metrics.test.mjs",
         "exitCode": 0,
-        "output": "ok 14 - closing refuses the waiver when the story created source without an active component\n  ---\n  duration_ms: 5432.838288\n  type: 'test'\n  ...\n# Subtest: closing asks for the architecture.json delta for a new orphan\nok 15 - closing asks for the architecture.json delta for a new orphan\n  ---\n  duration_ms: 3115.658636\n  type: 'test'\n  ...\n1..15\n# tests 15\n# suites 0\n# pass 15\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 35334.903484",
-        "at": "2026-11-28T00:53:24.940Z"
+        "output": "ok 3 - CLI: metrics of the uncommitted code against the open task\n  ---\n  duration_ms: 898.14996\n  type: 'test'\n  ...\n# Subtest: new dependencies come from requirements.txt, pyproject.toml, go.mod, csproj and pom.xml\nok 4 - new dependencies come from requirements.txt, pyproject.toml, go.mod, csproj and pom.xml\n  ---\n  duration_ms: 2.053593\n  type: 'test'\n  ...\n1..4\n# tests 4\n# suites 0\n# pass 4\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 982.408451",
+        "at": "2026-11-28T00:57:08.553Z"
       },
       "checks": {
         "passed": true,
-        "fingerprint": "b570809e93fb211b33ea581d765fb0f212e9f88ad3a2f96a6aa4dc0f89d3f631",
-        "at": "2026-11-28T00:54:00.384Z",
+        "fingerprint": "15cc0c049b2b036e878599acb5ca22d1104746448e89390f45a7f1453cdd9867",
+        "at": "2026-11-28T00:57:09.664Z",
         "results": [
           {
             "name": "Architecture",
@@ -71,20 +71,20 @@
             "name": "Tests",
             "command": "npm test",
             "exitCode": 0,
-            "output": "ok 249 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.136392\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 250 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.13926\n  type: 'test'\n  ...\n1..250\n# tests 250\n# suites 0\n# pass 250\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 36236.477479"
+            "output": "ok 250 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.180079\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 251 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.188892\n  type: 'test'\n  ...\n1..251\n# tests 251\n# suites 0\n# pass 251\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 35298.758715"
           }
         ]
       },
       "review": {
-        "task": "T5",
+        "task": "T6",
         "result": "findings",
-        "at": "2026-11-28T00:54:36.963Z"
+        "at": "2026-11-28T00:57:45.302Z"
       },
       "commit": {
-        "task": "T5",
+        "task": "T6",
         "approvedBy": "Miguel",
-        "at": "2026-11-28T00:54:37.161Z",
-        "fingerprint": "b570809e93fb211b33ea581d765fb0f212e9f88ad3a2f96a6aa4dc0f89d3f631"
+        "at": "2026-11-28T00:57:45.470Z",
+        "fingerprint": "15cc0c049b2b036e878599acb5ca22d1104746448e89390f45a7f1453cdd9867"
       },
       "failedAttempts": null
     },
@@ -96,5 +96,5 @@
       "pullRequest": null
     }
   },
-  "updatedAt": "2026-11-28T00:54:37.161Z"
+  "updatedAt": "2026-11-28T00:57:45.470Z"
 }

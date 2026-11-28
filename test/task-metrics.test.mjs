@@ -56,3 +56,25 @@ test('CLI: metrics of the uncommitted code against the open task', () => {
     repo.cleanup();
   }
 });
+
+test('new dependencies come from requirements.txt, pyproject.toml, go.mod, csproj and pom.xml', () => {
+  const metrics = (path, before, after) => taskMetrics({ changes: [{ path, isNew: before == null, added: [], removed: 0 }], taskFiles: [path], manifests: [{ path, before, after }] }).newDependencies;
+  assert.deepEqual(metrics('requirements.txt',
+    'flask==2.0\n',
+    '# web\nflask==2.0\nRequests[socks]>=2.31 ; python_version > "3.8"\n-r dev.txt\n-e .\n--index-url https://x\nnumpy\n'), ['Requests', 'numpy']);
+  assert.deepEqual(metrics('pyproject.toml',
+    '[project]\ndependencies = ["httpx>=0.27"]\n',
+    '[project]\nname = "app"\ndependencies = [\n  "httpx>=0.27",\n  "pydantic[email]~=2.0",\n  "anyio",\n]\n\n[project.optional-dependencies]\ndev = ["pytest"]\n\n[tool.poetry.dependencies]\npython = "^3.11"\nrich = "^13"\n\n[tool.poetry.group.test.dependencies]\nhypothesis = "*"\n'),
+  ['pydantic', 'anyio', 'pytest', 'rich', 'hypothesis']);
+  assert.deepEqual(metrics('svc/go.mod',
+    'module x\n\nrequire github.com/a/b v1.0.0\n',
+    'module x\n\nrequire github.com/a/b v1.0.0\n\nrequire (\n\tgithub.com/c/d v1.2.0\n\tgolang.org/x/e v0.1.0 // indirect\n)\n'), ['github.com/c/d', 'golang.org/x/e']);
+  assert.deepEqual(metrics('src/App/App.csproj',
+    '<Project><ItemGroup><PackageReference Include="Serilog" Version="3" /></ItemGroup></Project>\n',
+    '<Project>\n  <ItemGroup>\n    <PackageReference Include="Serilog" Version="3" />\n    <PackageReference Include="Dapper" Version="2" />\n    <ProjectReference Include="..\\Lib\\Lib.csproj" />\n  </ItemGroup>\n</Project>\n'), ['Dapper']);
+  assert.deepEqual(metrics('pom.xml',
+    null,
+    '<project>\n  <groupId>me</groupId>\n  <dependencies>\n    <dependency>\n      <groupId>org.slf4j</groupId>\n      <artifactId>slf4j-api</artifactId>\n    </dependency>\n  </dependencies>\n</project>\n'), ['org.slf4j:slf4j-api']);
+  const json = taskMetrics({ changes: [], taskFiles: [], manifest: { before: '{"dependencies":{"a":"1"}}', after: '{"dependencies":{"a":"1","b":"2"}}' } });
+  assert.deepEqual(json.newDependencies, ['b'], 'package.json as today');
+});
