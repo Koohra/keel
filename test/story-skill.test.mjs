@@ -180,3 +180,13 @@ test('plain: decisions reach the dev in plain language, then the recommendation'
     assert.match(rule, /só entre parênteses/, file);
   }
 });
+
+test('plain: phase texts and guides put degrau, porta and mapper only in parentheses', () => {
+  const texts = listFiles().filter((f) => /^skills\/story\/phases\/.*\.md$|^plugins\/keel-docs\/skills\/write\/guides\/.*\.md$/.test(f));
+  for (const file of [...texts, 'skills/setup/SKILL.md']) {
+    for (const line of read(file).split('\n')) {
+      const outside = line.replace(/\([^()]*\)/g, '');
+      assert.doesNotMatch(outside, /\b(degraus?|portas?|mappers?)\b/i, `${file}: ${line}`);
+    }
+  }
+});

@@ -8,5 +8,5 @@ Contexto durável do projeto, lido em toda história. Curto e sempre relevante: 
 4. "Glossary": só termos do domínio que aparecem nas histórias e podem ser confundidos.
 5. "Decisions": um link por ADR existente em `keel/adrs/`, com uma linha. Decisão nova que afeta o projeto inteiro vira ADR (guia `adr.md`), não parágrafo aqui.
 6. "Engineering principles": parta da seção do modelo. No máximo 10 regras, cada uma marcada `[hook]` (checada por script) ou `[review]` (rubrica). Ajuste com o dev, uma regra por vez quando houver dúvida. Clean Architecture e DDD não são o padrão: a regra universal é a direção das dependências.
-7. "Rungs per module": o degrau de cada módulo de primeiro nível, com motivo. Pergunte ao dev quando o código não mostrar.
+7. "Rungs per module": o quanto cada módulo de primeiro nível é elaborado (degrau), do passo a passo simples ao modelo com regras próprias, com motivo. Pergunte ao dev quando o código não mostrar, dizendo o que cada opção muda: mais barato de escrever agora ou mais fácil de mudar quando as regras crescerem.
 8. "Checks": os comandos de teste, lint e arquitetura que o projeto já tem, com a origem (`package.json`, `AGENTS.md:L<n>`). Sem comando, "não se aplica ainda"; não invente comando.
