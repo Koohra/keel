@@ -76,7 +76,7 @@ GREEN evidence: `node --test test/story-skill.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (o fechamento passa o git diff <closing.base>..HEAD, porque o revisor não roda git; teste confere); F2 fixed (teste confere a frase do Não julgado); F3 kept (a description do frontmatter passa a citar a história inteira; desvio do Code map registrado para o PR)
 ### T5
-Status: in review
+Status: done (1d417d3)
 RED evidence: `node --test test/evals.test.mjs` exited with 1 at 2026-11-28T00:56:16.899Z
 GREEN evidence: `node --test test/evals.test.mjs` exited with 0 at 2026-11-28T00:58:59.162Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
