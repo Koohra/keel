@@ -100,7 +100,7 @@ GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 removed (bloco repetido do teste da linha 130); F2 fixed (arquivo cortado em ` is covered by `); F3 fixed (passo 4 do closing.md e comentário citam o architecture.json); F4 kept (é a regra do design: arquivo inteiro para o que não é product.md)
 ### T6
-Status: in review
+Status: done (21aa1ca)
 RED evidence: `node --test test/task-metrics.test.mjs` exited with 1 at 2026-11-28T00:54:50.438Z
 GREEN evidence: `node --test test/task-metrics.test.mjs` exited with 0 at 2026-11-28T00:57:08.553Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
