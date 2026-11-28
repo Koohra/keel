@@ -94,7 +94,10 @@ const CHECK_FILE = "import { existsSync } from 'node:fs';\nconst [file, name] = 
 // The story through the task loop as the skill drives it, up to the closing phase.
 // extra: { T1: 'src/extra.js' } adds a file to that task's commit after the approval (approve commit refuses it).
 // beforeTasks(repo) runs after the story reaches implementation and before T1.
-export function closingRepo({ architecture = null, extra = {}, base = null, beforeTasks = null, checks = 'Tests: `node -e 0` · Architecture: não se aplica' } = {}) {
+// The default architecture has an active component: a story that creates src/*.js needs one (pass null for none).
+const ACTIVE_ARCHITECTURE = { components: { src: ['src/**'] }, rules: [] };
+
+export function closingRepo({ architecture = ACTIVE_ARCHITECTURE, extra = {}, base = null, beforeTasks = null, checks = 'Tests: `node -e 0` · Architecture: não se aplica' } = {}) {
   const repo = storyRepo({ tasks: closingTasksDoc(), checks, check: CHECK_FILE, architecture, base });
   beforeTasks?.(repo);
   const ok = (r) => assert.equal(r.status, 0, r.stderr);

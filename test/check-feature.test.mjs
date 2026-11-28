@@ -15,7 +15,7 @@ test('a story closed through the flow passes every item (AC-5.1)', () => {
     const run = checkFeature(repo);
     assert.equal(run.status, 0, run.stdout + run.stderr);
     for (const item of ['documents', 'state', 'commits', 'scope', 'checks', 'convergence']) assert.match(run.stdout, new RegExp(`^ok +${item}`, 'm'), item);
-    assert.match(run.stdout, /^skipped +architecture: no keel\/architecture\.json/m);
+    assert.match(run.stdout, /^ok +architecture: no new violation/m);
     assert.match(run.stdout, /^ok +deltas: none/m);
   } finally {
     repo.cleanup();
@@ -112,9 +112,16 @@ test('decisions: without architecture.json and without the waiver the architectu
     repo.ok(repo.state('review', 'story', '--result', 'ok'));
     repo.ok(repo.state('advance'));
     assert.match(checkFeature(repo, '--pr').stdout, /^- Modified: `keel\/product\.md#Checks`$/m);
-    repo.write('keel/product.md', product);
-    assert.match(checkFeature(repo).stdout, /^FAIL +architecture: .*Architecture: não se aplica/m);
   } finally {
     repo.cleanup();
+  }
+  const bare = closingRepo({ architecture: null, checks: 'Tests: `node -e 0`' });
+  try {
+    assert.match(checkFeature(bare).stdout, /^FAIL +architecture: .*Architecture: não se aplica/m);
+    const product = readFileSync(join(bare.dir, 'keel/product.md'), 'utf8');
+    bare.write('keel/product.md', product.replace('Tests: `node -e 0`', 'Tests: `node -e 0` · Architecture: não se aplica'));
+    assert.match(checkFeature(bare).stdout, /^FAIL +architecture: .*does not cover new code/m, 'KEEL-63 R2: the waiver does not cover new source');
+  } finally {
+    bare.cleanup();
   }
 });

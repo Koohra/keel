@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-63",
+    "title": "arch-check: componentes planejados e arquivos órfãos",
+    "source": "https://github.com/Koohra/keel/issues/63",
+    "folder": "keel/features/KEEL-63-arch-check-planned-components",
+    "branch": "feat/arch-check-planned-components",
+    "base": null
+  },
+  "level": "with-design",
+  "phase": "done",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-27T19:48:48.002Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-27T21:02:31.274Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T00:31:51.308Z",
+      "hash": "c5f10f0fb81eef6eccc8d890e51f95ba7ac30763431a3d4bfefdccc99e6312ae"
+    },
+    "design": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T00:32:59.449Z",
+      "hash": "89090810348c7813ef953d4da1456d0b52163b1e48d8180f4f33d8f4cd16e50a"
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T00:46:00.998Z",
+      "hash": "181c624c2af076cbd4f342336752970c755498caf711e5d3c393682b93fb45b3"
+    },
+    "implementation": {
+      "currentTask": "T7",
+      "blocked": null,
+      "red": null,
+      "green": null,
+      "checks": {
+        "passed": true,
+        "fingerprint": "b3f325de1b1da82b35dce81d9622adcba642a4337f7863372404e74f70804171",
+        "at": "2026-11-28T00:59:57.702Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 58 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 250 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.185718\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 251 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.245745\n  type: 'test'\n  ...\n1..251\n# tests 251\n# suites 0\n# pass 251\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 40628.133952"
+          }
+        ]
+      },
+      "review": {
+        "task": "T7",
+        "result": "findings",
+        "at": "2026-11-28T01:00:38.683Z"
+      },
+      "commit": {
+        "task": "T7",
+        "approvedBy": "Miguel",
+        "at": "2026-11-28T01:00:38.869Z",
+        "fingerprint": "b3f325de1b1da82b35dce81d9622adcba642a4337f7863372404e74f70804171"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T1 `planned component without files is pending and its rules wait` (a0079f2); T7 no test (bb388ab)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T4 `closing refuses the waiver when the story created source without an active component` (46403ab)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T2 `covered file outside every component is an orphan` (3191bad); T7 no test (bb388ab)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T3 `PostToolUse warns about an orphan file without blocking` (fb0b847)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R5",
+          "evidence": "T5 `closing asks for the architecture.json delta for a new orphan` (2c03357)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R6",
+          "evidence": "T6 `new dependencies come from requirements.txt, pyproject.toml, go.mod, csproj and pom.xml` (21aa1ca)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": [],
+        "orphans": [],
+        "created": [],
+        "noActive": false
+      },
+      "deltas": {
+        "files": [],
+        "sections": {
+          "added": [],
+          "modified": [],
+          "removed": []
+        },
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "deltasApproved": null,
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-28T01:00:48.907Z"
+}

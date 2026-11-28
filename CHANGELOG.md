@@ -4,6 +4,15 @@ Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões: 
 
 ## [Unreleased]
 
+### Added
+
+- `keel/architecture.json` aceita componente planejado (`{ "globs": [...], "planned": true }`): sem arquivos fica `pending` em vez de erro, e a regra passa a valer com o primeiro arquivo; com `coverage`, arquivo coberto fora de todo componente é órfão, aviso no hook e delta do `architecture.json` no fechamento, dentro da baseline (#63, KEEL-63).
+- `task-metrics.mjs` acha dependência nova também em `requirements.txt`, `pyproject.toml`, `go.mod`, `*.csproj` e `pom.xml` mudados pela task (#63, KEEL-63).
+
+### Changed
+
+- O fechamento recusa a dispensa `Architecture: não se aplica` quando a história criou código-fonte e não há componente ativo, e mudança em `keel/architecture.json` entra nos deltas que o dev aprova (#63, KEEL-63).
+
 ## [2.0.0-beta.1] - 2026-11-27
 
 O Keel passa a rodar no Codex, além do Claude Code.
