@@ -55,7 +55,11 @@ GREEN evidence: `node --test test/keel-state.test.mjs` exited with 0 at 2026-11-
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (sem keel/product.md não varre o código; com ele, a varredura do arch-check e a dos caminhos ficam separadas, sem mudar o arch-check); F2 fixed
 ### T3
-Status: pending
+Status: in review
+RED evidence: `node --test test/story-skill.test.mjs` exited with 1 at 2026-11-28T02:19:37.724Z
+GREEN evidence: `node --test test/story-skill.test.mjs` exited with 0 at 2026-11-28T02:19:50.775Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: ok (isolated reviewer)
 ### T4
 Status: pending
 

@@ -215,3 +215,12 @@ test('plain: phase texts and guides put degrau, porta and mapper only in parenth
     }
   }
 });
+
+test('triage: the phase reads designTriggers and proposes with-design', () => {
+  const triage = read('skills/story/phases/triage.md');
+  assert.match(triage, /triage\.designTriggers/);
+  assert.match(triage, /gatilho automático[^\n]*`with-design`/);
+  assert.match(triage, /o script recusa `trivial` e `standard`/);
+  const spec = read('docs/specification.md');
+  assert.match(spec, /triage\.designTriggers/);
+});

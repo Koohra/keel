@@ -100,6 +100,7 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
   - **trivial**: uma regra, poucos arquivos, sem gatilho de design. Só tasks.md, com critérios na própria task.
   - **standard**: requirements.md e tasks.md.
   - **with-design**: requirements.md, design.md e tasks.md.
+- Deve subir para **with-design** sem depender do julgamento da IA quando o script acha um gatilho automático, mostrado em `triage.designTriggers` no `next`: componente planejado sem arquivo, arquivo órfão novo (fora do baseline do `arch-check`) ou primeira história que cria código num projeto com `keel/product.md`. O `level` recusa `trivial` e `standard` enquanto o gatilho existir e grava a lista junto com o nível.
 - Gatilhos de design: trade-off real, mudança de contrato ou interface, dados ou migração, dependência nova, preocupação transversal (segurança, privacidade, desempenho), quebra deliberada de padrão, candidata a ADR, estrutura nova (fronteira, porta, módulo, mapper, dependência externa) ou subida de degrau de um módulo.
 - Deve sugerir fatiar a história quando houver mais de cerca de 6 regras ou uma regra com muitos exemplos.
 - Não deve escolher o nível em silêncio; o dev pode subir ou descer o nível.
