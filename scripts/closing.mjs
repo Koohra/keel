@@ -4,7 +4,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseBaseline, runCheck } from './arch-check.mjs';
+import { isSourcePath, parseBaseline, runCheck } from './arch-check.mjs';
 import { parseRules, parseTasks, sections, tableRows } from './validate-feature.mjs';
 import { doneHash, testName } from './task-loop.mjs';
 import { commitInHistory, gitOutput, gitPaths } from './git.mjs';
@@ -74,6 +74,13 @@ export function convergenceResult(state, docs) {
   return result(table === JSON.stringify(rows) ? null : 'the Convergence table in tasks.md differs from the script: copy closing.convergence from next');
 }
 
+// Source files the story created: added lines of git diff --name-status -M (a rename is not new;
+// a copy is) plus untracked paths, outside keel/.
+export function createdSources(nameStatus, untracked = []) {
+  const added = nameStatus.map((line) => line.split('\t')).filter(([status]) => /^[AC]/.test(status)).map((parts) => parts.at(-1));
+  return [...new Set([...added, ...untracked])].filter((path) => !path.startsWith('keel/') && isSourcePath(path)).sort();
+}
+
 // Keys in the baseline now that were not there at the story base.
 export function baselineGrowth(before, after) {
   return [...after].filter((key) => !before.has(key)).sort();
@@ -82,6 +89,10 @@ export function baselineGrowth(before, after) {
 export function archResult(state) {
   const arch = closingOf(state).arch;
   if (!arch) return result('architecture not checked: run next in the closing phase');
+  const created = arch.created ?? [];
+  if (created.length && (arch.status === 'skipped' || arch.noActive)) {
+    return result(`the story created source code (${created.join(', ')}) and keel/architecture.json has no active component: declare the components in keel/architecture.json and their rungs in "Rungs per module" of keel/product.md, and show the delta to the dev; "Architecture: não se aplica" does not cover new code`);
+  }
   if (arch.status === 'skipped' && !arch.waived) {
     return result('keel/architecture.json does not exist and the "### Checks" of keel/product.md does not say "Architecture: não se aplica": run the setup skill to declare the rules, or ask the dev to declare the waiver');
   }
@@ -174,8 +185,20 @@ export function storyBase(root, docs, inHistory, baseBranch = null) {
   return git(root, ['rev-parse', '--verify', '-q', `${first}^`])?.trim() || EMPTY_TREE;
 }
 
+function createdSince(root, base) {
+  const tokens = gitPaths(root, ['diff', '--name-status', '-M', '-z', base]);
+  const nameStatus = [];
+  for (let i = 0; i < tokens.length;) {
+    const size = /^[RC]/.test(tokens[i]) ? 3 : 2; // a rename or copy carries the old and the new path
+    nameStatus.push(tokens.slice(i, i + size).join('\t'));
+    i += size;
+  }
+  return createdSources(nameStatus, gitPaths(root, ['ls-files', '--others', '--exclude-standard', '-z']));
+}
+
 function checkArch(root, base) {
   if (base == null) return { status: 'fail', violations: [NO_BASE], grown: [] };
+  const created = createdSince(root, base);
   let check;
   try {
     check = runCheck(root);
@@ -185,14 +208,14 @@ function checkArch(root, base) {
   if (check.status === 'skipped') {
     const product = join(root, 'keel', 'product.md');
     const waived = architectureWaived(existsSync(product) ? readFileSync(product, 'utf8') : '');
-    return { status: 'skipped', waived, violations: [], grown: [] };
+    return { status: 'skipped', waived, violations: [], grown: [], created };
   }
   const file = join(root, ...check.baselinePath.split('/'));
   const now = existsSync(file) ? parseBaseline(readFileSync(file, 'utf8')) : new Set();
   const before = parseBaseline(git(root, ['show', `${base}:${check.baselinePath}`]) ?? '');
   const violations = check.violations.map((v) => v.message);
   const grown = baselineGrowth(before, now);
-  return { status: violations.length || grown.length ? 'fail' : 'ok', violations, grown };
+  return { status: violations.length || grown.length ? 'fail' : 'ok', violations, grown, created, noActive: !check.active.length };
 }
 
 const PROJECT_DOCS = ['keel/product.md', 'keel/adrs'];

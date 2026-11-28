@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { requirementsDoc } from './fixtures.mjs';
 import { closingRepo, closingTasksDoc } from './story-repo.mjs';
-import { convergenceRows, convergenceLines, sectionDelta } from '../scripts/closing.mjs';
+import { archResult, convergenceRows, convergenceLines, createdSources, sectionDelta } from '../scripts/closing.mjs';
 
 const doneTasks = () => closingTasksDoc()
   .replace('### T1\nStatus: pending', '### T1\nStatus: done (aaa1111)')
@@ -86,12 +86,12 @@ test('closing runs the full arch-check: a new violation or a baseline key added 
   }
 });
 
-test('without keel/architecture.json the architecture check is skipped and does not block (AC-3.2)', () => {
-  const repo = closingRepo();
+test('without keel/architecture.json the architecture check is skipped; the waiver no longer covers new code (AC-3.2, KEEL-63 R2)', () => {
+  const repo = closingRepo({ architecture: null });
   try {
     const next = json(repo.state('next'));
     assert.equal(next.closing.arch.status, 'skipped');
-    assert.ok(!next.missing.some((m) => m.criterion === 'arch:baseline-not-grown'), JSON.stringify(next.missing));
+    assert.match(next.missing.find((m) => m.criterion === 'arch:baseline-not-grown').reason, /does not cover new code/);
   } finally {
     repo.cleanup();
   }
@@ -191,7 +191,7 @@ test('decisions: delta by section and ADR file, added, modified and removed', ()
 });
 
 test('decisions: without architecture.json, skipped blocks unless Checks says Architecture: não se aplica', () => {
-  const repo = closingRepo({ checks: 'Tests: `node -e 0`' });
+  const repo = closingRepo({ architecture: null, checks: 'Tests: `node -e 0`' });
   try {
     let next = json(repo.state('next'));
     assert.equal(next.closing.arch.status, 'skipped');
@@ -199,8 +199,40 @@ test('decisions: without architecture.json, skipped blocks unless Checks says Ar
     const product = join(repo.dir, 'keel/product.md');
     repo.write('keel/product.md', readFileSync(product, 'utf8').replace('Tests: `node -e 0`', 'Tests: `node -e 0` · Architecture: não se aplica'));
     next = json(repo.state('next'));
-    assert.ok(!next.missing.some((m) => m.criterion === 'arch:baseline-not-grown'), JSON.stringify(next.missing));
+    assert.equal(next.closing.arch.waived, true);
+    // The story created src/*.js: since KEEL-63 R2 the waiver passes only without new source (archResult test above).
+    assert.match(next.missing.find((m) => m.criterion === 'arch:baseline-not-grown').reason, /does not cover new code/);
   } finally {
     repo.cleanup();
   }
+});
+
+test('closing refuses the waiver when the story created source without an active component', () => {
+  const repo = closingRepo({ architecture: null });
+  try {
+    const next = json(repo.state('next'));
+    assert.equal(next.closing.arch.status, 'skipped');
+    assert.deepEqual(next.closing.arch.created, ['src/login.js', 'src/offline.js', 'src/session.js']);
+    const reason = next.missing.find((m) => m.criterion === 'arch:baseline-not-grown').reason;
+    assert.match(reason, /src\/login\.js.*keel\/architecture\.json/);
+  } finally {
+    repo.cleanup();
+  }
+  const pending = closingRepo({ architecture: { components: { api: { globs: ['api/**'], planned: true } }, rules: [] } });
+  try {
+    const next = json(pending.state('next'));
+    assert.equal(next.closing.arch.noActive, true);
+    assert.match(next.missing.find((m) => m.criterion === 'arch:baseline-not-grown').reason, /src\/login\.js.*keel\/architecture\.json/);
+  } finally {
+    pending.cleanup();
+  }
+  assert.deepEqual(createdSources(['A\tsrc/a.js', 'M\tsrc/b.js', 'R100\tsrc/c.js\tsrc/d.js', 'A\tdocs/x.md', 'A\ttest/x.test.mjs', 'A\tkeel/tools/y.mjs', 'C75\tsrc/a.js\tsrc/e.py'], ['src/f.ts', 'notes.txt']),
+    ['src/a.js', 'src/e.py', 'src/f.ts', 'test/x.test.mjs']);
+  const state = (arch) => ({ steps: { closing: { arch } } });
+  const skipped = { status: 'skipped', waived: true, violations: [], grown: [] };
+  assert.deepEqual(archResult(state({ ...skipped, created: [] })), { met: true }, 'only existing sources changed or renamed: the waiver applies');
+  assert.deepEqual(archResult(state(skipped)), { met: true }, 'a closing recorded before this rule still passes');
+  assert.match(archResult(state({ ...skipped, waived: false, created: [] })).reason, /run the setup skill/, 'without the waiver and without new source: the message of today');
+  assert.equal(archResult(state({ ...skipped, created: ['test/x.test.mjs'] })).met, false, 'a new test is source too');
+  assert.deepEqual(archResult(state({ status: 'ok', violations: [], grown: [], created: ['src/a.js'], noActive: false })), { met: true });
 });

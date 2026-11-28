@@ -57,7 +57,7 @@ function checksItem(runs) {
 function closingItems(state, docs, facts) {
   const closed = recordClosing(state, facts, null);
   const problems = ({ met, reason }) => (met ? [] : [reason]);
-  const arch = facts.arch.status === 'skipped' && facts.arch.waived
+  const arch = facts.arch.status === 'skipped' && archResult(closed).met
     ? { ...item('architecture', [], 'no keel/architecture.json; waived in product.md (Architecture: não se aplica)'), skipped: true }
     : item('architecture', problems(archResult(closed)), 'no new violation, baseline did not grow');
   return [

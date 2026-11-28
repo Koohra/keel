@@ -49,6 +49,13 @@ export function globToRegExp(glob) {
 
 const isPython = (path) => path.endsWith('.py');
 
+// A file the scanner reads: by extension (.js, .ts, .py and the like).
+export function isSourcePath(path) {
+  const name = path.split('/').pop();
+  const dot = name.lastIndexOf('.');
+  return dot > 0 && SOURCE_EXTENSIONS.has(name.slice(dot));
+}
+
 // Replaces // and /* */ comments outside strings with spaces, keeping line breaks.
 // With strings: true, also replaces the content of strings. Approximate: does not recognize regex literals.
 export function blankComments(text, { strings = false } = {}) {
@@ -459,6 +466,7 @@ export function checkArchitecture({ config, files, baseline = new Set(), aliases
   const fresh = found.filter((v) => !baseline.has(v.key));
   return {
     pending,
+    active: Object.keys(components).filter((name) => !pending.includes(name)).sort(),
     violations: fresh.filter((v) => v.rule !== 'orphan'),
     orphans: fresh.filter((v) => v.rule === 'orphan'),
     known: found.filter((v) => baseline.has(v.key)),
@@ -472,8 +480,7 @@ function walk(root, dir = root, out = new Map()) {
     if (entry.isDirectory()) {
       if (!SKIP_DIRS.has(entry.name)) walk(root, join(dir, entry.name), out);
     } else if (entry.isFile()) {
-      const dot = entry.name.lastIndexOf('.');
-      if (dot > 0 && SOURCE_EXTENSIONS.has(entry.name.slice(dot))) {
+      if (isSourcePath(entry.name)) {
         const full = join(dir, entry.name);
         out.set(toPosix(relative(root, full)), readFileSync(full, 'utf8'));
       }

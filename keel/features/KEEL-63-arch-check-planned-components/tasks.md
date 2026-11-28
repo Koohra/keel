@@ -33,7 +33,7 @@ Depends on: T2
 
 ## T4 — Fechamento recusa fonte criada sem componente ativo
 Covers: R2 (AC-2.1, AC-2.2, AC-2.3, AC-2.4)
-Files: `scripts/closing.mjs`, `scripts/arch-check.mjs`, `test/closing.test.mjs`
+Files: `scripts/closing.mjs`, `scripts/arch-check.mjs`, `scripts/check-feature.mjs`, `test/closing.test.mjs`, `test/story-repo.mjs`, `test/check-feature.test.mjs`
 New structure: none
 Test first: `closing refuses the waiver when the story created source without an active component` — sem architecture.json com dispensa e `src/a.js` novo; só fonte existente mudada ou renomeada passa; só teste novo não passa; architecture.json só com pendentes não passa
 Verification: `node --test test/closing.test.mjs`
@@ -88,7 +88,11 @@ GREEN evidence: `node --test test/post-tool-use.test.mjs` exited with 0 at 2026-
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: ok (isolated reviewer)
 ### T4
-Status: pending
+Status: in review
+RED evidence: `node --test test/closing.test.mjs` exited with 1 at 2026-11-28T00:41:01.531Z
+GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T00:48:22.843Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (caso sem dispensa e sem fonte nova testado com a mensagem de hoje); F2 kept (`active` é campo aditivo do runCheck, usado só para o `noActive` que o design lista); F3 fixed (tamanho do trecho numa variável); F4 kept (rename e fonte existente provados no unitário de `createdSources`; a ordem status, antigo, novo é a do `git diff -z`)
 ### T5
 Status: pending
 ### T6
@@ -97,7 +101,7 @@ Status: pending
 Status: pending
 
 ## Implementation notes
-not applicable
+- T4: o `closingRepo` de `test/story-repo.mjs` fecha histórias que criam `src/*.js` com a dispensa e sem `architecture.json`; com a R2 essa combinação é recusada, então o padrão do `closingRepo` passa a ter um `architecture.json` com componente ativo, e os testes do caso sem arquivo passam `architecture: null`. `test/story-repo.mjs` entrou no `Files:` da T4, com `scripts/check-feature.mjs` (o item de arquitetura passava a dispensa sem o `archResult`) e `test/check-feature.test.mjs` (tasks reaprovadas, aprovação do Miguel para o épico em 2026-11-28).
 
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
