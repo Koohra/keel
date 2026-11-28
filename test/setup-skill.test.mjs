@@ -84,3 +84,16 @@ test('setup: answers become 3 to 5 Quality goals scenarios', () => {
   const before = read('keel/product.md').replace(/^## Quality goals\n[\s\S]*?(?=^## )/m, '');
   assert.deepEqual(checkDoc('product', 'keel/product.md', before).errors, []);
 });
+
+test('setup: approaches by stance, a starter checked on the web and "tanto faz" as a Keel decision', () => {
+  const section = newRepo();
+  for (const stance of ['mínima', 'proporcional', 'preparada para crescer']) assert.ok(section.includes(stance), stance);
+  assert.match(section, /2 ou 3 abordagens/);
+  assert.match(section, /o que custa depois/);
+  assert.match(section, /starter[^\n]*conferido na web/);
+  assert.match(section, /sem acesso à web[^\n]*`\[ASSUMPTION\]`/);
+  assert.match(section, /recusa todas as abordagens[^\n]*uma pergunta sobre o que falta[^\n]*de novo/);
+  assert.match(section, /\(porta, adaptador\)[^\n]*só[^\n]*cenário de mudança/);
+  assert.match(section, /"tanto faz"[^\n]*decisão do Keel, não do dev/);
+  assert.match(section, /recusa a entrevista[^\n]*recomendações do Keel[^\n]*ADR-001/);
+});

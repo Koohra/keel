@@ -64,7 +64,11 @@ GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (o teste usa checkDoc sobre o product.md sem a seção); F2 fixed (o passo 2 do setup cita Quality goals)
 ### T3
-Status: pending
+Status: in review
+RED evidence: `node --test test/setup-skill.test.mjs` exited with 1 at 2026-11-28T01:25:52.190Z
+GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11-28T01:27:27.922Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (o teste confere "o que falta" e "não do dev")
 ### T4
 Status: pending
 ### T5
