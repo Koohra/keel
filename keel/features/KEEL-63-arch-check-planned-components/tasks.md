@@ -106,8 +106,9 @@ GREEN evidence: `node --test test/task-metrics.test.mjs` exited with 0 at 2026-1
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (array do pyproject fecha só no `]` fora das aspas, com item depois de extras no teste); F2 fixed (só ENOENT vira manifest apagado); F3 fixed (predicados `opensDependencyArray` e `closesArray`)
 ### T7
-Status: pending
-
+Status: in review
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (a frase cobre o caso com architecture.json só pendente); F2 fixed (linha nova na tabela de decisões, 2026-11-28); F3 fixed (dica sem aspas, o script imprime em inglês)
 ## Implementation notes
 - T4: o `closingRepo` de `test/story-repo.mjs` fecha histórias que criam `src/*.js` com a dispensa e sem `architecture.json`; com a R2 essa combinação é recusada, então o padrão do `closingRepo` passa a ter um `architecture.json` com componente ativo, e os testes do caso sem arquivo passam `architecture: null`. `test/story-repo.mjs` entrou no `Files:` da T4, com `scripts/check-feature.mjs` (o item de arquitetura passava a dispensa sem o `archResult`) e `test/check-feature.test.mjs` (tasks reaprovadas, aprovação do Miguel para o épico em 2026-11-28).
 

@@ -2,8 +2,10 @@
   "components": {
     "domain": ["src/billing/domain/**"],
     "application": ["src/billing/application/**"],
-    "infra": ["src/billing/infra/**", "src/billing/web/**"]
+    "infra": ["src/billing/infra/**", "src/billing/web/**"],
+    "jobs": { "globs": ["src/billing/jobs/**"], "planned": true }
   },
+  "coverage": ["src/**"],
   "rules": [
     {
       "name": "domain-does-not-depend-on-outside",

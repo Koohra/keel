@@ -291,7 +291,7 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 - Deve listar escolhas de implementação que se afastaram da spec.
 - Regra faltante vira task nova, acrescentada ao tasks.md; o Keel não corrige em silêncio.
 - Deve comparar o entregue com a história original para apontar desvio de escopo.
-- Deve rodar a checagem de arquitetura completa e confirmar que a baseline não cresceu, e que exemplares e regras do product.md ainda valem. Sem `keel/architecture.json`, só passa com a dispensa `Architecture: não se aplica` no "### Checks" do product.md.
+- Deve rodar a checagem de arquitetura completa e confirmar que a baseline não cresceu, e que exemplares e regras do product.md ainda valem. Sem `keel/architecture.json`, só passa com a dispensa `Architecture: não se aplica` no "### Checks" do product.md, e nada disso vale se a história criou código-fonte sem nenhum componente ativo, com ou sem o arquivo. Arquivo órfão pede o delta do `architecture.json` e de "Rungs per module", aprovado com os outros deltas.
 - Se a história mudou o produto, deve editar o product.md direto; o script mostra o delta por seção (adicionado, modificado, removido) contra a base da história.
 - Se o design gerou candidata a ADR que atende o critério de Nygard, deve propor a ADR, escrita em `keel/adrs/` a partir do `adr-draft.md` da pasta da história.
 - Deve preparar a descrição do PR com resumo dos requisitos e a evidência por regra.
@@ -376,8 +376,8 @@ Cada critério tem o formato `<tipo>[:<alvo>][?]`. O `?` final faz o critério v
 | `coverage:rules->tasks->tests` | toda regra tem task com teste e toda task cobre regra existente |
 | `tasks:all-done` | toda task do tasks.md está com `Status: done` |
 | `convergence:all-rules` | toda regra está `met` (cada task que a cobre tem `Status: done (<hash>)` de um commit real e cada AC dela é citado no `Covers:` de uma task) e a tabela "Convergence" do tasks.md tem as mesmas linhas que o script devolveu |
-| `arch:baseline-not-grown` | o `arch-check.mjs` completo não acha violação nova e a baseline não ganhou chave desde a base da história; sem `keel/architecture.json` fica `skipped` e só passa com `Architecture: não se aplica` no "### Checks" do product.md |
-| `approval:deltas?` | vale só se `keel/product.md` ou `keel/adrs/` mudaram desde a base da história; então o dev aprovou (`approve deltas --by <dev>`) e o hash do conteúdo ainda é o aprovado |
+| `arch:baseline-not-grown` | o `arch-check.mjs` completo não acha violação nova e a baseline não ganhou chave desde a base da história; sem `keel/architecture.json` fica `skipped` e só passa com `Architecture: não se aplica` no "### Checks" do product.md; história que criou código-fonte sem componente ativo e órfão novo não passam |
+| `approval:deltas?` | vale só se `keel/product.md`, `keel/adrs/` ou `keel/architecture.json` mudaram desde a base da história; então o dev aprovou (`approve deltas --by <dev>`) e o hash do conteúdo ainda é o aprovado |
 
 Na fase closing, cada comando do `keel-state.mjs` recalcula e grava em `steps.closing` a convergência, a arquitetura e os deltas, e o `next` devolve as linhas prontas da tabela. A base da história é o merge-base com o branch dado no `init --base` (padrão `origin/HEAD`), como o diff de três pontos de um PR; sem ele, é o pai do commit de task mais antigo do "Progress" que está no histórico, e sem commit de task é o HEAD. O `check-feature.mjs <pasta>` confere a história fechada item por item (documentos, state.json em `done` com aprovações válidas, um commit real por task, cada commit dentro do `Files:` da task ou da pasta da história, checagens do product.md, convergência, arquitetura e deltas) e, com `--pr`, imprime a descrição do PR com a evidência por regra.
 
@@ -489,6 +489,7 @@ Cada parte é desenvolvida com TDD e, desde a parte 1, usando o próprio fluxo d
 | Base da história no fechamento | merge-base com o branch do `init --base`, como o diff de três pontos do PR | 2026-11-21 |
 | Delta de product.md e ADR | Edição direta; o script mostra o delta por seção e por arquivo de ADR (OpenSpec) | 2026-11-21 |
 | Sem architecture.json | Bloqueia o fechamento, salvo dispensa `Architecture: não se aplica` no product.md | 2026-11-21 |
+| Código-fonte novo sem componente ativo | A dispensa não vale; o fechamento pede os componentes no `architecture.json` (componente planejado para pasta que ainda não existe) | 2026-11-28 |
 | Hosts | Só Claude Code; Codex adiado | 2026-11-18 |
 | Hosts | Claude Code e Codex, com os mesmos scripts, skills e hooks (épico #50) | 2026-11-27 |
 | Repo | Repo novo, do zero, com o nome Keel; keel-dev depreciado, sem tag rc.1 | 2026-11-18 |
@@ -710,8 +711,10 @@ que a justifica.
   "components": {
     "domain": ["src/billing/domain/**"],
     "application": ["src/billing/application/**"],
-    "infra": ["src/billing/infra/**", "src/billing/web/**"]
+    "infra": ["src/billing/infra/**", "src/billing/web/**"],
+    "jobs": { "globs": ["src/billing/jobs/**"], "planned": true }
   },
+  "coverage": ["src/**"],
   "rules": [
     {
       "name": "domain-does-not-depend-on-outside",
@@ -725,7 +728,10 @@ que a justifica.
 }
 ```
 
-O Keel traduz esse arquivo para a ferramenta nativa (ArchUnit, Konsist, NetArchTest/ArchUnitNET, dependency-cruiser ou eslint-plugin-boundaries, import-linter, go-arch-lint). Sem ferramenta para a linguagem, usa um varredor de imports próprio, marcado como aproximado. Uma regra que casa com zero arquivos falha, para evitar passe vazio.
+O Keel traduz esse arquivo para a ferramenta nativa (ArchUnit, Konsist, NetArchTest/ArchUnitNET, dependency-cruiser ou eslint-plugin-boundaries, import-linter, go-arch-lint). Sem ferramenta para a linguagem, usa um varredor de imports próprio, marcado como aproximado. Uma regra que casa com zero arquivos falha, para evitar passe vazio, salvo componente planejado.
+
+- Componente planejado (`{ "globs": [...], "planned": true }`): sem arquivos fica `pending`, sem erro; a regra cujo `from` está pendente espera, e o alvo pendente de um `forbid` fica de fora enquanto os outros contam. Com o primeiro arquivo, vale como componente comum. Assim dá para declarar a arquitetura de um projeto vazio.
+- `coverage` (opcional): globs dos arquivos que precisam pertencer a algum componente. Arquivo coberto fora de todo componente é órfão (`orphan|<arquivo>` na baseline), com a dica de declarar o componente ou mover o arquivo. Órfão sozinho não muda o código de saída: no hook é aviso, e no fechamento pede o delta do `architecture.json` e de "Rungs per module".
 
 ### state.json
 
@@ -755,4 +761,4 @@ O Keel traduz esse arquivo para a ferramenta nativa (ArchUnit, Konsist, NetArchT
 }
 ```
 
-Valores de `level`: `trivial`, `standard`, `with-design`. Na implementação, `red` e `green` guardam comando, código de saída, trecho da saída e hora do `Verification:` da task aberta (o `red` de uma task de regressão guarda também os arquivos sabotados); `checks` guarda o resultado de cada comando de "Checks" do product.md e a impressão digital do código; `review` e `commit` guardam o review isolado e a aprovação do commit; `failedAttempts` guarda quantas vezes o GREEN ou as checagens falharam e a última falha (tipo, comando, código de saída, trecho da saída), e zera no GREEN ou nas checagens que passam e no `block`. Tudo isso é da task aberta e zera no `task start` seguinte. No fechamento, `convergence` guarda as linhas da tabela (regra, evidência, situação), `arch` o status (`ok`, `fail` ou `skipped`), as violações novas e as chaves que a baseline ganhou, `deltas` os arquivos de `keel/product.md` e `keel/adrs/` mudados desde a base, o delta por seção e o hash do conteúdo deles, e `deltasApproved` quem aprovou, quando e o hash aprovado. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente). O state.json não repete o que os arquivos já dizem (perguntas abertas, documento gerado, design exigido): o script lê os arquivos.
+Valores de `level`: `trivial`, `standard`, `with-design`. Na implementação, `red` e `green` guardam comando, código de saída, trecho da saída e hora do `Verification:` da task aberta (o `red` de uma task de regressão guarda também os arquivos sabotados); `checks` guarda o resultado de cada comando de "Checks" do product.md e a impressão digital do código; `review` e `commit` guardam o review isolado e a aprovação do commit; `failedAttempts` guarda quantas vezes o GREEN ou as checagens falharam e a última falha (tipo, comando, código de saída, trecho da saída), e zera no GREEN ou nas checagens que passam e no `block`. Tudo isso é da task aberta e zera no `task start` seguinte. No fechamento, `convergence` guarda as linhas da tabela (regra, evidência, situação), `arch` o status (`ok`, `fail` ou `skipped`), as violações novas, as chaves que a baseline ganhou, os órfãos novos, os arquivos de fonte criados e se falta componente ativo, `deltas` os arquivos de `keel/product.md`, `keel/adrs/` e `keel/architecture.json` mudados desde a base, o delta por seção e o hash do conteúdo deles, e `deltasApproved` quem aprovou, quando e o hash aprovado. `blocked` traz o motivo quando a história está parada (pergunta aberta, checagem fora do escopo, decisão pendente). O state.json não repete o que os arquivos já dizem (perguntas abertas, documento gerado, design exigido): o script lê os arquivos.
