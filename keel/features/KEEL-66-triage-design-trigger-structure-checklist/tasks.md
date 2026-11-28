@@ -61,7 +61,7 @@ GREEN evidence: `node --test test/story-skill.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: ok (isolated reviewer)
 ### T4
-Status: in review
+Status: done (22025e1)
 RED evidence: `node --test test/task-loop.test.mjs test/story-skill.test.mjs` exited with 1 at 2026-11-28T02:21:30.679Z
 GREEN evidence: `node --test test/task-loop.test.mjs test/story-skill.test.mjs` exited with 0 at 2026-11-28T02:23:42.877Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
