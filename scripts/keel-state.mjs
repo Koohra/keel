@@ -92,8 +92,8 @@ const CRITERIA = {
     const apart = assumptions ? `; ${assumptions} [ASSUMPTION](s) awaiting the dev's acceptance are counted apart and do not block` : '';
     return result(count === 0, `${count} open [QUESTION](s) in requirements.md${apart}`);
   },
-  review: (target, { state }) => {
-    if (target === 'story') return storyReviewResult(state);
+  review: (target, { state, docs }) => {
+    if (target === 'story') return storyReviewResult(state, docs);
     if (target !== 'requirements') return null;
     return result(state.steps.requirements.review !== null, 'isolated reviewer not recorded: run review requirements --result <ok|findings|unavailable>');
   },

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { requirementsDoc } from './fixtures.mjs';
+import { root } from './helpers.mjs';
 import { closingRepo, closingTasksDoc, storyRepo } from './story-repo.mjs';
 import { convergenceRows, convergenceLines, sectionDelta } from '../scripts/closing.mjs';
 
@@ -258,4 +259,30 @@ test('story review: a new commit after the review asks for it again, and next sh
   } finally {
     repo.cleanup();
   }
+});
+
+test('story review: findings need a disposition in Story review', () => {
+  const repo = closingRepo();
+  try {
+    repo.copyConvergence();
+    repo.ok(repo.state('review', 'story', '--result', 'findings'));
+    const missing = () => json(repo.state('next')).missing.find((m) => m.criterion === 'review:story');
+    assert.match(missing().reason, /Story review.*Review: findings \(isolated reviewer\); F1/);
+    const tasks = readFileSync(join(repo.dir, repo.folder, 'tasks.md'), 'utf8');
+    const withReview = (line) => repo.write(`${repo.folder}/tasks.md`, tasks.replace('## Convergence', `## Story review\n${line}\n\n## Convergence`));
+    withReview('Review: findings (isolated reviewer)');
+    assert.ok(missing());
+    withReview('Review: <ok | findings and what became of each one | unavailable> (filled in the closing)');
+    assert.ok(missing());
+    withReview('Review: findings');
+    assert.ok(missing());
+    withReview('Review: ok; nada a fazer');
+    assert.ok(missing());
+    withReview('Review: findings (isolated reviewer); F1 new task T4; F2 kept [source: ADR-001]');
+    assert.equal(missing(), undefined);
+    assert.equal(json(repo.state('advance')).phase, 'done');
+  } finally {
+    repo.cleanup();
+  }
+  assert.match(readFileSync(join(root, 'templates', 'tasks.md'), 'utf8'), /^## Story review\nReview: /m);
 });

@@ -99,11 +99,24 @@ export function recordStoryReview(state, outcome, now) {
   return { ...state, steps: { ...state.steps, closing }, updatedAt: now };
 }
 
+// What the "Review:" line of "## Story review" in tasks.md says after the result "findings".
+function storyReviewDisposition(tasksText) {
+  const body = sections(tasksText ?? '').find((s) => s.title === 'Story review')?.body ?? '';
+  // Only a line that starts with the recorded result counts; the template's placeholder (<...>) does not.
+  const after = body.match(/^Review:\s*findings\b(?:\s*\(isolated reviewer\))?(.*)$/m)?.[1] ?? '';
+  return after.replace(/^[\s;:,.—-]+/, '').trim();
+}
+
 // The review holds for the HEAD it saw: a commit after it (a new task from a finding) asks for it again.
-export function storyReviewResult(state) {
+// With findings, the dev reads in tasks.md what became of each one.
+export function storyReviewResult(state, docs = {}) {
   const { review, head } = closingOf(state);
   if (!review) return result('the whole story has no isolated review: call the reviewer with "revisão de história" and run review story --result <ok|findings|unavailable>');
-  return result(review.head === head ? null : 'HEAD changed since the story review: call the reviewer again and run review story --result <ok|findings|unavailable>');
+  if (review.head !== head) return result('HEAD changed since the story review: call the reviewer again and run review story --result <ok|findings|unavailable>');
+  if (review.result === 'findings' && !storyReviewDisposition(docs['tasks.md'])) {
+    return result('the story review had findings: write in the "## Story review" section of tasks.md, on the Review: line, what became of each one (new task, product.md or ADR delta, or kept with the source), e.g. "Review: findings (isolated reviewer); F1 new task T4; F2 kept [source: ADR-001]"');
+  }
+  return result(null);
 }
 
 // The dev's approval of the product.md/ADR delta, tied to the content it saw.
