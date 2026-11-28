@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { root, read } from './helpers.mjs';
+import { checkDoc } from '../plugins/keel-docs/scripts/doc-check.mjs';
 
 const skill = read('skills/setup/SKILL.md');
 
@@ -67,4 +68,19 @@ test('setup: a repository without source code gets an interview of at most 6 que
   for (const theme of ['quem usa e quantos', 'dado sensível', 'serviços externos', 'offline ou mobile', 'quem vai manter', '6 a 12 meses']) {
     assert.ok(section.includes(theme), theme);
   }
+});
+
+test('setup: answers become 3 to 5 Quality goals scenarios', () => {
+  const template = read('plugins/keel-docs/templates/product.md');
+  const goals = template.indexOf('## Quality goals');
+  assert.ok(goals > 0 && goals < template.indexOf('## Engineering principles'), 'Quality goals before Engineering principles');
+  const scenario = template.slice(goals, template.indexOf('## Engineering principles'));
+  for (const part of ['Contexto:', 'Estímulo:', 'Métrica:']) assert.ok(scenario.includes(part), part);
+  assert.match(read('plugins/keel-docs/skills/write/guides/product.md'), /"Quality goals"[^\n]*3 a 5 cenários/);
+  const section = newRepo();
+  assert.match(section, /"Quality goals"[^\n]*3 a 5 cenários[^\n]*contexto, estímulo e métrica/);
+  assert.match(section, /menos de 3[^\n]*cenários propostos pelo Keel[^\n]*decisão do Keel/);
+  // A product.md set up before Quality goals existed (this repository's, without that section) still passes.
+  const before = read('keel/product.md').replace(/^## Quality goals\n[\s\S]*?(?=^## )/m, '');
+  assert.deepEqual(checkDoc('product', 'keel/product.md', before).errors, []);
 });

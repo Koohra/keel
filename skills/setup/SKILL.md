@@ -62,7 +62,7 @@ No Codex (o relatório traz um achado `info` a mais quando o caso pede):
 ## 2. product.md e ADRs
 
 - Confira se `keel/product.md` e `keel/adrs/` existem e se o product.md tem até cerca de 200 linhas.
-- Sem product.md, ofereça criar com o dev: visão, o que faz, o que não faz, glossário, decisões e princípios.
+- Sem product.md, ofereça criar com o dev: visão, o que faz, o que não faz, glossário, decisões e princípios; "Quality goals" nasce no passo 3.1 em repositório sem código-fonte e, nos outros, só se o dev quiser.
   Não copie o que o código já diz. Documentação antiga: proponha destino ou descarte para cada fonte.
 - ADRs no formato `keel/adrs/ADR-NNN-<slug>.md`, com Status, Contexto, Decisão, Consequências e Confirmação.
 
@@ -81,6 +81,7 @@ Parta de `<plugin>/templates/principles.md` e ajuste com o dev:
 Use este ramo quando o repositório ainda não tem código-fonte (só README, licença, configuração ou documentos). Em repositório com código, pule para o passo 4.
 
 1. Entrevista: no máximo 6 perguntas, uma por vez. Cada pergunta traz uma frase "por que importa" em linguagem simples, as opções e a sua recomendação; o dev aceita a recomendação com "sim". Temas, nesta ordem, pulando o que o dev já disse: quem usa e quantos; dado sensível (pessoal, financeiro, de saúde); serviços externos (pagamento, e-mail, login de terceiros); offline ou mobile; quem vai manter; o que o produto deve virar em 6 a 12 meses.
+2. As respostas viram a seção "Quality goals" do `keel/product.md`: 3 a 5 cenários, cada um com contexto, estímulo e métrica. Se as respostas dão menos de 3, complete até 3 com cenários propostos pelo Keel, marcados como decisão do Keel. Mostre a seção e grave só com a aprovação do dev.
 
 ## 4. keel/architecture.json e testes de arquitetura
 

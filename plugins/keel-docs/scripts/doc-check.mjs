@@ -17,6 +17,8 @@ const ADR_NAME = /^ADR-\d{3}-[a-z0-9]+(?:-[a-z0-9]+)*\.md$/;
 const STRUCTURE_LINE = /^(#|<!--|\||$)/;
 // The principles section of the product template is kept verbatim on purpose.
 const VERBATIM_FROM = '## Engineering principles';
+// Template sections a document may leave out: product.md of a project set up before them.
+const OPTIONAL = new Set(['Quality goals']);
 // Size budgets from docs/specification.md#arquivos: product.md fails above the limit; a story
 // document only warns, because "about one page" is a guide, not a contract.
 const BUDGETS = {
@@ -120,7 +122,7 @@ function ruleErrors(text) {
 // Pure check of one document: { errors, warnings, questions }.
 export function checkDoc(kind, path, text) {
   const templateText = template(kind);
-  const expected = sections(templateText).map((s) => s.title);
+  const expected = sections(templateText).map((s) => s.title).filter((title) => !OPTIONAL.has(title));
   const errors = [...sectionErrors(text, expected), ...leftoverErrors(text, templateText)];
   const warnings = [];
   if (kind === 'requirements' || kind === 'design') errors.unshift(...frozenErrors(text));

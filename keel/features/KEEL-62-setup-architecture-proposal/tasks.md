@@ -15,9 +15,9 @@ Depends on: —
 
 ## T2 — Quality goals no product.md e no modelo do keel-docs
 Covers: R2 (AC-2.1, AC-2.2)
-Files: `skills/setup/SKILL.md`, `plugins/keel-docs/templates/product.md`, `plugins/keel-docs/skills/write/guides/product.md`, `test/setup-skill.test.mjs`
+Files: `skills/setup/SKILL.md`, `plugins/keel-docs/templates/product.md`, `plugins/keel-docs/skills/write/guides/product.md`, `plugins/keel-docs/scripts/doc-check.mjs`, `test/setup-skill.test.mjs`
 New structure: none
-Test first: `setup: answers become 3 to 5 Quality goals scenarios` — o modelo tem "## Quality goals" antes de "## Engineering principles" com contexto, estímulo e métrica, o guia diz 3 a 5 cenários, e o setup cita a seção e completa até 3 com cenários do Keel
+Test first: `setup: answers become 3 to 5 Quality goals scenarios` — o modelo tem "## Quality goals" antes de "## Engineering principles" com contexto, estímulo e métrica, o guia diz 3 a 5 cenários, e o setup cita a seção e completa até 3 com cenários do Keel; o `doc-check` aceita product.md sem a seção, como os de projetos existentes
 Verification: `node --test test/setup-skill.test.mjs`
 Done when: o teste novo passa e `node --test test/docs-plugin.test.mjs` segue passando
 Depends on: T1
@@ -58,7 +58,11 @@ GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (o teste confere as opções)
 ### T2
-Status: pending
+Status: in review
+RED evidence: `node --test test/setup-skill.test.mjs` exited with 1 at 2026-11-28T01:20:35.308Z
+GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11-28T01:25:01.517Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (o teste usa checkDoc sobre o product.md sem a seção); F2 fixed (o passo 2 do setup cita Quality goals)
 ### T3
 Status: pending
 ### T4
@@ -67,7 +71,7 @@ Status: pending
 Status: pending
 
 ## Implementation notes
-- not applicable
+- 2026-11-28: a T2 ganhou `plugins/keel-docs/scripts/doc-check.mjs` no `Files:`: o doc-check exige toda seção do modelo, e "Quality goals" precisa ser opcional para product.md de projeto existente (Existing behavior). Tasks aprovadas de novo por Miguel (aprovação permanente do épico #61).
 
 ## Story review
 Review: <ok | findings and what became of each one | unavailable> (filled in the closing)
