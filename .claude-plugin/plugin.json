@@ -1,6 +1,6 @@
 {
   "name": "keel",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "Spec-driven development, one story and one small TDD task at a time, with verifiable evidence at every step.",
   "author": {
     "name": "Miguel Pereira de Sousa"

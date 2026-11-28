@@ -4,14 +4,25 @@ Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões: 
 
 ## [Unreleased]
 
+## [2.0.0-beta.2] - 2026-11-28
+
+O Keel passa a cuidar da arquitetura desde o primeiro dia: propõe a estrutura de um projeto novo, cobra as regras quando o código aparece e revisa a história inteira no fechamento (épico #61).
+
 ### Added
 
-- `keel/architecture.json` aceita componente planejado (`{ "globs": [...], "planned": true }`): sem arquivos fica `pending` em vez de erro, e a regra passa a valer com o primeiro arquivo; com `coverage`, arquivo coberto fora de todo componente é órfão, aviso no hook e delta do `architecture.json` no fechamento, dentro da baseline (#63, KEEL-63).
-- `task-metrics.mjs` acha dependência nova também em `requirements.txt`, `pyproject.toml`, `go.mod`, `*.csproj` e `pom.xml` mudados pela task (#63, KEEL-63).
+- Setup em repositório sem código-fonte: entrevista de até 6 perguntas, uma por vez, cada uma com "por que importa" e recomendação; as respostas viram "Quality goals" no `product.md` (3 a 5 cenários); o setup propõe 2 ou 3 abordagens (mínima, proporcional, preparada para crescer) com um starter conferido na web, e grava a ADR-001 de arquitetura e stack, a tabela de degraus e o `architecture.json` com componentes planejados; "tanto faz" vira decisão do Keel (#70, KEEL-62).
+- O modelo de `product.md` do `keel-docs` ganha a seção "Quality goals" (#70, KEEL-62).
+- `keel/architecture.json` aceita componente planejado (`{ "globs": [...], "planned": true }`): sem arquivos fica `pending` em vez de erro, e a regra passa a valer com o primeiro arquivo; com `coverage`, arquivo coberto fora de todo componente é órfão, aviso no hook e delta do `architecture.json` no fechamento, dentro da baseline (#69, KEEL-63).
+- `task-metrics.mjs` acha dependência nova também em `requirements.txt`, `pyproject.toml`, `go.mod`, `*.csproj` e `pom.xml` mudados pela task (#69, KEEL-63).
+- Revisão de arquitetura da história inteira no fechamento: um modo novo do revisor isolado lê o diff da história, o repo map, o `architecture.json`, os "Quality goals", os degraus e as ADRs, e aponta tanto excesso de estrutura quanto falta (duplicação, formatos diferentes para a mesma coisa, mudança sem ADR); até 5 achados e uma lista "Não julgado"; o `keel-state.mjs` grava `review story` e o fechamento só avança com o destino de cada achado escrito (#68, KEEL-64).
+- Checklist de estrutura (`skills/story/checklists/structure.md`, 5 itens) entregue ao revisor de task quando o `design.md` declara estrutura nova ou subida de degrau (#71, KEEL-66).
 
 ### Changed
 
-- O fechamento recusa a dispensa `Architecture: não se aplica` quando a história criou código-fonte e não há componente ativo, e mudança em `keel/architecture.json` entra nos deltas que o dev aprova (#63, KEEL-63).
+- Linguagem simples nas decisões: em `story`, `setup` e `keel-docs:write`, cada opção começa pelo que muda para o produto ou para o usuário, com as palavras do glossário, e o termo técnico só aparece entre parênteses (#67, KEEL-65).
+- A triagem acha sozinha os gatilhos de design (componente planejado sem arquivo, arquivo novo fora de todo componente, primeira história que cria código) e propõe `with-design`; o `level` recusa `trivial` e `standard` enquanto o gatilho existir (#71, KEEL-66).
+- O fechamento recusa a dispensa `Architecture: não se aplica` quando a história criou código-fonte e não há componente ativo, e mudança em `keel/architecture.json` entra nos deltas que o dev aprova (#69, KEEL-63).
+- `CHANGELOG.md` completo desde a 2.0.0-beta.0, com tag e release no GitHub para cada versão; um teste exige uma entrada para cada história de `keel/features/` (#72, KEEL-72).
 
 ## [2.0.0-beta.1] - 2026-11-27
 
@@ -35,6 +46,9 @@ O Keel passa a rodar no Codex, além do Claude Code.
 
 ### Fixed
 
+- A fase de tasks não planeja task cujo teste passaria antes do código, e o review da confirmação não faz a história crescer além do objetivo e do fora de escopo (#33, KEEL-29).
+- A ADR nasce num só momento, no fechamento, sob a aprovação dos deltas, e arquivo fora do `Files:` da task é barrado antes da pergunta de aprovação (#34, KEEL-26).
+- O formato do `Review:` (tudo numa linha) está na fase e na recusa, e o `next` conta `[QUESTION]` e `[ASSUMPTION]` separados (#35, KEEL-28).
 - `evidence red` aceita o RED que falha numa asserção mesmo quando um processo filho do teste imprime `SyntaxError`; o arquivo de teste que não compila continua recusado (#37, KEEL-37).
 
 ## [2.0.0-beta.0] - 2026-11-22
@@ -43,16 +57,17 @@ Primeira versão completa do Keel 2: as 8 partes do plano estão na `main`. Falt
 
 ### Added
 
-- Base do repo: manifesto, marketplace, `keel/product.md`, ADRs, modelos e CI no Ubuntu e no Windows (#9, parte 1).
-- `validate-feature.mjs`, `keel-state.mjs` com aprovação por hash e hook que bloqueia escrita em `state.json` e código fora da fase (#10, parte 2).
-- Skill `keel:story` com triagem, leitura com `repo-map.mjs`, requisitos e confirmação; agente revisor isolado (#11, parte 3).
-- Princípios de engenharia: skill `keel:setup`, `architecture.json`, `arch-check.mjs` para JS/TS e Python, hooks `PostToolUse` e `SessionStart` (#12, parte 7).
-- Design condicional e tasks com cobertura regra → task → teste (#14, parte 4).
-- Loop da task em TDD (RED, GREEN, REFACTOR), `task-metrics.mjs`, review isolado, proposta de commit e hook `Stop` (#15, parte 5).
-- Fechamento: convergência, deltas de product.md e ADRs, descrição do PR e `check-feature.mjs`; primeira história de ponta a ponta na fixture (#16, parte 6).
-- Depuração com limite de 3 tentativas, regras para responder ao review e checklists de segurança, dados e contrato (#18).
-- Plugin opcional `keel-docs` com a skill `keel-docs:write` e `doc-check.mjs` (#19, parte 8).
+- Base do repo: manifesto, marketplace, `keel/product.md`, ADRs, modelos e CI no Ubuntu e no Windows (#9, parte 1, KEEL-1).
+- `validate-feature.mjs`, `keel-state.mjs` com aprovação por hash e hook que bloqueia escrita em `state.json` e código fora da fase (#10, parte 2, KEEL-2).
+- Skill `keel:story` com triagem, leitura com `repo-map.mjs`, requisitos e confirmação; agente revisor isolado (#11, parte 3, KEEL-3).
+- Princípios de engenharia: skill `keel:setup`, `architecture.json`, `arch-check.mjs` para JS/TS e Python, hooks `PostToolUse` e `SessionStart` (#12, parte 7, KEEL-7).
+- Design condicional e tasks com cobertura regra → task → teste (#14, parte 4, KEEL-4).
+- Loop da task em TDD (RED, GREEN, REFACTOR), `task-metrics.mjs`, review isolado, proposta de commit e hook `Stop` (#15, parte 5, KEEL-5).
+- Fechamento: convergência, deltas de product.md e ADRs, descrição do PR e `check-feature.mjs`; primeira história de ponta a ponta na fixture (#16, parte 6, KEEL-6).
+- Depuração com limite de 3 tentativas, regras para responder ao review e checklists de segurança, dados e contrato (#18, KEEL-17).
+- Plugin opcional `keel-docs` com a skill `keel-docs:write` e `doc-check.mjs` (#19, parte 8, KEEL-8).
 - Regra de foco na skill `story`: fazer só o que foi pedido; `approve commit` recusa arquivo fora do `Files:` da task (#23, KEEL-21).
+- O setup sugere melhorias de estrutura para `AGENTS.md` e `CLAUDE.md` existentes, com fonte, sem alterar o arquivo (#24, KEEL-20).
 - Licença MIT (#22).
 
 ### Changed
@@ -60,6 +75,7 @@ Primeira versão completa do Keel 2: as 8 partes do plano estão na `main`. Falt
 - Nomes estruturais (pastas, arquivos, marcadores, seções) em inglês; o texto dos documentos continua em português (#13).
 - README reescrito, com a história do Keel e o comando de instalação correto: `/plugin marketplace add Koohra/keel` e `/plugin install keel@keel` (#22).
 
-[Unreleased]: https://github.com/Koohra/keel/compare/v2.0.0-beta.1...HEAD
+[Unreleased]: https://github.com/Koohra/keel/compare/v2.0.0-beta.2...HEAD
+[2.0.0-beta.2]: https://github.com/Koohra/keel/compare/v2.0.0-beta.1...v2.0.0-beta.2
 [2.0.0-beta.1]: https://github.com/Koohra/keel/compare/v2.0.0-beta.0...v2.0.0-beta.1
 [2.0.0-beta.0]: https://github.com/Koohra/keel/releases/tag/v2.0.0-beta.0
