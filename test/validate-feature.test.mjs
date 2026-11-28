@@ -208,10 +208,12 @@ test("Keel's own stories pass the validator", () => {
   const folders = new Set(listFiles().filter((f) => f.startsWith('keel/features/')).map((f) => f.split('/').slice(0, 3).join('/')));
   assert.ok(folders.size > 0);
   for (const folder of folders) {
+    const tasks = read(`${folder}/tasks.md`);
+    assert.deepEqual(validateTasks(tasks), [], folder);
+    if (/^Requirements: none\b/m.test(tasks)) continue; // trivial: only tasks.md
     const requirements = read(`${folder}/requirements.md`);
     assert.deepEqual(validateRequirements(requirements), [], folder);
-    assert.deepEqual(validateTasks(read(`${folder}/tasks.md`)), [], folder);
-    assert.deepEqual(checkCoverage(read(`${folder}/tasks.md`), requirements), [], folder);
+    assert.deepEqual(checkCoverage(tasks, requirements), [], folder);
   }
 });
 
