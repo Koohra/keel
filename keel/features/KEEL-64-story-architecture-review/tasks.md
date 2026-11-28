@@ -52,7 +52,7 @@ Depends on: T4
 
 ## Progress
 ### T1
-Status: in review
+Status: done (954977b)
 RED evidence: `node --test test/closing.test.mjs` exited with 1 at 2026-11-28T00:37:23.747Z
 GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T00:41:41.781Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
