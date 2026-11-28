@@ -49,7 +49,11 @@ GREEN evidence: `node --test test/keel-state.test.mjs` exited with 0 at 2026-11-
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (o catch só aceita erro do keel/architecture.json); F2 fixed (gatilhos calculados uma vez por comando); F3 kept (design congelado; a mudança está em Implementation notes, T1); F4 fixed
 ### T2
-Status: pending
+Status: in review
+RED evidence: `node --test test/keel-state.test.mjs` exited with 1 at 2026-11-28T02:16:51.578Z
+GREEN evidence: `node --test test/keel-state.test.mjs` exited with 0 at 2026-11-28T02:18:41.357Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (sem keel/product.md não varre o código; com ele, a varredura do arch-check e a dos caminhos ficam separadas, sem mudar o arch-check); F2 fixed
 ### T3
 Status: pending
 ### T4

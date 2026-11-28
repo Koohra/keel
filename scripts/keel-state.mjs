@@ -19,7 +19,7 @@ import {
   startTask, taskView,
 } from './task-loop.mjs';
 import { commitInHistory, gitOutput, gitPaths } from './git.mjs';
-import { CONFIG_PATH, runCheck } from './arch-check.mjs';
+import { CONFIG_PATH, runCheck, sourcePaths } from './arch-check.mjs';
 import {
   approveDeltas, archResult, closingView, convergenceResult, deltasResult, gatherClosing, recordClosing, recordStoryReview, storyReviewResult,
 } from './closing.mjs';
@@ -203,9 +203,14 @@ function requireBy(by) {
   if (!by) throw new Error('say who approved with --by <dev>');
 }
 
-// Design triggers found by script, not by judgment: planned components the code has not created yet.
-export function designTriggers({ pending = [] }) {
-  return pending.map((name) => `planned component without files: ${name}`);
+// Design triggers found by script, not by judgment: planned components the code has not created yet,
+// new orphan files (outside the arch-check baseline) and a set-up project without source code.
+export function designTriggers({ pending = [], orphans = [], setUp = false, sources = [] }) {
+  return [
+    ...pending.map((name) => `planned component without files: ${name}`),
+    ...orphans.map((file) => `orphan file: ${file}`),
+    ...(setUp && !sources.some(isProjectSource) ? ['first story that creates source code: keel/product.md and no source file outside keel/'] : []),
+  ];
 }
 
 // triggers: designTriggers of the repository now; with any, only with-design is accepted.
@@ -305,7 +310,13 @@ function triageTriggers(root) {
   } catch (error) {
     if (!error.message.startsWith(CONFIG_PATH)) throw error;
   }
-  return designTriggers({ pending: arch?.pending ?? [] });
+  const setUp = existsSync(join(root, 'keel', 'product.md'));
+  return designTriggers({
+    pending: arch?.pending ?? [],
+    orphans: (arch?.orphans ?? []).map((orphan) => orphan.file),
+    setUp,
+    sources: setUp ? sourcePaths(root) : [],
+  });
 }
 
 function readState(path) {

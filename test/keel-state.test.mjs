@@ -264,3 +264,44 @@ test('triage: without automatic triggers every level is accepted as before', () 
     }
   }
 });
+
+test('triage: a new orphan file and a project without source code are design triggers', () => {
+  const covered = JSON.stringify({ components: { app: ['src/app/**'] }, coverage: ['src/**'] });
+  const orphan = { 'src/app/main.js': 'export const a = 1;\n', 'src/loose.js': 'export const b = 2;\n', 'keel/architecture.json': covered };
+  let repo = triageRepo(orphan);
+  try {
+    const triggers = repo.next().triage.designTriggers;
+    assert.equal(triggers.length, 1);
+    assert.match(triggers[0], /orphan file: src\/loose\.js/);
+    const refused = repo.run('level', 'standard', '--by', 'Ana');
+    assert.equal(refused.status, 1);
+    assert.match(refused.stderr, /orphan file: src\/loose\.js/);
+  } finally {
+    repo.cleanup();
+  }
+  repo = triageRepo({ ...orphan, 'keel/arch-baseline.txt': 'orphan|src/loose.js\n' });
+  try {
+    assert.deepEqual(repo.next().triage.designTriggers, [], 'an orphan in the baseline is known debt');
+  } finally {
+    repo.cleanup();
+  }
+  repo = triageRepo({ 'keel/product.md': '# Produto\n', 'keel/tools/x.mjs': 'export {};\n', 'README.md': '# App\n' });
+  try {
+    const triggers = repo.next().triage.designTriggers;
+    assert.equal(triggers.length, 1);
+    assert.match(triggers[0], /first story that creates source code/);
+    const refused = repo.run('level', 'trivial', '--by', 'Ana');
+    assert.equal(refused.status, 1);
+    assert.match(refused.stderr, /first story that creates source code/);
+    writeFileSync(join(repo.dir, 'index.js'), 'export {};\n');
+    assert.deepEqual(repo.next().triage.designTriggers, [], 'a source file outside keel/ removes the trigger');
+  } finally {
+    repo.cleanup();
+  }
+  repo = triageRepo({ 'README.md': '# App\n' });
+  try {
+    assert.deepEqual(repo.next().triage.designTriggers, [], 'without keel/product.md the setup has not run');
+  } finally {
+    repo.cleanup();
+  }
+});

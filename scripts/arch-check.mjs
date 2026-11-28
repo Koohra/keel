@@ -489,6 +489,11 @@ function walk(root, dir = root, out = new Map()) {
   return out;
 }
 
+// Paths of the code files on disk (posix, relative to root), by the same scan the check uses.
+export function sourcePaths(root) {
+  return [...walk(root).keys()];
+}
+
 // Reads compilerOptions.baseUrl and paths from the root tsconfig.json or jsconfig.json (without following "extends").
 export function loadAliases(root) {
   for (const name of ['tsconfig.json', 'jsconfig.json']) {
