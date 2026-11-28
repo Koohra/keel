@@ -169,3 +169,24 @@ test('story skill cites plugin files by <plugin> or relative to the skill folder
   assert.match(read('skills/story/SKILL.md'), /^Caminhos: `<plugin>` é a pasta do plugin: no Claude Code, `\$\{CLAUDE_PLUGIN_ROOT\}`; em outro agente, a pasta dois níveis acima deste SKILL\.md\./m);
   for (const name of ['security', 'data', 'contract']) assert.ok(existsSync(join(skillDir, 'checklists', `${name}.md`)), name);
 });
+
+test('plain: decisions reach the dev in plain language, then the recommendation', () => {
+  for (const file of ['skills/story/SKILL.md', 'skills/setup/SKILL.md', 'plugins/keel-docs/skills/write/SKILL.md']) {
+    const rule = read(file).split('\n').find((line) => line.includes('Linguagem simples:'));
+    assert.ok(rule, `${file}: no plain-language rule`);
+    assert.match(rule, /o que muda para o produto ou para o usuário/, file);
+    assert.match(rule, /glossário do `keel\/product\.md`/, file);
+    assert.match(rule, /depois das opções, a recomendação/, file);
+    assert.match(rule, /só entre parênteses/, file);
+  }
+});
+
+test('plain: phase texts and guides put degrau, porta and mapper only in parentheses', () => {
+  const texts = listFiles().filter((f) => /^skills\/story\/phases\/.*\.md$|^plugins\/keel-docs\/skills\/write\/guides\/.*\.md$/.test(f));
+  for (const file of [...texts, 'skills/setup/SKILL.md']) {
+    for (const line of read(file).split('\n')) {
+      const outside = line.replace(/\([^()]*\)/g, '');
+      assert.doesNotMatch(outside, /\b(degraus?|portas?|mappers?)\b/i, `${file}: ${line}`);
+    }
+  }
+});

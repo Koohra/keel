@@ -9,6 +9,8 @@ Objetivo: o projeto ter o contexto durável antes da primeira história. Respond
 Tudo aqui é proposta: nada é gravado sem o dev aprovar o trecho exato. Faça uma pergunta por vez,
 com a opção recomendada.
 
+Linguagem simples: em cada decisão com consequência e em cada pergunta com opções, escreva para quem não é dev, o que serve também ao dev (não há modo leigo). Cada opção começa com uma frase sobre o que muda para o produto ou para o usuário, com as palavras do glossário do `keel/product.md` e sem jargão de processo (degrau, porta, adaptador, mapper, agregado); depois das opções, a recomendação, com o porquê na mesma linguagem. O termo técnico aparece só entre parênteses, depois da frase simples.
+
 Caminhos: `<plugin>` é a pasta do plugin: no Claude Code, `${CLAUDE_PLUGIN_ROOT}`; em outro agente, a pasta dois níveis acima deste SKILL.md. Troque `<plugin>` pelo caminho antes de rodar um comando.
 
 Scripts (Node, sem dependências), rodados na raiz do projeto:
@@ -68,8 +70,9 @@ No Codex (o relatório traz um achado `info` a mais quando o caso pede):
 
 Parta de `<plugin>/templates/principles.md` e ajuste com o dev:
 - No máximo 10 regras, cada uma marcada `[hook]` (checada por script) ou `[review]` (rubrica de design).
-- Degrau de arquitetura de cada módulo, com motivo. Clean Architecture e DDD não são o padrão: a regra
-  universal é a direção das dependências; o resto segue o degrau.
+- O quanto cada módulo é elaborado (degrau de arquitetura), com motivo, dito ao dev pelo que muda: mais barato
+  de escrever agora ou mais fácil de mudar quando as regras crescerem. Clean Architecture e DDD não são o padrão:
+  a regra universal é a direção das dependências; o resto segue o que foi declarado para o módulo (degrau).
 - Exemplares a seguir e caminhos que não se copia.
 - Checks: comandos de teste, lint com complexidade e arquitetura, cada um com a origem quando vier do AGENTS.md.
 

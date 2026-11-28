@@ -61,3 +61,14 @@ test('a stuck task has its own case: GREEN that cannot pass ends blocked with th
   assert.match(graders, /blocked\\": /);
   assert.match(graders, /path: test\/users\.test\.mjs/);
 });
+
+test('plain: a design case checks that the decision reaches the dev in plain language', () => {
+  const plain = cases.find((c) => c.endsWith('/design-decision-plain'));
+  assert.ok(plain, 'design-decision-plain');
+  assert.match(read(`${plain}/case.yaml`), /tags: \[phase-5\]/);
+  assert.match(read(`${plain}/fixture.sh`), /prepare\.sh" APP-12 \S+ "[^"]+" design with-design$/m);
+  const graders = files.filter((f) => f.startsWith(`${plain}/graders/`)).map(read).join('\n');
+  assert.match(graders, /target: last_message/);
+  assert.match(graders, /match: not_contains/);
+  assert.match(graders, /recomend/i);
+});
