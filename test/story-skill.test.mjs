@@ -169,3 +169,14 @@ test('story skill cites plugin files by <plugin> or relative to the skill folder
   assert.match(read('skills/story/SKILL.md'), /^Caminhos: `<plugin>` é a pasta do plugin: no Claude Code, `\$\{CLAUDE_PLUGIN_ROOT\}`; em outro agente, a pasta dois níveis acima deste SKILL\.md\./m);
   for (const name of ['security', 'data', 'contract']) assert.ok(existsSync(join(skillDir, 'checklists', `${name}.md`)), name);
 });
+
+test('plain: decisions reach the dev in plain language, then the recommendation', () => {
+  for (const file of ['skills/story/SKILL.md', 'skills/setup/SKILL.md', 'plugins/keel-docs/skills/write/SKILL.md']) {
+    const rule = read(file).split('\n').find((line) => line.includes('Linguagem simples:'));
+    assert.ok(rule, `${file}: no plain-language rule`);
+    assert.match(rule, /o que muda para o produto ou para o usuário/, file);
+    assert.match(rule, /glossário do `keel\/product\.md`/, file);
+    assert.match(rule, /depois das opções, a recomendação/, file);
+    assert.match(rule, /só entre parênteses/, file);
+  }
+});
