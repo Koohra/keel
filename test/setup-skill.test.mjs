@@ -51,3 +51,20 @@ test('setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Cod
   assert.match(visibility, /AGENTS\.override\.md/);
   assert.match(visibility, /Só CLAUDE\.md/);
 });
+
+// Section 3.1 of the setup: the branch for a repository without source code.
+const newRepo = () => {
+  const start = skill.indexOf('## 3.1');
+  return start < 0 ? '' : skill.slice(start, skill.indexOf('\n## 4.', start));
+};
+
+test('setup: a repository without source code gets an interview of at most 6 questions', () => {
+  const section = newRepo();
+  assert.ok(section, 'no section 3.1');
+  assert.ok(skill.indexOf('## 3. ') < skill.indexOf('## 3.1') && skill.indexOf('## 3.1') < skill.indexOf('## 4. '), '3.1 sits between steps 3 and 4');
+  assert.match(section, /sem código-fonte/);
+  for (const rule of [/no máximo 6 perguntas/, /uma por vez/, /"por que importa"/, /as opções/, /recomenda/, /"sim"/]) assert.match(section, rule);
+  for (const theme of ['quem usa e quantos', 'dado sensível', 'serviços externos', 'offline ou mobile', 'quem vai manter', '6 a 12 meses']) {
+    assert.ok(section.includes(theme), theme);
+  }
+});

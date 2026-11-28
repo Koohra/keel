@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-62",
+    "title": "Setup: proposta de arquitetura para repositório novo",
+    "source": "https://github.com/Koohra/keel/issues/62",
+    "folder": "keel/features/KEEL-62-setup-architecture-proposal",
+    "branch": "feat/setup-architecture-proposal",
+    "base": null
+  },
+  "level": "standard",
+  "phase": "implementation",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-28T01:15:35.414Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-28T01:17:50.636Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T01:17:50.692Z",
+      "hash": "efa3acd0876ddd7814925e2e6595a587f2f229a4333ae8b635c19241cba4285a"
+    },
+    "design": {
+      "approved": false,
+      "approvedBy": null,
+      "approvedAt": null,
+      "hash": null
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T01:18:08.053Z",
+      "hash": "887940aca1516340db80538edfe452d08d45ceb3df719ccfb5646f67d78b1c5a"
+    },
+    "implementation": {
+      "currentTask": "T1",
+      "blocked": null,
+      "red": {
+        "command": "node --test test/setup-skill.test.mjs",
+        "exitCode": 1,
+        "output": "  actual: ''\n  operator: '=='\n  stack: |-\n    TestContext.<anonymous> (file:///home/user/keel/test/setup-skill.test.mjs:63:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..5\n# tests 5\n# suites 0\n# pass 4\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 77.292855",
+        "at": "2026-11-28T01:18:13.653Z"
+      },
+      "green": {
+        "command": "node --test test/setup-skill.test.mjs",
+        "exitCode": 0,
+        "output": "ok 4 - setup skill is agent-neutral: <plugin> paths, /doctor marked as Claude Code, Codex visibility cases\n  ---\n  duration_ms: 0.877614\n  type: 'test'\n  ...\n# Subtest: setup: a repository without source code gets an interview of at most 6 questions\nok 5 - setup: a repository without source code gets an interview of at most 6 questions\n  ---\n  duration_ms: 0.316257\n  type: 'test'\n  ...\n1..5\n# tests 5\n# suites 0\n# pass 5\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 66.301327",
+        "at": "2026-11-28T01:19:43.930Z"
+      },
+      "checks": {
+        "passed": true,
+        "fingerprint": "f899fd1d1859dcca8745133eb5155a99b3955f32684bcc81c40eda35cc7b7e51",
+        "at": "2026-11-28T01:19:44.099Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 58 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 260 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.17392\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 261 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.259687\n  type: 'test'\n  ...\n1..261\n# tests 261\n# suites 0\n# pass 261\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 44330.775775"
+          }
+        ]
+      },
+      "review": {
+        "task": "T1",
+        "result": "findings",
+        "at": "2026-11-28T01:20:28.757Z"
+      },
+      "commit": {
+        "task": "T1",
+        "approvedBy": "Miguel",
+        "at": "2026-11-28T01:20:28.846Z",
+        "fingerprint": "f899fd1d1859dcca8745133eb5155a99b3955f32684bcc81c40eda35cc7b7e51"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "convergence": null,
+      "arch": null,
+      "deltas": null,
+      "deltasApproved": null,
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-28T01:20:28.846Z"
+}

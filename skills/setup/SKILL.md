@@ -76,6 +76,12 @@ Parta de `<plugin>/templates/principles.md` e ajuste com o dev:
 - Exemplares a seguir e caminhos que não se copia.
 - Checks: comandos de teste, lint com complexidade e arquitetura, cada um com a origem quando vier do AGENTS.md.
 
+## 3.1 Repositório sem código-fonte: proposta de arquitetura
+
+Use este ramo quando o repositório ainda não tem código-fonte (só README, licença, configuração ou documentos). Em repositório com código, pule para o passo 4.
+
+1. Entrevista: no máximo 6 perguntas, uma por vez. Cada pergunta traz uma frase "por que importa" em linguagem simples, as opções e a sua recomendação; o dev aceita a recomendação com "sim". Temas, nesta ordem, pulando o que o dev já disse: quem usa e quantos; dado sensível (pessoal, financeiro, de saúde); serviços externos (pagamento, e-mail, login de terceiros); offline ou mobile; quem vai manter; o que o produto deve virar em 6 a 12 meses.
+
 ## 4. keel/architecture.json e testes de arquitetura
 
 1. Proponha `keel/architecture.json` a partir das pastas reais, no formato de `<plugin>/templates/architecture.json`:
