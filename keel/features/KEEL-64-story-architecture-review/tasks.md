@@ -70,7 +70,7 @@ GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (Review: findings sem sufixo é recusado, com teste); F2 fixed (a linha precisa começar com findings, com teste); F3 kept (segunda ocorrência; o princípio 7 extrai na terceira)
 ### T4
-Status: in review
+Status: done (c6822d0)
 RED evidence: `node --test test/story-skill.test.mjs` exited with 1 at 2026-11-28T00:52:15.301Z
 GREEN evidence: `node --test test/story-skill.test.mjs` exited with 0 at 2026-11-28T00:55:29.761Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
