@@ -26,8 +26,9 @@ Review: findings (isolated reviewer); F1 kept (tags e releases saem nesta versã
 - Primeira história `trivial` do repo: o teste "Keel's own stories pass the validator" exigia `requirements.md` em toda pasta; o `Files:` ganhou `test/validate-feature.test.mjs`, reaprovado por Miguel em 2026-11-28.
 
 ## Story review
-Review: (filled in the closing)
+Review: findings (isolated reviewer); F1 kept [source: o portão `coverage:rules->tasks->tests` do `keel-state.mjs` já confere a cobertura da trivial na fase tasks]; F2 kept [source: mesmo portão, que decide pelo `level` do state.json; o teste só evita exigir um arquivo que a trivial não tem]; F3 kept [source: `test/codex-e2e.test.mjs` está fora do `Files:` da T1 e confere a release do Codex, ADR-003]
 
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
 |---|---|---|
+| T1 | T1 `changelog: every story in keel/features has an entry` (9c9db31) | met |
