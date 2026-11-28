@@ -53,12 +53,12 @@ function tableInTasks(tasksText) {
   return tableRows(body).map(([rule = '', evidence = '', outcome = '']) => ({ rule, evidence, outcome }));
 }
 
-const closingOf = (state) => ({ convergence: null, arch: null, deltas: null, deltasApproved: null, ...state.steps.closing });
+const closingOf = (state) => ({ base: null, head: null, convergence: null, arch: null, deltas: null, deltasApproved: null, review: null, ...state.steps.closing });
 
 // Facts gathered at the edge go into state.json; the same object comes back when nothing changed.
 export function recordClosing(state, facts, now) {
   const closing = closingOf(state);
-  const next = { ...closing, convergence: facts.convergence, arch: facts.arch, deltas: facts.deltas };
+  const next = { ...closing, base: facts.base, head: facts.head, convergence: facts.convergence, arch: facts.arch, deltas: facts.deltas };
   if (JSON.stringify(next) === JSON.stringify(closing)) return state;
   return { ...state, steps: { ...state.steps, closing: next }, updatedAt: now };
 }
@@ -101,6 +101,36 @@ export function archResult(state) {
     ? [`orphan file(s) outside every component: ${arch.orphans.map((o) => o.split(' is covered by ')[0]).join(', ')}; propose to the dev the delta of keel/architecture.json (the component) and of "Rungs per module" in keel/product.md (its rung), or a task to move the file`]
     : [];
   return result([...arch.violations, ...grown, ...orphans].join('; '));
+}
+
+const REVIEW_RESULTS = ['ok', 'findings', 'unavailable'];
+
+// Result of the isolated reviewer on the whole story, recorded in the closing.
+export function recordStoryReview(state, outcome, now) {
+  if (state.phase !== 'closing') throw new Error(`review story only in phase closing; the story is in ${state.phase}`);
+  if (!REVIEW_RESULTS.includes(outcome)) throw new Error(`invalid result "${outcome}"; use ${REVIEW_RESULTS.join(', ')}`);
+  const closing = { ...closingOf(state), review: { result: outcome, head: closingOf(state).head, at: now } };
+  return { ...state, steps: { ...state.steps, closing }, updatedAt: now };
+}
+
+// What the "Review:" line of "## Story review" in tasks.md says after the result "findings".
+function storyReviewDisposition(tasksText) {
+  const body = sections(tasksText ?? '').find((s) => s.title === 'Story review')?.body ?? '';
+  // Only a line that starts with the recorded result counts; the template's placeholder (<...>) does not.
+  const after = body.match(/^Review:\s*findings\b(?:\s*\(isolated reviewer\))?(.*)$/m)?.[1] ?? '';
+  return after.replace(/^[\s;:,.—-]+/, '').trim();
+}
+
+// The review holds for the HEAD it saw: a commit after it (a new task from a finding) asks for it again.
+// With findings, the dev reads in tasks.md what became of each one.
+export function storyReviewResult(state, docs = {}) {
+  const { review, head } = closingOf(state);
+  if (!review) return result('the whole story has no isolated review: call the reviewer with "revisão de história" and run review story --result <ok|findings|unavailable>');
+  if (review.head !== head) return result('HEAD changed since the story review: call the reviewer again and run review story --result <ok|findings|unavailable>');
+  if (review.result === 'findings' && !storyReviewDisposition(docs['tasks.md'])) {
+    return result('the story review had findings: write in the "## Story review" section of tasks.md, on the Review: line, what became of each one (new task, product.md or ADR delta, or kept with the source), e.g. "Review: findings (isolated reviewer); F1 new task T4; F2 kept [source: ADR-001]"');
+  }
+  return result(null);
 }
 
 // The dev's approval of the product.md/ADR/architecture.json delta, tied to the content it saw.
@@ -162,7 +192,7 @@ export function sectionDelta(file, before, after) {
 // What next shows in the closing phase.
 export function closingView(state) {
   const closing = closingOf(state);
-  return { convergence: convergenceLines(closing.convergence ?? []), arch: closing.arch, deltas: closing.deltas };
+  return { base: closing.base, convergence: convergenceLines(closing.convergence ?? []), arch: closing.arch, deltas: closing.deltas };
 }
 
 // --- Edge: git ---
@@ -246,5 +276,6 @@ function projectDeltas(root, base) {
 export function gatherClosing(root, docs, state) {
   const inHistory = (hash) => commitInHistory(root, hash);
   const base = storyBase(root, docs, inHistory, state?.story?.base);
-  return { convergence: convergenceRows(docs, inHistory), arch: checkArch(root, base), deltas: projectDeltas(root, base) };
+  const head = git(root, ['rev-parse', 'HEAD'])?.trim() ?? null;
+  return { base, head, convergence: convergenceRows(docs, inHistory), arch: checkArch(root, base), deltas: projectDeltas(root, base) };
 }

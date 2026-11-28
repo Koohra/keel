@@ -20,7 +20,7 @@ import {
 } from './task-loop.mjs';
 import { commitInHistory, gitOutput, gitPaths } from './git.mjs';
 import {
-  approveDeltas, archResult, closingView, convergenceResult, deltasResult, gatherClosing, recordClosing,
+  approveDeltas, archResult, closingView, convergenceResult, deltasResult, gatherClosing, recordClosing, recordStoryReview, storyReviewResult,
 } from './closing.mjs';
 
 export const LEVELS = ['trivial', 'standard', 'with-design'];
@@ -92,7 +92,8 @@ const CRITERIA = {
     const apart = assumptions ? `; ${assumptions} [ASSUMPTION](s) awaiting the dev's acceptance are counted apart and do not block` : '';
     return result(count === 0, `${count} open [QUESTION](s) in requirements.md${apart}`);
   },
-  review: (target, { state }) => {
+  review: (target, { state, docs }) => {
+    if (target === 'story') return storyReviewResult(state, docs);
     if (target !== 'requirements') return null;
     return result(state.steps.requirements.review !== null, 'isolated reviewer not recorded: run review requirements --result <ok|findings|unavailable>');
   },
@@ -213,7 +214,7 @@ export function recordGenerated(state, artifact, now) {
 }
 
 export function recordReview(state, doc, outcome, now) {
-  if (doc !== 'requirements') throw new Error(`unknown review of "${doc}"; use requirements or task`);
+  if (doc !== 'requirements') throw new Error(`unknown review of "${doc}"; use requirements, task or story`);
   if (!REVIEW_RESULTS.includes(outcome)) throw new Error(`invalid result "${outcome}"; use ${REVIEW_RESULTS.join(', ')}`);
   requirePhase(state, 'confirmation', 'review requirements');
   const requirements = { ...state.steps.requirements, review: { result: outcome, at: now } };
@@ -378,7 +379,7 @@ const USAGE = `usage: node scripts/keel-state.mjs <command> [--story <folder>]
   next | advance
   level <${LEVELS.join('|')}> --by <dev>
   generated repo-map
-  review <requirements|task> --result <${REVIEW_RESULTS.join('|')}>
+  review <requirements|task|story> --result <${REVIEW_RESULTS.join('|')}>
   approve <${[...Object.keys(DOC_STEPS), 'commit', 'deltas'].join('|')}> --by <dev>
   task start <T#>
   evidence <red|green>
@@ -432,7 +433,9 @@ function run(argv, root, now) {
     case 'level': updated = setLevel(updated, arg, values.by, now); break;
     case 'generated': updated = recordGenerated(updated, arg, now); break;
     case 'review':
-      updated = arg === 'task' ? recordTaskReview(updated, values.result, now, docs['tasks.md'], changedFiles(root)) : recordReview(updated, arg, values.result, now);
+      if (arg === 'task') updated = recordTaskReview(updated, values.result, now, docs['tasks.md'], changedFiles(root));
+      else if (arg === 'story') updated = recordStoryReview(updated, values.result, now);
+      else updated = recordReview(updated, arg, values.result, now);
       break;
     case 'approve':
       if (arg === 'commit') updated = approveCommit(updated, values.by, docs['tasks.md'], codeFingerprint(root), taskExitOf(workflow), now, changedFiles(root));

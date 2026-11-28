@@ -170,6 +170,31 @@ test('story skill cites plugin files by <plugin> or relative to the skill folder
   for (const name of ['security', 'data', 'contract']) assert.ok(existsSync(join(skillDir, 'checklists', `${name}.md`)), name);
 });
 
+test('o revisor tem a revisão de história com os dois lados e o fechamento a chama', () => {
+  const reviewer = read('agents/reviewer.md');
+  assert.match(frontmatter(reviewer).tools, /^Read, Grep, Glob$/);
+  const story = reviewer.slice(reviewer.indexOf('## Revisão de história'), reviewer.indexOf('## Checklists'));
+  assert.ok(reviewer.includes('## Revisão de história'));
+  for (const input of ['base da história até o HEAD', 'repo map', 'keel/architecture.json', 'Quality goals', 'Rungs per module', 'ADRs']) {
+    assert.ok(story.includes(input), input);
+  }
+  for (const item of ['sem cenário', 'segunda implementação', 'Duplicação entre módulos', 'erro, data, dinheiro, autenticação', 'além do degrau', 'sem ADR', 'invariante de produto']) {
+    assert.ok(story.includes(item), item);
+  }
+  assert.match(story, /no máximo 5 achados/);
+  assert.match(story, /BLOQUEIA.*REMOVER.*SUGERIR/s);
+  assert.match(story, /fonte/);
+  assert.match(story, /"Não julgado"[^\n]*sempre[^\n]*"nada"/);
+  assert.match(story, /sem "Quality goals", sem `architecture\.json`[^\n]*vai para "Não julgado", não vira achado/);
+  const closing = read('skills/story/phases/closing.md');
+  const step = closing.slice(closing.indexOf('## 3. Arquitetura e revisão da história'), closing.indexOf('## 4.'));
+  assert.match(step, /`keel:reviewer`[^\n]*"revisão de história"/);
+  assert.match(step, /`git diff <closing\.base>\.\.HEAD`/);
+  assert.match(step, /keel-state\.mjs"? review story --result/);
+  assert.match(step, /"Story review"/);
+  assert.match(step, /[Nn]ão corrija código/);
+});
+
 test('plain: decisions reach the dev in plain language, then the recommendation', () => {
   for (const file of ['skills/story/SKILL.md', 'skills/setup/SKILL.md', 'plugins/keel-docs/skills/write/SKILL.md']) {
     const rule = read(file).split('\n').find((line) => line.includes('Linguagem simples:'));

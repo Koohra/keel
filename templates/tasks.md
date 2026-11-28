@@ -43,6 +43,9 @@ Status: pending
 ## Implementation notes
 - <learning that applies to the next tasks>
 
+## Story review
+Review: <ok | findings and what became of each one | unavailable> (filled in the closing)
+
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
 |---|---|---|

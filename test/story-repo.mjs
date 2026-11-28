@@ -132,6 +132,7 @@ export function closingRepo({ architecture = ACTIVE_ARCHITECTURE, extra = {}, ba
   };
   const close = () => {
     copyConvergence();
+    ok(repo.state('review', 'story', '--result', 'ok'));
     ok(repo.state('advance'));
   };
   return { ...repo, setStatus, ok, copyConvergence, close };

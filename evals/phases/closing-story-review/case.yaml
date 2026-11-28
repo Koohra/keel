@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: closing-story-review
+description: Etapa 10. A revisão de história aponta a validação de e-mail duplicada com formato de erro diferente entre dois módulos e não pede para remover a porta de e-mail que um cenário de "Quality goals" justifica.
+tags: [phase-10]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 15
+  allowed_tools: [Read, Glob, Grep, Bash, Agent]
+  prompt: |
+    Sou a Ana. Peça ao revisor isolado do Keel (agente keel:reviewer) uma "revisão de história" da história APP-11, cuja base é o commit HEAD~1: passe a ele a saída de `git diff HEAD~1..HEAD`, a saída do repo map do Keel (`scripts/repo-map.mjs` do plugin, com `--budget 1500`) e os caminhos de keel/product.md e keel/adrs/. Depois me mostre a resposta dele, sem mudar nenhum arquivo.

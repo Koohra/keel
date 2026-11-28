@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { requirementsDoc } from './fixtures.mjs';
 import { root } from './helpers.mjs';
-import { closingRepo, closingTasksDoc } from './story-repo.mjs';
+import { closingRepo, closingTasksDoc, storyRepo } from './story-repo.mjs';
 import { archResult, convergenceRows, convergenceLines, createdSources, sectionDelta } from '../scripts/closing.mjs';
 
 const doneTasks = () => closingTasksDoc()
@@ -109,6 +109,7 @@ test('product.md or ADRs changed since the story base need approve deltas, tied 
     const refused = repo.state('advance');
     assert.match(refused.stderr, /approval:deltas\?: .*approve deltas --by/);
     repo.ok(repo.state('approve', 'deltas', '--by', 'Ana'));
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
     next = json(repo.state('next'));
     assert.deepEqual(next.missing, []);
     repo.write('keel/adrs/ADR-002-google.md', '# ADR-002 changed\n');
@@ -128,6 +129,7 @@ test('without deltas there is nothing to approve and the gate does not apply (AC
     const refused = repo.state('approve', 'deltas', '--by', 'Ana');
     assert.notEqual(refused.status, 0);
     assert.match(refused.stderr, /no product\.md, ADR or architecture\.json delta to approve/);
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
     assert.equal(json(repo.state('advance')).phase, 'done');
   } finally {
     repo.cleanup();
@@ -147,6 +149,7 @@ test('review fixes: task commits must be in the branch history, and a rewritten 
     next = json(repo.state('next'));
     assert.equal(next.closing.arch.status, 'fail');
     assert.match(next.missing.find((m) => m.criterion === 'approval:deltas?').reason, /story base not found/);
+    assert.equal(next.closing.base, null);
   } finally {
     repo.cleanup();
   }
@@ -255,11 +258,90 @@ test('closing asks for the architecture.json delta for a new orphan', () => {
     assert.deepEqual(next.closing.deltas.sections, { added: [], modified: ['keel/architecture.json'], removed: [] });
     assert.match(next.missing.find((m) => m.criterion === 'approval:deltas?').reason, /keel\/architecture\.json changed/);
     repo.ok(repo.state('approve', 'deltas', '--by', 'Ana'));
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
     assert.equal(json(repo.state('advance')).phase, 'done');
   } finally {
     repo.cleanup();
   }
   const phase = readFileSync(join(root, 'skills', 'story', 'phases', 'closing.md'), 'utf8');
-  const step = phase.match(/## 3\. Arquitetura\n([\s\S]*?)\n## /)[1];
+  const step = phase.match(/## 3\. Arquitetura[^\n]*\n([\s\S]*?)\n## /)[1];
   for (const term of ['órfão', 'keel/architecture.json', 'Rungs per module', 'criou código-fonte']) assert.ok(step.includes(term), term);
+});
+
+test('story review: advance needs review story in the closing', () => {
+  const repo = closingRepo();
+  try {
+    repo.copyConvergence();
+    const refused = repo.state('advance');
+    assert.notEqual(refused.status, 0);
+    assert.match(refused.stderr, /review:story: .*run review story --result/);
+    const invalid = repo.state('review', 'story', '--result', 'maybe');
+    assert.notEqual(invalid.status, 0);
+    assert.match(invalid.stderr, /use ok, findings, unavailable/);
+    const unknown = repo.state('review', 'design', '--result', 'ok');
+    assert.match(unknown.stderr, /use requirements, task or story/);
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
+    assert.ok(!json(repo.state('next')).missing.some((m) => m.criterion === 'review:story'));
+    repo.ok(repo.state('review', 'story', '--result', 'unavailable'));
+    assert.equal(json(repo.state('advance')).phase, 'done');
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test('story review: review story only in the closing phase', () => {
+  const repo = storyRepo();
+  try {
+    const refused = repo.state('review', 'story', '--result', 'ok');
+    assert.notEqual(refused.status, 0);
+    assert.match(refused.stderr, /review story only in phase closing; the story is in implementation/);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test('story review: a new commit after the review asks for it again, and next shows the base', () => {
+  const repo = closingRepo();
+  try {
+    repo.copyConvergence();
+    const base = repo.sh('git', ['rev-parse', 'HEAD~3']);
+    assert.equal(json(repo.state('next')).closing.base, base);
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
+    repo.write('docs/notes.md', 'nota\n');
+    repo.sh('git', ['add', 'docs/notes.md']);
+    repo.sh('git', ['commit', '-q', '-m', 'nota']);
+    const refused = repo.state('advance');
+    assert.notEqual(refused.status, 0);
+    assert.match(refused.stderr, /review:story: .*HEAD changed since the story review.*run review story/);
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
+    assert.equal(json(repo.state('advance')).phase, 'done');
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test('story review: findings need a disposition in Story review', () => {
+  const repo = closingRepo();
+  try {
+    repo.copyConvergence();
+    repo.ok(repo.state('review', 'story', '--result', 'findings'));
+    const missing = () => json(repo.state('next')).missing.find((m) => m.criterion === 'review:story');
+    assert.match(missing().reason, /Story review.*Review: findings \(isolated reviewer\); F1/);
+    const tasks = readFileSync(join(repo.dir, repo.folder, 'tasks.md'), 'utf8');
+    const withReview = (line) => repo.write(`${repo.folder}/tasks.md`, tasks.replace('## Convergence', `## Story review\n${line}\n\n## Convergence`));
+    withReview('Review: findings (isolated reviewer)');
+    assert.ok(missing());
+    withReview('Review: <ok | findings and what became of each one | unavailable> (filled in the closing)');
+    assert.ok(missing());
+    withReview('Review: findings');
+    assert.ok(missing());
+    withReview('Review: ok; nada a fazer');
+    assert.ok(missing());
+    withReview('Review: findings (isolated reviewer); F1 new task T4; F2 kept [source: ADR-001]');
+    assert.equal(missing(), undefined);
+    assert.equal(json(repo.state('advance')).phase, 'done');
+  } finally {
+    repo.cleanup();
+  }
+  assert.match(readFileSync(join(root, 'templates', 'tasks.md'), 'utf8'), /^## Story review\nReview: /m);
 });
