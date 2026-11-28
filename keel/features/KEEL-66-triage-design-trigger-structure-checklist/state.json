@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-66",
+    "title": "Triagem: gatilho automático de design e checklist de estrutura",
+    "source": null,
+    "folder": "keel/features/KEEL-66-triage-design-trigger-structure-checklist",
+    "branch": "feat/triage-design-trigger-structure-checklist",
+    "base": null
+  },
+  "level": "with-design",
+  "phase": "implementation",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-28T02:08:17.936Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-28T02:10:04.226Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T02:10:04.269Z",
+      "hash": "0232f085a827f89d698847c9cd3d58e649d91a0724bc62881be8c7b12af091d6"
+    },
+    "design": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T02:10:57.293Z",
+      "hash": "e9cdec11b9ed5a716a61f152766b79011d8c59ed03ea0d33b595ba25279ac830"
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T02:10:57.335Z",
+      "hash": "449710d2c5e30831c2a08870c41617e033454df4789c52e3fffbf8fc93a5b4c7"
+    },
+    "implementation": {
+      "currentTask": null,
+      "blocked": null,
+      "red": null,
+      "green": null,
+      "checks": null,
+      "review": null,
+      "commit": null
+    },
+    "closing": {
+      "convergence": null,
+      "arch": null,
+      "deltas": null,
+      "deltasApproved": null,
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-28T02:10:57.406Z"
+}
