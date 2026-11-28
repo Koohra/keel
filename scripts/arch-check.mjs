@@ -288,11 +288,13 @@ function validateConfig(config, paths) {
     const regex = globToRegExp(pattern);
     if (!paths.some((path) => moduleOf(path, regex))) fail(`noCycles: "${pattern}" matches no module; fix the glob`);
   }
+  const coverage = config.coverage ?? [];
+  if (!Array.isArray(coverage) || coverage.some((g) => typeof g !== 'string')) fail('"coverage" must be a list of globs');
   if (config.baseline != null && typeof config.baseline !== 'string') fail('"baseline" must be a path');
   // Rules wait for a pending "from"; a pending target leaves "forbid" while the others still count.
   const rules = (config.rules ?? []).filter((rule) => !waiting.has(rule.from))
     .map((rule) => ({ ...rule, forbid: rule.forbid.filter((target) => !waiting.has(target)) }));
-  return { components, pending, externals, rules, noCycles, roots: roots.map((r) => toPosix(r).replace(/^\.\/|\/+$/g, '')).filter(Boolean) };
+  return { components, pending, coverage, externals, rules, noCycles, roots: roots.map((r) => toPosix(r).replace(/^\.\/|\/+$/g, '')).filter(Boolean) };
 }
 
 // Module of a file for a noCycles pattern: the shortest path prefix that matches the glob.
@@ -367,7 +369,7 @@ export function checkArchitecture({ config, files, baseline = new Set(), aliases
   const entries = files instanceof Map ? [...files] : Object.entries(files);
   const paths = entries.map(([path]) => path).sort();
   const fileSet = new Set(paths);
-  const { components, pending, externals, rules, noCycles, roots } = validateConfig(config, paths);
+  const { components, pending, coverage, externals, rules, noCycles, roots } = validateConfig(config, paths);
   const topDirs = new Set(paths.filter((p) => p.includes('/')).map((p) => p.split('/')[0]));
   const context = { fileSet, externals, roots, aliases, topDirs };
   const unresolved = [];
@@ -446,10 +448,19 @@ export function checkArchitecture({ config, files, baseline = new Set(), aliases
     }
   }
 
+  // A covered file that no component (planned included) claims: a warning, not a violation.
+  const covered = coverage.map(globToRegExp);
+  for (const path of paths) {
+    if (!covered.some((re) => re.test(path)) || componentsOf(path).size) continue;
+    add({ key: `orphan|${path}`, rule: 'orphan', file: path, line: 1, message: `${path} is covered by "coverage" but belongs to no component. Fix: declare the component or move the file` });
+  }
+
   const found = [...all.values()].sort((a, b) => a.key.localeCompare(b.key));
+  const fresh = found.filter((v) => !baseline.has(v.key));
   return {
     pending,
-    violations: found.filter((v) => !baseline.has(v.key)),
+    violations: fresh.filter((v) => v.rule !== 'orphan'),
+    orphans: fresh.filter((v) => v.rule === 'orphan'),
     known: found.filter((v) => baseline.has(v.key)),
     stale: [...baseline].filter((key) => !all.has(key)).sort(),
     unresolved: unresolved.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line),
@@ -518,6 +529,7 @@ export function runCheck(root, { files } = {}) {
     const only = new Set(files.map((f) => toPosix(isAbsolute(f) ? relative(root, f) : f).replace(/^\.\//, '')));
     result.violations = result.violations.filter((v) => relevant(v, only));
     result.known = result.known.filter((v) => relevant(v, only));
+    result.orphans = result.orphans.filter((v) => relevant(v, only));
     result.unresolved = result.unresolved.filter((u) => only.has(u.file));
   }
   return {
@@ -533,8 +545,8 @@ export function runCheck(root, { files } = {}) {
 export function writeBaseline(root) {
   const project = loadProject(root);
   if (!project) return null;
-  const { violations, known } = checkArchitecture({ ...project, baseline: new Set() });
-  const keys = [...violations, ...known].map((v) => v.key).sort();
+  const { violations, orphans, known } = checkArchitecture({ ...project, baseline: new Set() });
+  const keys = [...violations, ...orphans, ...known].map((v) => v.key).sort();
   const file = join(root, ...project.baselinePath.split('/'));
   mkdirSync(dirname(file), { recursive: true });
   const header = '# arch-check baseline (approximate scanner): known violations, one key per line.\n# Only new violations fail. Delete the line when the violation is fixed.\n';
@@ -583,6 +595,10 @@ function main(argv) {
     for (const note of result.notes) console.log(`note: ${note}`);
     if (result.pending.length) console.log(`planned component(s) without files (pending): ${result.pending.join(', ')}`);
     for (const violation of result.violations) console.log(`- ${violation.message}`);
+    if (result.orphans.length) {
+      console.log('orphan file(s) covered by "coverage" outside every component, not counted as violations:');
+      for (const orphan of result.orphans) console.log(`- ${orphan.message}`);
+    }
     if (result.unresolved.length) {
       console.log('unresolved imports (approximate), not counted as violations:');
       for (const u of result.unresolved) console.log(`  ${u.file}:${u.line} "${u.specifier}"`);

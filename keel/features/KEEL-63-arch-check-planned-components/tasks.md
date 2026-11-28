@@ -76,7 +76,11 @@ GREEN evidence: `node --test test/arch-check.test.mjs` exited with 0 at 2026-11-
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (`planned: null` dá erro, com teste); F2 fixed (objeto sem `planned` testado como componente comum); F3 kept (`pending` é a lista ordenada da saída e `waiting` o Set da consulta)
 ### T2
-Status: pending
+Status: in review
+RED evidence: `node --test test/arch-check.test.mjs` exited with 1 at 2026-11-28T00:35:52.776Z
+GREEN evidence: `node --test test/arch-check.test.mjs` exited with 0 at 2026-11-28T00:37:29.026Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (campo `orphan` removido, filtro por `rule`); F2 kept (o código 2 vem do mesmo `catch` testado em AC-1.3, como nos testes de `planned`)
 ### T3
 Status: pending
 ### T4

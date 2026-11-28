@@ -42,24 +42,24 @@
       "hash": "6d668e7152a3b968eba65f0033bc203379761dd7e9ac209073d359216925c747"
     },
     "implementation": {
-      "currentTask": "T1",
+      "currentTask": "T2",
       "blocked": null,
       "red": {
         "command": "node --test test/arch-check.test.mjs",
         "exitCode": 1,
-        "output": "  stack: |-\n    file:///home/user/keel/test/arch-check.test.mjs:276:12\n    withProject (file:///home/user/keel/test/arch-check.test.mjs:33:12)\n    TestContext.<anonymous> (file:///home/user/keel/test/arch-check.test.mjs:274:3)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..14\n# tests 14\n# suites 0\n# pass 13\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1103.301142",
-        "at": "2026-11-28T00:33:15.058Z"
+        "output": "  stack: |-\n    file:///home/user/keel/test/arch-check.test.mjs:318:35\n    withProject (file:///home/user/keel/test/arch-check.test.mjs:33:12)\n    TestContext.<anonymous> (file:///home/user/keel/test/arch-check.test.mjs:314:3)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..15\n# tests 15\n# suites 0\n# pass 14\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1326.835683",
+        "at": "2026-11-28T00:35:52.776Z"
       },
       "green": {
         "command": "node --test test/arch-check.test.mjs",
         "exitCode": 0,
-        "output": "ok 13 - Keel itself passes its keel/architecture.json\n  ---\n  duration_ms: 84.709992\n  type: 'test'\n  ...\n# Subtest: planned component without files is pending and its rules wait\nok 14 - planned component without files is pending and its rules wait\n  ---\n  duration_ms: 178.431005\n  type: 'test'\n  ...\n1..14\n# tests 14\n# suites 0\n# pass 14\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1289.96005",
-        "at": "2026-11-28T00:34:53.246Z"
+        "output": "ok 14 - planned component without files is pending and its rules wait\n  ---\n  duration_ms: 151.079711\n  type: 'test'\n  ...\n# Subtest: covered file outside every component is an orphan\nok 15 - covered file outside every component is an orphan\n  ---\n  duration_ms: 222.591482\n  type: 'test'\n  ...\n1..15\n# tests 15\n# suites 0\n# pass 15\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1414.522756",
+        "at": "2026-11-28T00:37:29.026Z"
       },
       "checks": {
         "passed": true,
-        "fingerprint": "011bd2bbd56654bafce8e9defedc4e87afcab702581c5260f87b9713f9230890",
-        "at": "2026-11-28T00:34:54.659Z",
+        "fingerprint": "b7e5784ef17aec58ba8274cb1f84106c99e46bf89b39c1d94dbf3c6474765d92",
+        "at": "2026-11-28T00:37:30.548Z",
         "results": [
           {
             "name": "Architecture",
@@ -71,20 +71,20 @@
             "name": "Tests",
             "command": "npm test",
             "exitCode": 0,
-            "output": "ok 245 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.129907\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 246 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.141133\n  type: 'test'\n  ...\n1..246\n# tests 246\n# suites 0\n# pass 246\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 26560.834614"
+            "output": "ok 246 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.183931\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 247 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.205041\n  type: 'test'\n  ...\n1..247\n# tests 247\n# suites 0\n# pass 247\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 26207.651832"
           }
         ]
       },
       "review": {
-        "task": "T1",
+        "task": "T2",
         "result": "findings",
-        "at": "2026-11-28T00:35:21.538Z"
+        "at": "2026-11-28T00:37:57.090Z"
       },
       "commit": {
-        "task": "T1",
+        "task": "T2",
         "approvedBy": "Miguel",
-        "at": "2026-11-28T00:35:36.554Z",
-        "fingerprint": "011bd2bbd56654bafce8e9defedc4e87afcab702581c5260f87b9713f9230890"
+        "at": "2026-11-28T00:37:57.273Z",
+        "fingerprint": "b7e5784ef17aec58ba8274cb1f84106c99e46bf89b39c1d94dbf3c6474765d92"
       },
       "failedAttempts": null
     },
@@ -96,5 +96,5 @@
       "pullRequest": null
     }
   },
-  "updatedAt": "2026-11-28T00:35:36.554Z"
+  "updatedAt": "2026-11-28T00:37:57.273Z"
 }

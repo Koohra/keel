@@ -297,3 +297,45 @@ test('planned component without files is pending and its rules wait', () => {
   assert.throws(check({ a: { globs: ['src/**'], planned: null } }), /component a: "planned" must be true or false/);
   assert.throws(check({ a: { globs: ['lib/**'] } }), /rule r matches zero files/, 'an object without planned is a common component');
 });
+
+test('covered file outside every component is an orphan', () => {
+  const config = {
+    components: { domain: ['src/domain/**'], api: { globs: ['src/api/**'], planned: true } },
+    rules: [],
+    coverage: ['src/**'],
+    baseline: 'keel/arch-baseline.txt',
+  };
+  const project = {
+    'keel/architecture.json': config,
+    'src/domain/a.ts': 'export const a = 1;\n',
+    'src/novo/x.js': 'export const x = 1;\n',
+    'scripts/tool.mjs': 'export const t = 1;\n',
+  };
+  withProject(project, (dir, run) => {
+    const result = run('--json');
+    assert.equal(result.status, 0, 'an orphan alone does not fail the check');
+    const json = JSON.parse(result.stdout);
+    assert.deepEqual(json.orphans.map((o) => o.key), ['orphan|src/novo/x.js']);
+    assert.match(json.orphans[0].message, /src\/novo\/x\.js .*no component.*declare the component or move the file/);
+    assert.deepEqual(json.violations, []);
+    assert.match(run().stdout, /orphan file\(s\).*\n- src\/novo\/x\.js/);
+    assert.deepEqual(JSON.parse(run('--json', '--files', 'src/domain/a.ts').stdout).orphans, []);
+
+    assert.equal(run('--write-baseline').status, 0);
+    const lines = readFileSync(join(dir, 'keel', 'arch-baseline.txt'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#'));
+    assert.deepEqual(lines, ['orphan|src/novo/x.js']);
+    const known = JSON.parse(run('--json').stdout);
+    assert.deepEqual(known.orphans, []);
+    assert.deepEqual(known.known.map((v) => v.key), ['orphan|src/novo/x.js']);
+
+    rmSync(join(dir, 'src', 'novo'), { recursive: true });
+    mkdirSync(join(dir, 'src', 'api'));
+    writeFileSync(join(dir, 'src', 'api', 'h.ts'), 'export const h = 1;\n');
+    const moved = JSON.parse(run('--json').stdout);
+    assert.deepEqual(moved.orphans, [], 'a file of a planned component is not an orphan');
+    assert.deepEqual(moved.pending, []);
+    assert.deepEqual(moved.stale, ['orphan|src/novo/x.js']);
+  });
+  const files = new Map([['src/a.ts', '']]);
+  assert.throws(() => checkArchitecture({ config: { components: { a: ['src/**'] }, coverage: 'src/**' }, files }), /"coverage" must be a list of globs/);
+});
