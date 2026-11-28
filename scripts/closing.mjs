@@ -53,12 +53,12 @@ function tableInTasks(tasksText) {
   return tableRows(body).map(([rule = '', evidence = '', outcome = '']) => ({ rule, evidence, outcome }));
 }
 
-const closingOf = (state) => ({ convergence: null, arch: null, deltas: null, deltasApproved: null, review: null, ...state.steps.closing });
+const closingOf = (state) => ({ base: null, head: null, convergence: null, arch: null, deltas: null, deltasApproved: null, review: null, ...state.steps.closing });
 
 // Facts gathered at the edge go into state.json; the same object comes back when nothing changed.
 export function recordClosing(state, facts, now) {
   const closing = closingOf(state);
-  const next = { ...closing, convergence: facts.convergence, arch: facts.arch, deltas: facts.deltas };
+  const next = { ...closing, base: facts.base, head: facts.head, convergence: facts.convergence, arch: facts.arch, deltas: facts.deltas };
   if (JSON.stringify(next) === JSON.stringify(closing)) return state;
   return { ...state, steps: { ...state.steps, closing: next }, updatedAt: now };
 }
@@ -95,13 +95,15 @@ const REVIEW_RESULTS = ['ok', 'findings', 'unavailable'];
 export function recordStoryReview(state, outcome, now) {
   if (state.phase !== 'closing') throw new Error(`review story only in phase closing; the story is in ${state.phase}`);
   if (!REVIEW_RESULTS.includes(outcome)) throw new Error(`invalid result "${outcome}"; use ${REVIEW_RESULTS.join(', ')}`);
-  const closing = { ...closingOf(state), review: { result: outcome, at: now } };
+  const closing = { ...closingOf(state), review: { result: outcome, head: closingOf(state).head, at: now } };
   return { ...state, steps: { ...state.steps, closing }, updatedAt: now };
 }
 
+// The review holds for the HEAD it saw: a commit after it (a new task from a finding) asks for it again.
 export function storyReviewResult(state) {
-  const { review } = closingOf(state);
-  return result(review ? null : 'the whole story has no isolated review: call the reviewer with "revisão de história" and run review story --result <ok|findings|unavailable>');
+  const { review, head } = closingOf(state);
+  if (!review) return result('the whole story has no isolated review: call the reviewer with "revisão de história" and run review story --result <ok|findings|unavailable>');
+  return result(review.head === head ? null : 'HEAD changed since the story review: call the reviewer again and run review story --result <ok|findings|unavailable>');
 }
 
 // The dev's approval of the product.md/ADR delta, tied to the content it saw.
@@ -163,7 +165,7 @@ export function sectionDelta(file, before, after) {
 // What next shows in the closing phase.
 export function closingView(state) {
   const closing = closingOf(state);
-  return { convergence: convergenceLines(closing.convergence ?? []), arch: closing.arch, deltas: closing.deltas };
+  return { base: closing.base, convergence: convergenceLines(closing.convergence ?? []), arch: closing.arch, deltas: closing.deltas };
 }
 
 // --- Edge: git ---
@@ -233,5 +235,6 @@ function projectDeltas(root, base) {
 export function gatherClosing(root, docs, state) {
   const inHistory = (hash) => commitInHistory(root, hash);
   const base = storyBase(root, docs, inHistory, state?.story?.base);
-  return { convergence: convergenceRows(docs, inHistory), arch: checkArch(root, base), deltas: projectDeltas(root, base) };
+  const head = git(root, ['rev-parse', 'HEAD'])?.trim() ?? null;
+  return { base, head, convergence: convergenceRows(docs, inHistory), arch: checkArch(root, base), deltas: projectDeltas(root, base) };
 }

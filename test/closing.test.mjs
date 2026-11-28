@@ -148,6 +148,7 @@ test('review fixes: task commits must be in the branch history, and a rewritten 
     next = json(repo.state('next'));
     assert.equal(next.closing.arch.status, 'fail');
     assert.match(next.missing.find((m) => m.criterion === 'approval:deltas?').reason, /story base not found/);
+    assert.equal(next.closing.base, null);
   } finally {
     repo.cleanup();
   }
@@ -234,6 +235,26 @@ test('story review: review story only in the closing phase', () => {
     const refused = repo.state('review', 'story', '--result', 'ok');
     assert.notEqual(refused.status, 0);
     assert.match(refused.stderr, /review story only in phase closing; the story is in implementation/);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test('story review: a new commit after the review asks for it again, and next shows the base', () => {
+  const repo = closingRepo();
+  try {
+    repo.copyConvergence();
+    const base = repo.sh('git', ['rev-parse', 'HEAD~3']);
+    assert.equal(json(repo.state('next')).closing.base, base);
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
+    repo.write('docs/notes.md', 'nota\n');
+    repo.sh('git', ['add', 'docs/notes.md']);
+    repo.sh('git', ['commit', '-q', '-m', 'nota']);
+    const refused = repo.state('advance');
+    assert.notEqual(refused.status, 0);
+    assert.match(refused.stderr, /review:story: .*HEAD changed since the story review.*run review story/);
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
+    assert.equal(json(repo.state('advance')).phase, 'done');
   } finally {
     repo.cleanup();
   }

@@ -58,7 +58,11 @@ GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (advance com unavailable vai a done); F2 kept (a lista de resultados repetida pede mexer em scripts/task-loop.mjs, fora do Files: da T1; anotado em Implementation notes); F3 kept (o head é da T2, AC-4.3); F4 kept (o despacho por alvo fica no run, que é quem lista os alvos)
 ### T2
-Status: pending
+Status: in review
+RED evidence: `node --test test/closing.test.mjs` exited with 1 at 2026-11-28T00:43:02.390Z
+GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T00:45:33.558Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (o teste de histórico reescrito confere closing.base null)
 ### T3
 Status: pending
 ### T4
