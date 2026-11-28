@@ -52,7 +52,7 @@ Depends on: T4
 
 ## Progress
 ### T1
-Status: in review
+Status: done (de73e5c)
 RED evidence: `node --test test/setup-skill.test.mjs` exited with 1 at 2026-11-28T01:18:13.653Z
 GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11-28T01:19:43.930Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
