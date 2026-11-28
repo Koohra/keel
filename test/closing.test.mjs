@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { requirementsDoc } from './fixtures.mjs';
+import { root } from './helpers.mjs';
 import { closingRepo, closingTasksDoc } from './story-repo.mjs';
 import { archResult, convergenceRows, convergenceLines, createdSources, sectionDelta } from '../scripts/closing.mjs';
 
@@ -126,7 +127,7 @@ test('without deltas there is nothing to approve and the gate does not apply (AC
     repo.copyConvergence();
     const refused = repo.state('approve', 'deltas', '--by', 'Ana');
     assert.notEqual(refused.status, 0);
-    assert.match(refused.stderr, /no product\.md or ADR delta to approve/);
+    assert.match(refused.stderr, /no product\.md, ADR or architecture\.json delta to approve/);
     assert.equal(json(repo.state('advance')).phase, 'done');
   } finally {
     repo.cleanup();
@@ -235,4 +236,30 @@ test('closing refuses the waiver when the story created source without an active
   assert.match(archResult(state({ ...skipped, waived: false, created: [] })).reason, /run the setup skill/, 'without the waiver and without new source: the message of today');
   assert.equal(archResult(state({ ...skipped, created: ['test/x.test.mjs'] })).met, false, 'a new test is source too');
   assert.deepEqual(archResult(state({ status: 'ok', violations: [], grown: [], created: ['src/a.js'], noActive: false })), { met: true });
+});
+
+test('closing asks for the architecture.json delta for a new orphan', () => {
+  const covered = { components: { src: ['src/login.js', 'src/session.js'] }, rules: [], coverage: ['src/**'] };
+  const repo = closingRepo({ architecture: covered });
+  try {
+    repo.copyConvergence();
+    let next = json(repo.state('next'));
+    assert.deepEqual(next.closing.arch.orphans.map((o) => o.split(' ')[0]), ['src/offline.js']);
+    const reason = next.missing.find((m) => m.criterion === 'arch:baseline-not-grown').reason;
+    assert.match(reason, /src\/offline\.js.*keel\/architecture\.json.*Rungs per module/);
+
+    repo.write('keel/architecture.json', JSON.stringify({ ...covered, components: { src: ['src/**'] } }));
+    next = json(repo.state('next'));
+    assert.deepEqual(next.closing.arch.orphans, []);
+    assert.deepEqual(next.closing.deltas.files, ['keel/architecture.json']);
+    assert.deepEqual(next.closing.deltas.sections, { added: [], modified: ['keel/architecture.json'], removed: [] });
+    assert.match(next.missing.find((m) => m.criterion === 'approval:deltas?').reason, /keel\/architecture\.json changed/);
+    repo.ok(repo.state('approve', 'deltas', '--by', 'Ana'));
+    assert.equal(json(repo.state('advance')).phase, 'done');
+  } finally {
+    repo.cleanup();
+  }
+  const phase = readFileSync(join(root, 'skills', 'story', 'phases', 'closing.md'), 'utf8');
+  const step = phase.match(/## 3\. Arquitetura\n([\s\S]*?)\n## /)[1];
+  for (const term of ['órfão', 'keel/architecture.json', 'Rungs per module', 'criou código-fonte']) assert.ok(step.includes(term), term);
 });

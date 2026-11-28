@@ -94,7 +94,11 @@ GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (caso sem dispensa e sem fonte nova testado com a mensagem de hoje); F2 kept (`active` é campo aditivo do runCheck, usado só para o `noActive` que o design lista); F3 fixed (tamanho do trecho numa variável); F4 kept (rename e fonte existente provados no unitário de `createdSources`; a ordem status, antigo, novo é a do `git diff -z`)
 ### T5
-Status: pending
+Status: in review
+RED evidence: `node --test test/closing.test.mjs` exited with 1 at 2026-11-28T00:49:43.129Z
+GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T00:53:24.940Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 removed (bloco repetido do teste da linha 130); F2 fixed (arquivo cortado em ` is covered by `); F3 fixed (passo 4 do closing.md e comentário citam o architecture.json); F4 kept (é a regra do design: arquivo inteiro para o que não é product.md)
 ### T6
 Status: pending
 ### T7
