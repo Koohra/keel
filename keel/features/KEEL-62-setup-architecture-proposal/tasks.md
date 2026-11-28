@@ -91,7 +91,7 @@ GREEN evidence: `node --test test/evals.test.mjs` exited with 0 at 2026-11-28T01
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (grader de uma pergunta só na última mensagem); F2 fixed (os graders olham a última mensagem, como o design-decision-plain)
 ### T6
-Status: in review
+Status: done (93c706e)
 RED evidence: `node --test test/setup-skill.test.mjs` exited with 1 at 2026-11-28T01:35:48.794Z
 GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11-28T01:35:54.474Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
