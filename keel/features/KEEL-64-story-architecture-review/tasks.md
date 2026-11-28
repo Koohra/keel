@@ -87,6 +87,16 @@ Review: findings (isolated reviewer); F1 fixed (o not_contains só pega REMOVER 
 - O design tem `Trigger: contract`, então o `next` pede o checklist de contrato; T1 e T2 foram revisadas sem ele, a partir da T3 ele vai ao revisor.
 - Fora do escopo: a lista `['ok', 'findings', 'unavailable']` aparece em `scripts/keel-state.mjs`, `scripts/task-loop.mjs` e `scripts/closing.mjs`; extrair pede mexer no `task-loop.mjs`.
 
+## Story review
+Review: findings (isolated reviewer); F1 kept (lista de resultados repetida já anotada em Implementation notes, fora do escopo); F2 kept (a trava de fase inline segue `approveDeltas`, scripts/closing.mjs); F3 kept (o critério é provado pela CLI em test/closing.test.mjs, R4); F4 kept (o fechamento já exige git com commits, scripts/keel-state.mjs `git`); F5 kept (R5: o script só cobra o destino com findings)
+
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
 |---|---|---|
+| R1 | T4 `o revisor tem a revisão de história com os dois lados e o fechamento a chama` (c6822d0) | met |
+| R2 | T4 `o revisor tem a revisão de história com os dois lados e o fechamento a chama` (c6822d0) | met |
+| R3 | T4 `o revisor tem a revisão de história com os dois lados e o fechamento a chama` (c6822d0) | met |
+| R4 | T1 `story review: advance needs review story in the closing` (954977b); T2 `story review: a new commit after the review asks for it again, and next shows the base` (8df2ae8) | met |
+| R5 | T3 `story review: findings need a disposition in Story review` (211d765) | met |
+| R6 | T2 `story review: a new commit after the review asks for it again, and next shows the base` (8df2ae8); T4 `o revisor tem a revisão de história com os dois lados e o fechamento a chama` (c6822d0) | met |
+| R7 | T5 `stage 10 has a story review case: duplication is found and a justified port is kept` (1d417d3) | met |

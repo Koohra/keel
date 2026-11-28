@@ -9,7 +9,7 @@
     "base": null
   },
   "level": "with-design",
-  "phase": "implementation",
+  "phase": "done",
   "steps": {
     "triage": {
       "done": true,
@@ -89,12 +89,67 @@
       "failedAttempts": null
     },
     "closing": {
-      "convergence": null,
-      "arch": null,
-      "deltas": null,
+      "base": "93246febc2993720584db5178f53e22f4ca0f7b3",
+      "head": "951c706f766d0e040664c5a638e8cb2195fb2995",
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T4 `o revisor tem a revisão de história com os dois lados e o fechamento a chama` (c6822d0)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T4 `o revisor tem a revisão de história com os dois lados e o fechamento a chama` (c6822d0)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T4 `o revisor tem a revisão de história com os dois lados e o fechamento a chama` (c6822d0)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T1 `story review: advance needs review story in the closing` (954977b); T2 `story review: a new commit after the review asks for it again, and next shows the base` (8df2ae8)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R5",
+          "evidence": "T3 `story review: findings need a disposition in Story review` (211d765)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R6",
+          "evidence": "T2 `story review: a new commit after the review asks for it again, and next shows the base` (8df2ae8); T4 `o revisor tem a revisão de história com os dois lados e o fechamento a chama` (c6822d0)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R7",
+          "evidence": "T5 `stage 10 has a story review case: duplication is found and a justified port is kept` (1d417d3)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": []
+      },
+      "deltas": {
+        "files": [],
+        "sections": {
+          "added": [],
+          "modified": [],
+          "removed": []
+        },
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
       "deltasApproved": null,
+      "review": {
+        "result": "findings",
+        "head": "951c706f766d0e040664c5a638e8cb2195fb2995",
+        "at": "2026-11-28T01:00:44.275Z"
+      },
       "pullRequest": null
     }
   },
-  "updatedAt": "2026-11-28T00:59:34.000Z"
+  "updatedAt": "2026-11-28T01:00:44.529Z"
 }
