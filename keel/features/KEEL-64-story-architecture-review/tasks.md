@@ -76,8 +76,11 @@ GREEN evidence: `node --test test/story-skill.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (o fechamento passa o git diff <closing.base>..HEAD, porque o revisor não roda git; teste confere); F2 fixed (teste confere a frase do Não julgado); F3 kept (a description do frontmatter passa a citar a história inteira; desvio do Code map registrado para o PR)
 ### T5
-Status: pending
-
+Status: in review
+RED evidence: `node --test test/evals.test.mjs` exited with 1 at 2026-11-28T00:56:16.899Z
+GREEN evidence: `node --test test/evals.test.mjs` exited with 0 at 2026-11-28T00:58:59.162Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (o not_contains só pega REMOVER seguido de perto pela porta); F2 fixed (a segunda implementação grava em memória e a porta é usada pelo convite); F3 fixed (o grader exige duplicação ou formato junto de e-mail, users ou invites); F4 fixed (o prompt passa o repo map)
 ## Implementation notes
 - T4: três falhas seguidas (texto do reviewer.md sem as palavras exatas do teste); `block` gravado com a causa e seguido sob a aprovação permanente. Desvio do design: a `description` do frontmatter do `agents/reviewer.md` cita a história inteira.
 - 2026-11-28: o `Files:` da T3 ganhou `scripts/keel-state.mjs` (o critério `review:story` precisa receber o tasks.md); tasks.md aprovado de novo por Miguel (aprovação permanente do épico #61).

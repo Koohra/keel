@@ -61,3 +61,16 @@ test('a stuck task has its own case: GREEN that cannot pass ends blocked with th
   assert.match(graders, /blocked\\": /);
   assert.match(graders, /path: test\/users\.test\.mjs/);
 });
+
+test('stage 10 has a story review case: duplication is found and a justified port is kept', () => {
+  const review = cases.find((c) => c.endsWith('/closing-story-review'));
+  assert.ok(review, 'closing-story-review');
+  assert.match(read(`${review}/case.yaml`), /tags: \[phase-10\]/);
+  const graders = files.filter((f) => f.startsWith(`${review}/graders/`)).map(read);
+  assert.ok(graders.some((g) => /tool: Agent/.test(g) && /keel:reviewer/.test(g) && /revisão de história/.test(g)), 'reviewer grader');
+  assert.ok(graders.some((g) => /duplica/.test(g) && /formato/.test(g) && !/not_contains/.test(g)), 'duplication grader');
+  assert.ok(graders.some((g) => /REMOVER/.test(g) && /match: not_contains/.test(g)), 'justified port grader');
+  const fixture = read(`${review}/fixture.sh`);
+  assert.match(fixture, /## Quality goals/);
+  assert.match(fixture, /git commit/);
+});
