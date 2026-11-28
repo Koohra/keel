@@ -58,7 +58,7 @@ GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (o teste confere as opções)
 ### T2
-Status: in review
+Status: done (abd5b31)
 RED evidence: `node --test test/setup-skill.test.mjs` exited with 1 at 2026-11-28T01:20:35.308Z
 GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11-28T01:25:01.517Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
