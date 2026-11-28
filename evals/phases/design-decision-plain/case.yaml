@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: design-decision-plain
+description: Etapa 5. A dev pede ajuda para escolher como o e-mail sai; a decisão chega em linguagem simples, com recomendação e sem jargão fora de parênteses.
+tags: [phase-5]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 40
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Edit, Agent]
+  prompt: Continua a história APP-12 no Keel.
