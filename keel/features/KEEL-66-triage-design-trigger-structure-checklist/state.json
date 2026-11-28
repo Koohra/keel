@@ -9,7 +9,7 @@
     "base": null
   },
   "level": "with-design",
-  "phase": "implementation",
+  "phase": "done",
   "steps": {
     "triage": {
       "done": true,
@@ -89,12 +89,60 @@
       "failedAttempts": null
     },
     "closing": {
-      "convergence": null,
-      "arch": null,
-      "deltas": null,
+      "base": "de837a6a4dfef006211645f75535cac6ebac5395",
+      "head": "8071800c8e9ba28854cfd2dc625c7e02029e6692",
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T1 `triage: a planned component without files makes the level with-design` (a3f31b4); T2 `triage: a new orphan file and a project without source code are design triggers` (920b4ee)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T1 `triage: a planned component without files makes the level with-design` (a3f31b4)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T3 `triage: the phase reads designTriggers and proposes with-design` (39a2ab8)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T4 `checklists: new structure or a rung change brings the structure checklist` (22025e1)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R5",
+          "evidence": "T1 `triage: a planned component without files makes the level with-design` (a3f31b4); T4 `checklists: new structure or a rung change brings the structure checklist` (22025e1)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": [],
+        "orphans": [],
+        "created": [],
+        "noActive": false
+      },
+      "deltas": {
+        "files": [],
+        "sections": {
+          "added": [],
+          "modified": [],
+          "removed": []
+        },
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
       "deltasApproved": null,
+      "review": {
+        "result": "findings",
+        "head": "8071800c8e9ba28854cfd2dc625c7e02029e6692",
+        "at": "2026-11-28T02:25:56.146Z"
+      },
       "pullRequest": null
     }
   },
-  "updatedAt": "2026-11-28T02:24:32.666Z"
+  "updatedAt": "2026-11-28T02:25:56.345Z"
 }

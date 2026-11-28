@@ -71,8 +71,13 @@ Review: findings (isolated reviewer); F1 fixed (separador com alinhamento não c
 - T4: `agents/reviewer.md:62` cita como exemplo só os checklists de segurança, dados e contrato. Fica fora do `Files:` da T4; o revisor lê qualquer caminho que recebe, então o de estrutura já funciona.
 
 ## Story review
-Review: <ok | findings and what became of each one | unavailable> (filled in the closing)
+Review: findings (isolated reviewer); F1 kept (a varredura dupla só roda na triagem de projeto com keel/product.md; juntar as duas mudaria o arch-check, fora do escopo); F2 kept (componente planejado com arquivo não é pending: test/arch-check.test.mjs:289, e o next só repassa pending)
 
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
 |---|---|---|
+| R1 | T1 `triage: a planned component without files makes the level with-design` (a3f31b4); T2 `triage: a new orphan file and a project without source code are design triggers` (920b4ee) | met |
+| R2 | T1 `triage: a planned component without files makes the level with-design` (a3f31b4) | met |
+| R3 | T3 `triage: the phase reads designTriggers and proposes with-design` (39a2ab8) | met |
+| R4 | T4 `checklists: new structure or a rung change brings the structure checklist` (22025e1) | met |
+| R5 | T1 `triage: a planned component without files makes the level with-design` (a3f31b4); T4 `checklists: new structure or a rung change brings the structure checklist` (22025e1) | met |
