@@ -43,7 +43,7 @@ Depends on: —
 
 ## Progress
 ### T1
-Status: in review
+Status: done (a3f31b4)
 RED evidence: `node --test test/keel-state.test.mjs` exited with 1 at 2026-11-28T02:11:12.259Z
 GREEN evidence: `node --test test/keel-state.test.mjs` exited with 0 at 2026-11-28T02:15:53.873Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
