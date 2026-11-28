@@ -238,10 +238,18 @@ function resolveImport(imp, from, context) {
 function validateConfig(config, paths) {
   const fail = (message) => { throw new Error(`${CONFIG_PATH}: ${message}`); };
   if (!config || typeof config !== 'object' || Array.isArray(config)) fail('expected an object');
-  const components = config.components ?? {};
-  if (typeof components !== 'object' || Array.isArray(components)) fail('"components" must be an object name -> list of globs');
-  for (const [name, globs] of Object.entries(components)) {
+  const declared = config.components ?? {};
+  if (typeof declared !== 'object' || Array.isArray(declared)) fail('"components" must be an object name -> list of globs');
+  // A component is a list of globs or { globs, planned }; planned without files is pending.
+  const components = {};
+  const planned = new Set();
+  for (const [name, value] of Object.entries(declared)) {
+    const object = value && typeof value === 'object' && !Array.isArray(value);
+    const globs = object ? value.globs : value;
     if (!Array.isArray(globs) || globs.some((g) => typeof g !== 'string')) fail(`component ${name}: expected a list of globs`);
+    if (object && 'planned' in value && typeof value.planned !== 'boolean') fail(`component ${name}: "planned" must be true or false`);
+    components[name] = globs;
+    if (object && value.planned) planned.add(name);
   }
   const externals = { ...DEFAULT_EXTERNALS };
   for (const [category, entries] of Object.entries(config.externals ?? {})) {
@@ -254,12 +262,14 @@ function validateConfig(config, paths) {
     const regexes = components[component].map(globToRegExp);
     return paths.some((path) => regexes.some((re) => re.test(path)));
   };
+  const pending = [...planned].filter((name) => !matches(name)).sort();
+  const waiting = new Set(pending);
   if (!Array.isArray(config.rules ?? [])) fail('"rules" must be a list');
   for (const rule of config.rules ?? []) {
     const name = rule?.name;
     if (typeof name !== 'string' || !name) fail('rule without "name"');
     if (!(rule.from in components)) fail(`rule ${name}: unknown component "${rule.from}" in "from"`);
-    if (!matches(rule.from)) {
+    if (!waiting.has(rule.from) && !matches(rule.from)) {
       fail(`rule ${name} matches zero files (component ${rule.from}); fix the globs to avoid an empty pass`);
     }
     if (!Array.isArray(rule.forbid)) fail(`rule ${name}: "forbid" must be a list`);
@@ -268,7 +278,7 @@ function validateConfig(config, paths) {
         const category = target.slice('external:'.length);
         if (!(category in externals)) fail(`rule ${name}: unknown external category "${category}"`);
       } else if (!(target in components)) fail(`rule ${name}: unknown component "${target}" in "forbid"`);
-      else if (!matches(target)) fail(`rule ${name}: component ${target} in "forbid" matches zero files; fix the globs`);
+      else if (!waiting.has(target) && !matches(target)) fail(`rule ${name}: component ${target} in "forbid" matches zero files; fix the globs`);
     }
     if (typeof rule.fix !== 'string' || !rule.fix.trim()) fail(`rule ${name} without "fix"`);
   }
@@ -279,7 +289,10 @@ function validateConfig(config, paths) {
     if (!paths.some((path) => moduleOf(path, regex))) fail(`noCycles: "${pattern}" matches no module; fix the glob`);
   }
   if (config.baseline != null && typeof config.baseline !== 'string') fail('"baseline" must be a path');
-  return { components, externals, rules: config.rules ?? [], noCycles, roots: roots.map((r) => toPosix(r).replace(/^\.\/|\/+$/g, '')).filter(Boolean) };
+  // Rules wait for a pending "from"; a pending target leaves "forbid" while the others still count.
+  const rules = (config.rules ?? []).filter((rule) => !waiting.has(rule.from))
+    .map((rule) => ({ ...rule, forbid: rule.forbid.filter((target) => !waiting.has(target)) }));
+  return { components, pending, externals, rules, noCycles, roots: roots.map((r) => toPosix(r).replace(/^\.\/|\/+$/g, '')).filter(Boolean) };
 }
 
 // Module of a file for a noCycles pattern: the shortest path prefix that matches the glob.
@@ -354,7 +367,7 @@ export function checkArchitecture({ config, files, baseline = new Set(), aliases
   const entries = files instanceof Map ? [...files] : Object.entries(files);
   const paths = entries.map(([path]) => path).sort();
   const fileSet = new Set(paths);
-  const { components, externals, rules, noCycles, roots } = validateConfig(config, paths);
+  const { components, pending, externals, rules, noCycles, roots } = validateConfig(config, paths);
   const topDirs = new Set(paths.filter((p) => p.includes('/')).map((p) => p.split('/')[0]));
   const context = { fileSet, externals, roots, aliases, topDirs };
   const unresolved = [];
@@ -435,6 +448,7 @@ export function checkArchitecture({ config, files, baseline = new Set(), aliases
 
   const found = [...all.values()].sort((a, b) => a.key.localeCompare(b.key));
   return {
+    pending,
     violations: found.filter((v) => !baseline.has(v.key)),
     known: found.filter((v) => baseline.has(v.key)),
     stale: [...baseline].filter((key) => !all.has(key)).sort(),
@@ -567,6 +581,7 @@ function main(argv) {
     }
     console.log(`arch-check (approximate scanner): ${result.files} file(s) read, ${result.violations.length} new violation(s), ${result.known.length} known in the baseline`);
     for (const note of result.notes) console.log(`note: ${note}`);
+    if (result.pending.length) console.log(`planned component(s) without files (pending): ${result.pending.join(', ')}`);
     for (const violation of result.violations) console.log(`- ${violation.message}`);
     if (result.unresolved.length) {
       console.log('unresolved imports (approximate), not counted as violations:');

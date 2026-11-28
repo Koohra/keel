@@ -258,3 +258,42 @@ test('Keel itself passes its keel/architecture.json', () => {
   const result = spawnSync(process.execPath, [join(root, 'scripts', 'arch-check.mjs')], { cwd: root, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
+
+test('planned component without files is pending and its rules wait', () => {
+  const config = {
+    components: {
+      domain: ['src/domain/**'],
+      infra: ['src/infra/**'],
+      api: { globs: ['src/api/**'], planned: true },
+    },
+    rules: [
+      { name: 'api-isolated', from: 'api', forbid: ['infra'], fix: 'x' },
+      { name: 'domain-isolated', from: 'domain', forbid: ['api', 'infra'], fix: 'y' },
+    ],
+  };
+  withProject({ 'keel/architecture.json': config, 'src/domain/a.ts': 'export const a = 1;\n', 'src/infra/db.ts': 'export const db = 1;\n' }, (dir, run) => {
+    const empty = run('--json');
+    assert.equal(empty.status, 0, empty.stdout + empty.stderr);
+    const json = JSON.parse(empty.stdout);
+    assert.deepEqual(json.pending, ['api']);
+    assert.deepEqual(json.violations, []);
+    assert.match(run().stdout, /planned component\(s\) without files \(pending\): api/);
+
+    writeFileSync(join(dir, 'src', 'domain', 'a.ts'), "import { db } from '../infra/db';\n");
+    const active = JSON.parse(run('--json').stdout);
+    assert.deepEqual(active.violations.map((v) => v.key), ['domain-isolated|src/domain/a.ts|src/infra/db.ts'], 'the active target is checked beside a pending one');
+
+    mkdirSync(join(dir, 'src', 'api'));
+    writeFileSync(join(dir, 'src', 'api', 'h.ts'), "import { db } from '../infra/db';\n");
+    const first = JSON.parse(run('--json').stdout);
+    assert.deepEqual(first.pending, []);
+    assert.ok(first.violations.some((v) => v.key === 'api-isolated|src/api/h.ts|src/infra/db.ts'), 'the rule applies with the first file');
+  });
+  const files = new Map([['src/a.ts', '']]);
+  const check = (components) => () => checkArchitecture({ config: { components, rules: [{ name: 'r', from: 'a', forbid: [], fix: 'x' }] }, files });
+  assert.throws(check({ a: ['lib/**'] }), /rule r matches zero files/);
+  assert.throws(check({ a: { globs: ['src/**'], planned: 'yes' } }), /component a: "planned" must be true or false/);
+  assert.throws(check({ a: { planned: true } }), /component a: expected a list of globs/);
+  assert.throws(check({ a: { globs: ['src/**'], planned: null } }), /component a: "planned" must be true or false/);
+  assert.throws(check({ a: { globs: ['lib/**'] } }), /rule r matches zero files/, 'an object without planned is a common component');
+});

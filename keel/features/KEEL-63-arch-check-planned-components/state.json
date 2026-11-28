@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-63",
+    "title": "arch-check: componentes planejados e arquivos órfãos",
+    "source": "https://github.com/Koohra/keel/issues/63",
+    "folder": "keel/features/KEEL-63-arch-check-planned-components",
+    "branch": "feat/arch-check-planned-components",
+    "base": null
+  },
+  "level": "with-design",
+  "phase": "implementation",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-27T19:48:48.002Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-27T21:02:31.274Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T00:31:51.308Z",
+      "hash": "c5f10f0fb81eef6eccc8d890e51f95ba7ac30763431a3d4bfefdccc99e6312ae"
+    },
+    "design": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T00:32:59.449Z",
+      "hash": "89090810348c7813ef953d4da1456d0b52163b1e48d8180f4f33d8f4cd16e50a"
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T00:32:59.502Z",
+      "hash": "6d668e7152a3b968eba65f0033bc203379761dd7e9ac209073d359216925c747"
+    },
+    "implementation": {
+      "currentTask": "T1",
+      "blocked": null,
+      "red": {
+        "command": "node --test test/arch-check.test.mjs",
+        "exitCode": 1,
+        "output": "  stack: |-\n    file:///home/user/keel/test/arch-check.test.mjs:276:12\n    withProject (file:///home/user/keel/test/arch-check.test.mjs:33:12)\n    TestContext.<anonymous> (file:///home/user/keel/test/arch-check.test.mjs:274:3)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..14\n# tests 14\n# suites 0\n# pass 13\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1103.301142",
+        "at": "2026-11-28T00:33:15.058Z"
+      },
+      "green": {
+        "command": "node --test test/arch-check.test.mjs",
+        "exitCode": 0,
+        "output": "ok 13 - Keel itself passes its keel/architecture.json\n  ---\n  duration_ms: 84.709992\n  type: 'test'\n  ...\n# Subtest: planned component without files is pending and its rules wait\nok 14 - planned component without files is pending and its rules wait\n  ---\n  duration_ms: 178.431005\n  type: 'test'\n  ...\n1..14\n# tests 14\n# suites 0\n# pass 14\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1289.96005",
+        "at": "2026-11-28T00:34:53.246Z"
+      },
+      "checks": {
+        "passed": true,
+        "fingerprint": "011bd2bbd56654bafce8e9defedc4e87afcab702581c5260f87b9713f9230890",
+        "at": "2026-11-28T00:34:54.659Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 58 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 245 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.129907\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 246 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.141133\n  type: 'test'\n  ...\n1..246\n# tests 246\n# suites 0\n# pass 246\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 26560.834614"
+          }
+        ]
+      },
+      "review": {
+        "task": "T1",
+        "result": "findings",
+        "at": "2026-11-28T00:35:21.538Z"
+      },
+      "commit": {
+        "task": "T1",
+        "approvedBy": "Miguel",
+        "at": "2026-11-28T00:35:36.554Z",
+        "fingerprint": "011bd2bbd56654bafce8e9defedc4e87afcab702581c5260f87b9713f9230890"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "convergence": null,
+      "arch": null,
+      "deltas": null,
+      "deltasApproved": null,
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-28T00:35:36.554Z"
+}
