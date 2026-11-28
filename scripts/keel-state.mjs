@@ -19,6 +19,7 @@ import {
   startTask, taskView,
 } from './task-loop.mjs';
 import { commitInHistory, gitOutput, gitPaths } from './git.mjs';
+import { CONFIG_PATH, runCheck } from './arch-check.mjs';
 import {
   approveDeltas, archResult, closingView, convergenceResult, deltasResult, gatherClosing, recordClosing, recordStoryReview, storyReviewResult,
 } from './closing.mjs';
@@ -171,6 +172,7 @@ export function nextStep(state, workflow, docs, tree = {}) {
   const phase = workflow.phases[phaseIndex(workflow, current.phase)];
   const loop = phase.loop === 'tasks' ? taskView(current, docs['tasks.md'], tree.fingerprint, phase.taskExit, docs['design.md']) : {};
   const closing = current.phase === 'closing' ? { closing: closingView(current) } : {};
+  const triage = current.phase === 'triage' ? { triage: { designTriggers: tree.designTriggers ?? [] } } : {};
   return {
     story: current.story.key,
     phase: current.phase,
@@ -179,6 +181,7 @@ export function nextStep(state, workflow, docs, tree = {}) {
     missing: missingFor(phase, current, docs),
     ...loop,
     ...closing,
+    ...triage,
     expired,
   };
 }
@@ -200,11 +203,20 @@ function requireBy(by) {
   if (!by) throw new Error('say who approved with --by <dev>');
 }
 
-export function setLevel(state, level, by, now) {
+// Design triggers found by script, not by judgment: planned components the code has not created yet.
+export function designTriggers({ pending = [] }) {
+  return pending.map((name) => `planned component without files: ${name}`);
+}
+
+// triggers: designTriggers of the repository now; with any, only with-design is accepted.
+export function setLevel(state, level, by, now, triggers = []) {
   if (!LEVELS.includes(level)) throw new Error(`invalid level "${level}"; use ${LEVELS.join(', ')}`);
   requireBy(by);
   requirePhase(state, 'triage', 'level');
-  return { ...state, level, steps: { ...state.steps, triage: { done: true, confirmedBy: by, at: now } }, updatedAt: now };
+  if (triggers.length && level !== 'with-design') {
+    throw new Error(`level ${level} refused: automatic design trigger(s): ${triggers.join('; ')}; use level with-design --by <dev>`);
+  }
+  return { ...state, level, steps: { ...state.steps, triage: { done: true, confirmedBy: by, at: now, designTriggers: triggers } }, updatedAt: now };
 }
 
 export function recordGenerated(state, artifact, now) {
@@ -282,6 +294,18 @@ export function currentBranch(root) {
   if (statSync(gitDir).isFile()) gitDir = resolve(root, readFileSync(gitDir, 'utf8').replace(/^gitdir:\s*/, '').trim());
   const head = readFileSync(join(gitDir, 'HEAD'), 'utf8').trim();
   return head.startsWith('ref: refs/heads/') ? head.slice('ref: refs/heads/'.length) : null;
+}
+
+// Facts for designTriggers. An invalid keel/architecture.json gives no architecture trigger here;
+// arch-check reports it in the later phases.
+function triageTriggers(root) {
+  let arch = null;
+  try {
+    arch = runCheck(root);
+  } catch (error) {
+    if (!error.message.startsWith(CONFIG_PATH)) throw error;
+  }
+  return designTriggers({ pending: arch?.pending ?? [] });
 }
 
 function readState(path) {
@@ -409,7 +433,7 @@ function run(argv, root, now) {
     if (existsSync(join(folder, 'state.json'))) throw new Error(`${state.story.folder} already has state.json`);
     mkdirSync(folder, { recursive: true });
     writeState(folder, state);
-    return { output: nextStep(state, workflow, readDocs(folder)) };
+    return { output: nextStep(state, workflow, readDocs(folder), { designTriggers: triageTriggers(root) }) };
   }
   const { folder, state: stored } = loadStory(root, values.story);
   const docs = readDocs(folder);
@@ -417,6 +441,9 @@ function run(argv, root, now) {
   let updated = expired.length ? { ...state, updatedAt: now } : state;
   // In the closing phase every command sees fresh facts: convergence, architecture and deltas.
   if (updated.phase === 'closing') updated = recordClosing(updated, gatherClosing(root, docs, updated), now);
+  // Design triggers of the triage, scanned at most once per command.
+  let found = null;
+  const triggers = () => (updated.phase === 'triage' ? (found ??= triageTriggers(root)) : []);
   switch (command) {
     case 'next':
       break;
@@ -430,7 +457,7 @@ function run(argv, root, now) {
       updated = moved.state;
       break;
     }
-    case 'level': updated = setLevel(updated, arg, values.by, now); break;
+    case 'level': updated = setLevel(updated, arg, values.by, now, triggers()); break;
     case 'generated': updated = recordGenerated(updated, arg, now); break;
     case 'review':
       if (arg === 'task') updated = recordTaskReview(updated, values.result, now, docs['tasks.md'], changedFiles(root));
@@ -470,7 +497,7 @@ function run(argv, root, now) {
   }
   if (updated !== stored) writeState(folder, updated);
   const open = updated.phase === 'implementation' && updated.steps.implementation?.currentTask;
-  const tree = open ? { fingerprint: codeFingerprint(root) } : {};
+  const tree = open ? { fingerprint: codeFingerprint(root) } : updated.phase === 'triage' ? { designTriggers: triggers() } : {};
   return { output: nextStep(updated, workflow, docs, tree) };
 }
 

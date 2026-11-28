@@ -6,7 +6,7 @@ Approved by Miguel on 2026-11-28
 <!-- frozen after approval: start -->
 ## T1 — Walking skeleton: componente planejado sem arquivo força with-design na triagem
 Covers: R1 (AC-1.1), R2 (AC-2.1, AC-2.2), R5 (AC-5.1)
-Files: `scripts/keel-state.mjs`, `test/keel-state.test.mjs`
+Files: `scripts/keel-state.mjs`, `test/keel-state.test.mjs`, `test/story-repo.mjs`
 New structure: none
 Test first: `triage: a planned component without files makes the level with-design` — com um componente `planned` sem arquivo, o `next` da triagem mostra o gatilho, `level standard` é recusado com o gatilho, `level foo`, sem `--by` e fora da triagem dão o erro de hoje, e `level with-design` grava os gatilhos; com código e sem `architecture.json`, ou com o JSON inválido, `designTriggers` é `[]` e `level standard` passa
 Verification: `node --test test/keel-state.test.mjs`
@@ -43,7 +43,11 @@ Depends on: —
 
 ## Progress
 ### T1
-Status: pending
+Status: in review
+RED evidence: `node --test test/keel-state.test.mjs` exited with 1 at 2026-11-28T02:11:12.259Z
+GREEN evidence: `node --test test/keel-state.test.mjs` exited with 0 at 2026-11-28T02:15:53.873Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (o catch só aceita erro do keel/architecture.json); F2 fixed (gatilhos calculados uma vez por comando); F3 kept (design congelado; a mudança está em Implementation notes, T1); F4 fixed
 ### T2
 Status: pending
 ### T3
@@ -52,7 +56,7 @@ Status: pending
 Status: pending
 
 ## Implementation notes
-not applicable
+- T1: o `Files:` ganhou `test/story-repo.mjs`. O `closingRepo` com componente só planejado ficava preso na triagem pelo gatilho novo; o fixture passa a gravar o `architecture.json` depois do `level`, e o tasks.md teve nova aprovação.
 
 ## Story review
 Review: <ok | findings and what became of each one | unavailable> (filled in the closing)
