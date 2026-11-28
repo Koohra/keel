@@ -97,3 +97,23 @@ test('setup: approaches by stance, a starter checked on the web and "tanto faz" 
   assert.match(section, /"tanto faz"[^\n]*decisão do Keel, não do dev/);
   assert.match(section, /recusa a entrevista[^\n]*recomendações do Keel[^\n]*ADR-001/);
 });
+
+test('setup: the new repository ends with ADR-001, rungs and a planned architecture.json', () => {
+  const section = newRepo();
+  assert.match(section, /"Rungs per module"[^\n]*cenário/);
+  assert.match(section, /ADR-001 de arquitetura e stack[^\n]*"Confirmation"[^\n]*`keel\/architecture\.json`/);
+  assert.match(section, /"Decisões adiadas"[^\n]*agora não, porque/);
+  assert.match(section, /`"planned": true`/);
+  assert.match(section, /`coverage`/);
+  assert.match(section, /`Architecture: não se aplica`[^\n]*não vale/);
+  assert.match(section, /cada trecho[^\n]*aprovação/);
+  assert.match(section, /`arch-check\.mjs`[^\n]*`pending`[^\n]*sem `noCycles` nem baseline/);
+  assert.match(section, /violação plantada[^\n]*primeiro arquivo/);
+  const gate = skill.slice(skill.indexOf('## Portão'));
+  assert.match(gate, /O dev aprova o product\.md e as ADRs iniciais/);
+  assert.match(gate, /sem código-fonte[^\n]*ADR-001 de arquitetura e stack/);
+  const step4 = skill.slice(skill.indexOf('## 4. '), skill.indexOf('## 5. '));
+  assert.match(step4, /a partir das pastas reais/);
+  const stage0 = read('docs/specification.md').match(/## Etapa 0\.[\s\S]*?(?=\n## Etapa 1\.)/)[0];
+  assert.match(stage0, /sem código-fonte[^\n]*"Quality goals"[^\n]*ADR-001/);
+});

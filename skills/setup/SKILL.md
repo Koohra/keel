@@ -84,6 +84,11 @@ Use este ramo quando o repositório ainda não tem código-fonte (só README, li
 2. As respostas viram a seção "Quality goals" do `keel/product.md`: 3 a 5 cenários, cada um com contexto, estímulo e métrica. Se as respostas dão menos de 3, complete até 3 com cenários propostos pelo Keel, marcados como decisão do Keel. Mostre a seção e grave só com a aprovação do dev.
 3. Abordagens: com os "Quality goals", apresente 2 ou 3 abordagens, uma por postura: mínima (o menos possível para a primeira versão), proporcional (o que os cenários pedem agora) e preparada para crescer (o que o cenário de 6 a 12 meses pede). Cada uma com uma frase sobre o que muda para o produto e uma linha sobre o que custa depois. A recomendação padrão é um starter conhecido da stack, conferido na web (documentação oficial do framework); sem acesso à web, diga que não conferiu e registre o starter na ADR-001 como `[ASSUMPTION]`. Costura entre partes do código (porta, adaptador) entra só quando um cenário de mudança dos "Quality goals" a justifica. Se o dev recusa todas as abordagens, faça uma pergunta sobre o que falta e proponha de novo.
 4. "Tanto faz": quando o dev responde "tanto faz" a uma pergunta ou escolha, siga a recomendação e registre na ADR-001 ou nos "Quality goals" que foi decisão do Keel, não do dev. Se o dev recusa a entrevista, siga com as recomendações do Keel, registradas do mesmo jeito; o portão continua pedindo a ADR-001.
+5. O que sai, com a abordagem aprovada. Mostre cada trecho e grave só com a aprovação do dev, um por vez:
+   - a tabela "Rungs per module" do passo 3, agora com os módulos da abordagem e, no motivo de cada um, o cenário dos "Quality goals" que pede aquela quantidade de estrutura (o degrau);
+   - a ADR-001 de arquitetura e stack em `keel/adrs/`: a abordagem e o starter escolhidos, com "Confirmation" apontando para as regras do `keel/architecture.json` que a conferem, e uma seção "Decisões adiadas", uma linha por decisão no formato "agora não, porque...";
+   - o `keel/architecture.json` com os componentes da abordagem marcados `"planned": true` e `coverage` nas pastas onde o código vai nascer. A dispensa `Architecture: não se aplica` não vale neste ramo.
+6. Rode `arch-check.mjs`: ele sai com 0 e mostra os componentes `pending`. Sem código, o arquivo fica sem `noCycles` nem baseline, que entram pelo delta do fechamento quando as pastas existirem. A prova por violação plantada do passo 4 fica para quando o primeiro arquivo do componente existir, e a ferramenta nativa do passo 4.5, para quando houver código; até lá, "Checks" usa o `arch-check.mjs` na linha Architecture. Depois siga para o passo 5.
 
 ## 4. keel/architecture.json e testes de arquitetura
 
@@ -124,3 +129,4 @@ Plugin do Codex não traz subagente: o revisor isolado vai para o projeto, em `.
 ## Portão
 
 O dev aprova o product.md e as ADRs iniciais. Sem isso, nenhuma história começa.
+Em repositório sem código-fonte, as ADRs iniciais incluem a ADR-001 de arquitetura e stack do passo 3.1.
