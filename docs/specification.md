@@ -73,6 +73,7 @@ Orçamento de tamanho: product.md até cerca de 200 linhas, requirements.md até
 - Não deve tornar Clean Architecture ou DDD o padrão: a regra estrutural universal é a direção das dependências; o resto segue o degrau declarado por módulo.
 - Não deve copiar para o product.md o que o código já diz.
 - Não deve começar uma história sem product.md; sem ele, oferece criar.
+- Em repositório sem código-fonte, deve seguir o ramo de proposta de arquitetura (épico #61, #62): até 6 perguntas, uma por vez, com "por que importa" e recomendação; as respostas viram 3 a 5 cenários em "Quality goals" no product.md; 2 ou 3 abordagens por postura, com o custo depois; e saem a ADR-001 de arquitetura e stack (com "Confirmation" e "Decisões adiadas") e o `architecture.json` com componentes planejados, sem a dispensa "Architecture: não se aplica". "Tanto faz" vira decisão do Keel.
 
 **AGENTS.md e CLAUDE.md do projeto** (Miguel, 2026-11-20; base em `AGENTS.md e CLAUDE.md no Keel.md`)
 - O Keel funciona sem tocar nesses arquivos. As instruções dele ficam na skill, nos hooks e num `SessionStart` curto (até 1.500 caracteres: história ativa, fase, o que falta, skill a usar e precedência), nunca no arquivo do dev.

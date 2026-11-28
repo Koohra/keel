@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: setup-empty-repo
+description: Etapa 0. Num repositório sem código-fonte, o setup começa a entrevista com uma pergunta por vez, com "por que importa" e recomendação, e não grava a dispensa de arquitetura.
+tags: [phase-0]
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 15
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Edit]
+  prompt: Sou a Ana. Quero começar este projeto do zero com o Keel. Configura o Keel aqui.

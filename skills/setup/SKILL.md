@@ -11,6 +11,8 @@ com a opção recomendada.
 
 Linguagem simples: em cada decisão com consequência e em cada pergunta com opções, escreva para quem não é dev, o que serve também ao dev (não há modo leigo). Cada opção começa com uma frase sobre o que muda para o produto ou para o usuário, com as palavras do glossário do `keel/product.md` e sem jargão de processo (degrau, porta, adaptador, mapper, agregado); depois das opções, a recomendação, com o porquê na mesma linguagem. O termo técnico aparece só entre parênteses, depois da frase simples.
 
+Repositório sem código-fonte (passo 3.1): toda pergunta do setup, também as do passo 2 sobre o product.md, segue o formato da entrevista: uma frase "por que importa", as opções e a recomendação, uma por vez, aceita com "sim".
+
 Caminhos: `<plugin>` é a pasta do plugin: no Claude Code, `${CLAUDE_PLUGIN_ROOT}`; em outro agente, a pasta dois níveis acima deste SKILL.md. Troque `<plugin>` pelo caminho antes de rodar um comando.
 
 Scripts (Node, sem dependências), rodados na raiz do projeto:
@@ -62,7 +64,7 @@ No Codex (o relatório traz um achado `info` a mais quando o caso pede):
 ## 2. product.md e ADRs
 
 - Confira se `keel/product.md` e `keel/adrs/` existem e se o product.md tem até cerca de 200 linhas.
-- Sem product.md, ofereça criar com o dev: visão, o que faz, o que não faz, glossário, decisões e princípios.
+- Sem product.md, ofereça criar com o dev: visão, o que faz, o que não faz, glossário, decisões e princípios; "Quality goals" nasce no passo 3.1 em repositório sem código-fonte e, nos outros, só se o dev quiser.
   Não copie o que o código já diz. Documentação antiga: proponha destino ou descarte para cada fonte.
 - ADRs no formato `keel/adrs/ADR-NNN-<slug>.md`, com Status, Contexto, Decisão, Consequências e Confirmação.
 
@@ -75,6 +77,20 @@ Parta de `<plugin>/templates/principles.md` e ajuste com o dev:
   a regra universal é a direção das dependências; o resto segue o que foi declarado para o módulo (degrau).
 - Exemplares a seguir e caminhos que não se copia.
 - Checks: comandos de teste, lint com complexidade e arquitetura, cada um com a origem quando vier do AGENTS.md.
+
+## 3.1 Repositório sem código-fonte: proposta de arquitetura
+
+Use este ramo quando o repositório ainda não tem código-fonte (só README, licença, configuração ou documentos). Em repositório com código, pule para o passo 4.
+
+1. Entrevista: no máximo 6 perguntas, uma por vez. Cada pergunta traz uma frase "por que importa" em linguagem simples, as opções e a sua recomendação; o dev aceita a recomendação com "sim". Temas, nesta ordem, pulando o que o dev já disse: quem usa e quantos; dado sensível (pessoal, financeiro, de saúde); serviços externos (pagamento, e-mail, login de terceiros); offline ou mobile; quem vai manter; o que o produto deve virar em 6 a 12 meses.
+2. As respostas viram a seção "Quality goals" do `keel/product.md`: 3 a 5 cenários, cada um com contexto, estímulo e métrica. Se as respostas dão menos de 3, complete até 3 com cenários propostos pelo Keel, marcados como decisão do Keel. Mostre a seção e grave só com a aprovação do dev.
+3. Abordagens: com os "Quality goals", apresente 2 ou 3 abordagens, uma por postura: mínima (o menos possível para a primeira versão), proporcional (o que os cenários pedem agora) e preparada para crescer (o que o cenário de 6 a 12 meses pede). Cada uma com uma frase sobre o que muda para o produto e uma linha sobre o que custa depois. A recomendação padrão é um starter conhecido da stack, conferido na web (documentação oficial do framework); sem acesso à web, diga que não conferiu e registre o starter na ADR-001 como `[ASSUMPTION]`. Costura entre partes do código (porta, adaptador) entra só quando um cenário de mudança dos "Quality goals" a justifica. Se o dev recusa todas as abordagens, faça uma pergunta sobre o que falta e proponha de novo.
+4. "Tanto faz": quando o dev responde "tanto faz" a uma pergunta ou escolha, siga a recomendação e registre na ADR-001 ou nos "Quality goals" que foi decisão do Keel, não do dev. Se o dev recusa a entrevista, siga com as recomendações do Keel, registradas do mesmo jeito; o portão continua pedindo a ADR-001.
+5. O que sai, com a abordagem aprovada. Mostre cada trecho e grave só com a aprovação do dev, um por vez:
+   - a tabela "Rungs per module" do passo 3, agora com os módulos da abordagem e, no motivo de cada um, o cenário dos "Quality goals" que pede aquela quantidade de estrutura (o degrau);
+   - a ADR-001 de arquitetura e stack em `keel/adrs/`: a abordagem e o starter escolhidos, com "Confirmation" apontando para as regras do `keel/architecture.json` que a conferem, e uma seção "Decisões adiadas", uma linha por decisão no formato "agora não, porque...";
+   - o `keel/architecture.json` com os componentes da abordagem marcados `"planned": true` e `coverage` nas pastas onde o código vai nascer. A dispensa `Architecture: não se aplica` não vale neste ramo.
+6. Rode `arch-check.mjs`: ele sai com 0 e mostra os componentes `pending`. Sem código, o arquivo fica sem `noCycles` nem baseline, que entram pelo delta do fechamento quando as pastas existirem. A prova por violação plantada do passo 4 fica para quando o primeiro arquivo do componente existir, e a ferramenta nativa do passo 4.5, para quando houver código; até lá, "Checks" usa o `arch-check.mjs` na linha Architecture. Depois siga para o passo 5.
 
 ## 4. keel/architecture.json e testes de arquitetura
 
@@ -115,3 +131,4 @@ Plugin do Codex não traz subagente: o revisor isolado vai para o projeto, em `.
 ## Portão
 
 O dev aprova o product.md e as ADRs iniciais. Sem isso, nenhuma história começa.
+Em repositório sem código-fonte, as ADRs iniciais incluem a ADR-001 de arquitetura e stack do passo 3.1.

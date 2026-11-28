@@ -19,6 +19,10 @@ O que o produto é, para quem e por quê, em até três frases. [source: ...]
 ## Decisions
 - [ADR-001](adrs/ADR-001-<slug>.md) <decisão>.
 
+## Quality goals
+O que o produto precisa garantir, em 3 a 5 cenários medíveis (formato Q42 do arc42).
+- Q1 <nome curto>. Contexto: <em que situação>. Estímulo: <o que acontece>. Métrica: <como se mede que deu certo>. [source: ...]
+
 ## Engineering principles
 
 Valem para código novo ou alterado. [hook] é checado automaticamente; [review] entra na

@@ -1,0 +1,158 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-62",
+    "title": "Setup: proposta de arquitetura para repositório novo",
+    "source": "https://github.com/Koohra/keel/issues/62",
+    "folder": "keel/features/KEEL-62-setup-architecture-proposal",
+    "branch": "feat/setup-architecture-proposal",
+    "base": null
+  },
+  "level": "standard",
+  "phase": "done",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-28T01:15:35.414Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-28T01:17:50.636Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T01:17:50.692Z",
+      "hash": "efa3acd0876ddd7814925e2e6595a587f2f229a4333ae8b635c19241cba4285a"
+    },
+    "design": {
+      "approved": false,
+      "approvedBy": null,
+      "approvedAt": null,
+      "hash": null
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T01:35:48.602Z",
+      "hash": "d8931209bc74d19c47258b28fa48bd41675a829e4641d107863cb8aaf6913a2f"
+    },
+    "implementation": {
+      "currentTask": "T6",
+      "blocked": null,
+      "red": {
+        "command": "node --test test/setup-skill.test.mjs",
+        "exitCode": 1,
+        "output": "    \n  operator: 'match'\n  stack: |-\n    TestContext.<anonymous> (file:///home/user/keel/test/setup-skill.test.mjs:123:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..9\n# tests 9\n# suites 0\n# pass 8\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 59.558327",
+        "at": "2026-11-28T01:35:48.794Z"
+      },
+      "green": {
+        "command": "node --test test/setup-skill.test.mjs",
+        "exitCode": 0,
+        "output": "ok 8 - setup: the new repository ends with ADR-001, rungs and a planned architecture.json\n  ---\n  duration_ms: 0.724356\n  type: 'test'\n  ...\n# Subtest: setup: in a repository without source code every question follows the interview format\nok 9 - setup: in a repository without source code every question follows the interview format\n  ---\n  duration_ms: 0.381724\n  type: 'test'\n  ...\n1..9\n# tests 9\n# suites 0\n# pass 9\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 78.853024",
+        "at": "2026-11-28T01:35:54.474Z"
+      },
+      "checks": {
+        "passed": true,
+        "fingerprint": "62bc15accd2dc30d0160d7fcb59f395ccfe5ee65a1a8d4989a3c1e360d9f3ba7",
+        "at": "2026-11-28T01:35:54.658Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 58 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 265 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.155634\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 266 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.142852\n  type: 'test'\n  ...\n1..266\n# tests 266\n# suites 0\n# pass 266\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 44872.823321"
+          }
+        ]
+      },
+      "review": {
+        "task": "T6",
+        "result": "ok",
+        "at": "2026-11-28T01:37:17.456Z"
+      },
+      "commit": {
+        "task": "T6",
+        "approvedBy": "Miguel",
+        "at": "2026-11-28T01:37:17.542Z",
+        "fingerprint": "62bc15accd2dc30d0160d7fcb59f395ccfe5ee65a1a8d4989a3c1e360d9f3ba7"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "base": "1181ad6548c62bc277db1a9cfe489eb49fe87048",
+      "head": "0d82f6b30ee43ec0dbc50e05e7f4a9204233a177",
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T1 `setup: a repository without source code gets an interview of at most 6 questions` (de73e5c); T6 `setup: in a repository without source code every question follows the interview format` (93c706e)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T2 `setup: answers become 3 to 5 Quality goals scenarios` (abd5b31)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T3 `setup: approaches by stance, a starter checked on the web and \"tanto faz\" as a Keel decision` (c18084a)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T4 `setup: the new repository ends with ADR-001, rungs and a planned architecture.json` (d99c73b)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R5",
+          "evidence": "T4 `setup: the new repository ends with ADR-001, rungs and a planned architecture.json` (d99c73b)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R6",
+          "evidence": "T3 `setup: approaches by stance, a starter checked on the web and \"tanto faz\" as a Keel decision` (c18084a)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R7",
+          "evidence": "T5 `stage 0 has a case: an empty repository gets one question at a time and no waiver` (1e56913)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": [],
+        "orphans": [],
+        "created": [],
+        "noActive": false
+      },
+      "deltas": {
+        "files": [],
+        "sections": {
+          "added": [],
+          "modified": [],
+          "removed": []
+        },
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "deltasApproved": null,
+      "review": {
+        "result": "findings",
+        "head": "0d82f6b30ee43ec0dbc50e05e7f4a9204233a177",
+        "at": "2026-11-28T02:04:09.146Z"
+      },
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-28T02:04:14.099Z"
+}
