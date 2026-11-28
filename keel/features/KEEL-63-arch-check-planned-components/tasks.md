@@ -88,7 +88,7 @@ GREEN evidence: `node --test test/post-tool-use.test.mjs` exited with 0 at 2026-
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: ok (isolated reviewer)
 ### T4
-Status: in review
+Status: done (46403ab)
 RED evidence: `node --test test/closing.test.mjs` exited with 1 at 2026-11-28T00:41:01.531Z
 GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T00:48:22.843Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
