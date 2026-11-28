@@ -76,7 +76,7 @@ GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: ok (isolated reviewer); nota SUGERIR aplicada (o passo 4.5 e a linha Architecture de Checks ficam ditos para o repositório sem código)
 ### T5
-Status: in review
+Status: done (1e56913)
 RED evidence: `node --test test/evals.test.mjs` exited with 1 at 2026-11-28T01:31:09.756Z
 GREEN evidence: `node --test test/evals.test.mjs` exited with 0 at 2026-11-28T01:32:54.729Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
