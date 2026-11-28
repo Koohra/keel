@@ -9,7 +9,7 @@
     "base": null
   },
   "level": "with-design",
-  "phase": "implementation",
+  "phase": "done",
   "steps": {
     "triage": {
       "done": true,
@@ -79,12 +79,58 @@
       "failedAttempts": null
     },
     "closing": {
-      "convergence": null,
-      "arch": null,
-      "deltas": null,
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T1 `planned component without files is pending and its rules wait` (a0079f2); T7 no test (bb388ab)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T4 `closing refuses the waiver when the story created source without an active component` (46403ab)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T2 `covered file outside every component is an orphan` (3191bad); T7 no test (bb388ab)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T3 `PostToolUse warns about an orphan file without blocking` (fb0b847)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R5",
+          "evidence": "T5 `closing asks for the architecture.json delta for a new orphan` (2c03357)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R6",
+          "evidence": "T6 `new dependencies come from requirements.txt, pyproject.toml, go.mod, csproj and pom.xml` (21aa1ca)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": [],
+        "orphans": [],
+        "created": [],
+        "noActive": false
+      },
+      "deltas": {
+        "files": [],
+        "sections": {
+          "added": [],
+          "modified": [],
+          "removed": []
+        },
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
       "deltasApproved": null,
       "pullRequest": null
     }
   },
-  "updatedAt": "2026-11-28T01:00:38.869Z"
+  "updatedAt": "2026-11-28T01:00:48.907Z"
 }

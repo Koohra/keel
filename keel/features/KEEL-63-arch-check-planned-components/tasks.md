@@ -115,3 +115,9 @@ Review: findings (isolated reviewer); F1 fixed (a frase cobre o caso com archite
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
 |---|---|---|
+| R1 | T1 `planned component without files is pending and its rules wait` (a0079f2); T7 no test (bb388ab) | met |
+| R2 | T4 `closing refuses the waiver when the story created source without an active component` (46403ab) | met |
+| R3 | T2 `covered file outside every component is an orphan` (3191bad); T7 no test (bb388ab) | met |
+| R4 | T3 `PostToolUse warns about an orphan file without blocking` (fb0b847) | met |
+| R5 | T5 `closing asks for the architecture.json delta for a new orphan` (2c03357) | met |
+| R6 | T6 `new dependencies come from requirements.txt, pyproject.toml, go.mod, csproj and pom.xml` (21aa1ca) | met |
