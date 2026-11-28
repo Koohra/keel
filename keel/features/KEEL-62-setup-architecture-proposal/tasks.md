@@ -76,8 +76,11 @@ GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: ok (isolated reviewer); nota SUGERIR aplicada (o passo 4.5 e a linha Architecture de Checks ficam ditos para o repositório sem código)
 ### T5
-Status: pending
-
+Status: in review
+RED evidence: `node --test test/evals.test.mjs` exited with 1 at 2026-11-28T01:31:09.756Z
+GREEN evidence: `node --test test/evals.test.mjs` exited with 0 at 2026-11-28T01:32:54.729Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (grader de uma pergunta só na última mensagem); F2 fixed (os graders olham a última mensagem, como o design-decision-plain)
 ## Implementation notes
 - 2026-11-28: a T2 ganhou `plugins/keel-docs/scripts/doc-check.mjs` no `Files:`: o doc-check exige toda seção do modelo, e "Quality goals" precisa ser opcional para product.md de projeto existente (Existing behavior). Tasks aprovadas de novo por Miguel (aprovação permanente do épico #61).
 

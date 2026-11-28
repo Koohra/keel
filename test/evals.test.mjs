@@ -85,3 +85,17 @@ test('plain: a design case checks that the decision reaches the dev in plain lan
   assert.match(graders, /match: not_contains/);
   assert.match(graders, /recomend/i);
 });
+
+test('stage 0 has a case: an empty repository gets one question at a time and no waiver', () => {
+  const empty = cases.find((c) => c.endsWith('/setup-empty-repo'));
+  assert.ok(empty, 'setup-empty-repo');
+  assert.match(read(`${empty}/case.yaml`), /tags: \[phase-0\]/);
+  const graders = files.filter((f) => f.startsWith(`${empty}/graders/`)).map(read);
+  assert.ok(graders.some((g) => /por que importa/.test(g) && !/not_contains/.test(g)), 'why it matters grader');
+  assert.ok(graders.some((g) => /recomend/.test(g) && !/not_contains/.test(g)), 'recommendation grader');
+  assert.ok(graders.some((g) => /Architecture: n/.test(g) && /match: not_contains/.test(g)), 'no waiver grader');
+  const fixture = read(`${empty}/fixture.sh`);
+  assert.doesNotMatch(fixture, /node-mini|prepare\.sh/);
+  assert.match(fixture, /git init/);
+  assert.doesNotMatch(fixture, /\.(js|mjs|ts|py)\b/);
+});
