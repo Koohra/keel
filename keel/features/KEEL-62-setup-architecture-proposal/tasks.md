@@ -101,12 +101,12 @@ Review: ok (isolated reviewer)
 - 2026-11-28: a T2 ganhou `plugins/keel-docs/scripts/doc-check.mjs` no `Files:`: o doc-check exige toda seção do modelo, e "Quality goals" precisa ser opcional para product.md de projeto existente (Existing behavior). Tasks aprovadas de novo por Miguel (aprovação permanente do épico #61).
 
 ## Story review
-Review: <ok | findings and what became of each one | unavailable> (filled in the closing)
+Review: findings (isolated reviewer); F1 kept (Out of scope: o setup não tem estado por script); F2 kept (ADR-001 de arquitetura e stack e "Decisões adiadas" pedidos pela issue #62); F3 kept (o guia vale para projeto existente; o setup 3.1 completa até 3, AC-2.2); F4 kept (grader de uma pergunta é o que o R7 pede); F5 kept (mudança no doc-check registrada em Implementation notes)
 
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
 |---|---|---|
-| R1 | T1 `setup: a repository without source code gets an interview of at most 6 questions` (de73e5c) | met |
+| R1 | T1 `setup: a repository without source code gets an interview of at most 6 questions` (de73e5c); T6 `setup: in a repository without source code every question follows the interview format` (93c706e) | met |
 | R2 | T2 `setup: answers become 3 to 5 Quality goals scenarios` (abd5b31) | met |
 | R3 | T3 `setup: approaches by stance, a starter checked on the web and "tanto faz" as a Keel decision` (c18084a) | met |
 | R4 | T4 `setup: the new repository ends with ADR-001, rungs and a planned architecture.json` (d99c73b) | met |
