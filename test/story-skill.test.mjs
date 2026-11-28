@@ -194,3 +194,24 @@ test('o revisor tem a revisão de história com os dois lados e o fechamento a c
   assert.match(step, /"Story review"/);
   assert.match(step, /[Nn]ão corrija código/);
 });
+
+test('plain: decisions reach the dev in plain language, then the recommendation', () => {
+  for (const file of ['skills/story/SKILL.md', 'skills/setup/SKILL.md', 'plugins/keel-docs/skills/write/SKILL.md']) {
+    const rule = read(file).split('\n').find((line) => line.includes('Linguagem simples:'));
+    assert.ok(rule, `${file}: no plain-language rule`);
+    assert.match(rule, /o que muda para o produto ou para o usuário/, file);
+    assert.match(rule, /glossário do `keel\/product\.md`/, file);
+    assert.match(rule, /depois das opções, a recomendação/, file);
+    assert.match(rule, /só entre parênteses/, file);
+  }
+});
+
+test('plain: phase texts and guides put degrau, porta and mapper only in parentheses', () => {
+  const texts = listFiles().filter((f) => /^skills\/story\/phases\/.*\.md$|^plugins\/keel-docs\/skills\/write\/guides\/.*\.md$/.test(f));
+  for (const file of [...texts, 'skills/setup/SKILL.md']) {
+    for (const line of read(file).split('\n')) {
+      const outside = line.replace(/\([^()]*\)/g, '');
+      assert.doesNotMatch(outside, /\b(degraus?|portas?|mappers?)\b/i, `${file}: ${line}`);
+    }
+  }
+});
