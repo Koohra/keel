@@ -64,7 +64,7 @@ GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (o teste de histórico reescrito confere closing.base null)
 ### T3
-Status: in review
+Status: done (211d765)
 RED evidence: `node --test test/closing.test.mjs` exited with 1 at 2026-11-28T00:46:45.323Z
 GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T00:51:00.040Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
