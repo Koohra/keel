@@ -53,7 +53,7 @@ function tableInTasks(tasksText) {
   return tableRows(body).map(([rule = '', evidence = '', outcome = '']) => ({ rule, evidence, outcome }));
 }
 
-const closingOf = (state) => ({ convergence: null, arch: null, deltas: null, deltasApproved: null, ...state.steps.closing });
+const closingOf = (state) => ({ convergence: null, arch: null, deltas: null, deltasApproved: null, review: null, ...state.steps.closing });
 
 // Facts gathered at the edge go into state.json; the same object comes back when nothing changed.
 export function recordClosing(state, facts, now) {
@@ -87,6 +87,21 @@ export function archResult(state) {
   }
   const grown = arch.grown.length ? [`the baseline grew since the story base: ${arch.grown.join(', ')}; fix the violation instead of adding it to the baseline`] : [];
   return result([...arch.violations, ...grown].join('; '));
+}
+
+const REVIEW_RESULTS = ['ok', 'findings', 'unavailable'];
+
+// Result of the isolated reviewer on the whole story, recorded in the closing.
+export function recordStoryReview(state, outcome, now) {
+  if (state.phase !== 'closing') throw new Error(`review story only in phase closing; the story is in ${state.phase}`);
+  if (!REVIEW_RESULTS.includes(outcome)) throw new Error(`invalid result "${outcome}"; use ${REVIEW_RESULTS.join(', ')}`);
+  const closing = { ...closingOf(state), review: { result: outcome, at: now } };
+  return { ...state, steps: { ...state.steps, closing }, updatedAt: now };
+}
+
+export function storyReviewResult(state) {
+  const { review } = closingOf(state);
+  return result(review ? null : 'the whole story has no isolated review: call the reviewer with "revisão de história" and run review story --result <ok|findings|unavailable>');
 }
 
 // The dev's approval of the product.md/ADR delta, tied to the content it saw.

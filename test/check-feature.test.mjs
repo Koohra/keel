@@ -109,6 +109,7 @@ test('decisions: without architecture.json and without the waiver the architectu
     const product = readFileSync(join(repo.dir, 'keel/product.md'), 'utf8');
     repo.write('keel/product.md', product.replace('Tests: `node -e 0`', 'Tests: `node -e 0` · Architecture: não se aplica'));
     repo.ok(repo.state('approve', 'deltas', '--by', 'Ana'));
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
     repo.ok(repo.state('advance'));
     assert.match(checkFeature(repo, '--pr').stdout, /^- Modified: `keel\/product\.md#Checks`$/m);
     repo.write('keel/product.md', product);

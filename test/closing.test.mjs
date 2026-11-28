@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { requirementsDoc } from './fixtures.mjs';
-import { closingRepo, closingTasksDoc } from './story-repo.mjs';
+import { closingRepo, closingTasksDoc, storyRepo } from './story-repo.mjs';
 import { convergenceRows, convergenceLines, sectionDelta } from '../scripts/closing.mjs';
 
 const doneTasks = () => closingTasksDoc()
@@ -108,6 +108,7 @@ test('product.md or ADRs changed since the story base need approve deltas, tied 
     const refused = repo.state('advance');
     assert.match(refused.stderr, /approval:deltas\?: .*approve deltas --by/);
     repo.ok(repo.state('approve', 'deltas', '--by', 'Ana'));
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
     next = json(repo.state('next'));
     assert.deepEqual(next.missing, []);
     repo.write('keel/adrs/ADR-002-google.md', '# ADR-002 changed\n');
@@ -127,6 +128,7 @@ test('without deltas there is nothing to approve and the gate does not apply (AC
     const refused = repo.state('approve', 'deltas', '--by', 'Ana');
     assert.notEqual(refused.status, 0);
     assert.match(refused.stderr, /no product\.md or ADR delta to approve/);
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
     assert.equal(json(repo.state('advance')).phase, 'done');
   } finally {
     repo.cleanup();
@@ -200,6 +202,38 @@ test('decisions: without architecture.json, skipped blocks unless Checks says Ar
     repo.write('keel/product.md', readFileSync(product, 'utf8').replace('Tests: `node -e 0`', 'Tests: `node -e 0` · Architecture: não se aplica'));
     next = json(repo.state('next'));
     assert.ok(!next.missing.some((m) => m.criterion === 'arch:baseline-not-grown'), JSON.stringify(next.missing));
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test('story review: advance needs review story in the closing', () => {
+  const repo = closingRepo();
+  try {
+    repo.copyConvergence();
+    const refused = repo.state('advance');
+    assert.notEqual(refused.status, 0);
+    assert.match(refused.stderr, /review:story: .*run review story --result/);
+    const invalid = repo.state('review', 'story', '--result', 'maybe');
+    assert.notEqual(invalid.status, 0);
+    assert.match(invalid.stderr, /use ok, findings, unavailable/);
+    const unknown = repo.state('review', 'design', '--result', 'ok');
+    assert.match(unknown.stderr, /use requirements, task or story/);
+    repo.ok(repo.state('review', 'story', '--result', 'ok'));
+    assert.ok(!json(repo.state('next')).missing.some((m) => m.criterion === 'review:story'));
+    repo.ok(repo.state('review', 'story', '--result', 'unavailable'));
+    assert.equal(json(repo.state('advance')).phase, 'done');
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test('story review: review story only in the closing phase', () => {
+  const repo = storyRepo();
+  try {
+    const refused = repo.state('review', 'story', '--result', 'ok');
+    assert.notEqual(refused.status, 0);
+    assert.match(refused.stderr, /review story only in phase closing; the story is in implementation/);
   } finally {
     repo.cleanup();
   }

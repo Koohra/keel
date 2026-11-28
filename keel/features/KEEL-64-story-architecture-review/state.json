@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-64",
+    "title": "Revisor: revisão de arquitetura da história inteira no fechamento",
+    "source": "https://github.com/Koohra/keel/issues/64",
+    "folder": "keel/features/KEEL-64-story-architecture-review",
+    "branch": "feat/story-architecture-review",
+    "base": null
+  },
+  "level": "with-design",
+  "phase": "implementation",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-28T00:34:05.742Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-28T00:36:04.274Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T00:36:04.321Z",
+      "hash": "3bf43b193e78b4561a805fb322fc1434325acccffe26578f7d7388c3e5db28ff"
+    },
+    "design": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T00:37:06.178Z",
+      "hash": "e17f7346957f02809225d10107aeef3f7732f1fc3814ae76920aa0c56146e53e"
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T00:37:06.225Z",
+      "hash": "87d5ed4d2b04395cbc82c7de4e9fba3cacd32e74f5b01fcadd671fdc7892f2ae"
+    },
+    "implementation": {
+      "currentTask": "T1",
+      "blocked": null,
+      "red": {
+        "command": "node --test test/closing.test.mjs",
+        "exitCode": 1,
+        "output": "    \n  operator: 'match'\n  stack: |-\n    TestContext.<anonymous> (file:///home/user/keel/test/closing.test.mjs:234:12)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..15\n# tests 15\n# suites 0\n# pass 13\n# fail 2\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 27368.286587",
+        "at": "2026-11-28T00:37:23.747Z"
+      },
+      "green": {
+        "command": "node --test test/closing.test.mjs",
+        "exitCode": 0,
+        "output": "ok 14 - story review: advance needs review story in the closing\n  ---\n  duration_ms: 3026.602489\n  type: 'test'\n  ...\n# Subtest: story review: review story only in the closing phase\nok 15 - story review: review story only in the closing phase\n  ---\n  duration_ms: 587.989019\n  type: 'test'\n  ...\n1..15\n# tests 15\n# suites 0\n# pass 15\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 27424.470347",
+        "at": "2026-11-28T00:41:41.781Z"
+      },
+      "checks": {
+        "passed": true,
+        "fingerprint": "930b5ff21c46697ef037dc7458a7c8ae4e6345baf25c20f0888785ec870fda7e",
+        "at": "2026-11-28T00:42:09.301Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 58 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 246 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.112713\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 247 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.121763\n  type: 'test'\n  ...\n1..247\n# tests 247\n# suites 0\n# pass 247\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 27570.355083"
+          }
+        ]
+      },
+      "review": {
+        "task": "T1",
+        "result": "findings",
+        "at": "2026-11-28T00:42:37.150Z"
+      },
+      "commit": {
+        "task": "T1",
+        "approvedBy": "Miguel",
+        "at": "2026-11-28T00:42:56.013Z",
+        "fingerprint": "930b5ff21c46697ef037dc7458a7c8ae4e6345baf25c20f0888785ec870fda7e"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "convergence": null,
+      "arch": null,
+      "deltas": null,
+      "deltasApproved": null,
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-28T00:42:56.013Z"
+}

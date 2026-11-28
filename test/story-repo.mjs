@@ -129,6 +129,7 @@ export function closingRepo({ architecture = null, extra = {}, base = null, befo
   };
   const close = () => {
     copyConvergence();
+    ok(repo.state('review', 'story', '--result', 'ok'));
     ok(repo.state('advance'));
   };
   return { ...repo, setStatus, ok, copyConvergence, close };

@@ -18,7 +18,7 @@
       "exit": ["tasks:all-done"],
       "taskExit": ["evidence:red", "evidence:green", "checks:passed", "review:task", "approval:commit"] },
     { "id": "closing", "instructions": "phases/closing.md",
-      "exit": ["convergence:all-rules", "arch:baseline-not-grown", "approval:deltas?"] },
+      "exit": ["convergence:all-rules", "arch:baseline-not-grown", "review:story", "approval:deltas?"] },
     { "id": "done" }
   ]
 }
