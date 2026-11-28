@@ -117,3 +117,8 @@ test('setup: the new repository ends with ADR-001, rungs and a planned architect
   const stage0 = read('docs/specification.md').match(/## Etapa 0\.[\s\S]*?(?=\n## Etapa 1\.)/)[0];
   assert.match(stage0, /sem código-fonte[^\n]*"Quality goals"[^\n]*ADR-001/);
 });
+
+test('setup: in a repository without source code every question follows the interview format', () => {
+  const intro = skill.slice(0, skill.indexOf('## 1. '));
+  assert.match(intro, /sem código-fonte[^\n]*toda pergunta[^\n]*passo 2[^\n]*"por que importa"[^\n]*as opções[^\n]*recomendação[^\n]*uma por vez/);
+});

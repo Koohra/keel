@@ -11,6 +11,8 @@ com a opção recomendada.
 
 Linguagem simples: em cada decisão com consequência e em cada pergunta com opções, escreva para quem não é dev, o que serve também ao dev (não há modo leigo). Cada opção começa com uma frase sobre o que muda para o produto ou para o usuário, com as palavras do glossário do `keel/product.md` e sem jargão de processo (degrau, porta, adaptador, mapper, agregado); depois das opções, a recomendação, com o porquê na mesma linguagem. O termo técnico aparece só entre parênteses, depois da frase simples.
 
+Repositório sem código-fonte (passo 3.1): toda pergunta do setup, também as do passo 2 sobre o product.md, segue o formato da entrevista: uma frase "por que importa", as opções e a recomendação, uma por vez, aceita com "sim".
+
 Caminhos: `<plugin>` é a pasta do plugin: no Claude Code, `${CLAUDE_PLUGIN_ROOT}`; em outro agente, a pasta dois níveis acima deste SKILL.md. Troque `<plugin>` pelo caminho antes de rodar um comando.
 
 Scripts (Node, sem dependências), rodados na raiz do projeto:

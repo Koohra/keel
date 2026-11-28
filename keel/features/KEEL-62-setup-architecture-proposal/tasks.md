@@ -48,6 +48,15 @@ Test first: `stage 0 has a case: an empty repository gets one question at a time
 Verification: `node --test test/evals.test.mjs`
 Done when: o teste novo passa
 Depends on: T4
+
+## T6 — Toda pergunta do setup em repositório sem código-fonte segue o formato da entrevista
+Covers: R1 (AC-1.1)
+Files: `skills/setup/SKILL.md`, `test/setup-skill.test.mjs`
+New structure: none
+Test first: `setup: in a repository without source code every question follows the interview format` — o setup diz, antes do passo 1, que em repositório sem código-fonte toda pergunta, também as do passo 2, traz "por que importa", as opções e a recomendação, uma por vez
+Verification: `node --test test/setup-skill.test.mjs`
+Done when: o teste novo passa
+Depends on: T5
 <!-- frozen after approval: end -->
 
 ## Progress
@@ -81,7 +90,14 @@ RED evidence: `node --test test/evals.test.mjs` exited with 1 at 2026-11-28T01:3
 GREEN evidence: `node --test test/evals.test.mjs` exited with 0 at 2026-11-28T01:32:54.729Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (grader de uma pergunta só na última mensagem); F2 fixed (os graders olham a última mensagem, como o design-decision-plain)
+### T6
+Status: in review
+RED evidence: `node --test test/setup-skill.test.mjs` exited with 1 at 2026-11-28T01:35:48.794Z
+GREEN evidence: `node --test test/setup-skill.test.mjs` exited with 0 at 2026-11-28T01:35:54.474Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: ok (isolated reviewer)
 ## Implementation notes
+- 2026-11-28: a revisão de história achou que o eval do repositório vazio olha a primeira pergunta, que é a do passo 2 e não tinha "por que importa"; virou a T6. Tasks aprovadas de novo por Miguel (aprovação permanente do épico #61).
 - 2026-11-28: a T2 ganhou `plugins/keel-docs/scripts/doc-check.mjs` no `Files:`: o doc-check exige toda seção do modelo, e "Quality goals" precisa ser opcional para product.md de projeto existente (Existing behavior). Tasks aprovadas de novo por Miguel (aprovação permanente do épico #61).
 
 ## Story review
@@ -90,3 +106,10 @@ Review: <ok | findings and what became of each one | unavailable> (filled in the
 ## Convergence (filled at the end, checked by script)
 | Rule | Evidence | Outcome |
 |---|---|---|
+| R1 | T1 `setup: a repository without source code gets an interview of at most 6 questions` (de73e5c) | met |
+| R2 | T2 `setup: answers become 3 to 5 Quality goals scenarios` (abd5b31) | met |
+| R3 | T3 `setup: approaches by stance, a starter checked on the web and "tanto faz" as a Keel decision` (c18084a) | met |
+| R4 | T4 `setup: the new repository ends with ADR-001, rungs and a planned architecture.json` (d99c73b) | met |
+| R5 | T4 `setup: the new repository ends with ADR-001, rungs and a planned architecture.json` (d99c73b) | met |
+| R6 | T3 `setup: approaches by stance, a starter checked on the web and "tanto faz" as a Keel decision` (c18084a) | met |
+| R7 | T5 `stage 0 has a case: an empty repository gets one question at a time and no waiver` (1e56913) | met |
