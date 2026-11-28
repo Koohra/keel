@@ -82,7 +82,11 @@ GREEN evidence: `node --test test/arch-check.test.mjs` exited with 0 at 2026-11-
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (campo `orphan` removido, filtro por `rule`); F2 kept (o código 2 vem do mesmo `catch` testado em AC-1.3, como nos testes de `planned`)
 ### T3
-Status: pending
+Status: in review
+RED evidence: `node --test test/post-tool-use.test.mjs` exited with 1 at 2026-11-28T00:38:16.431Z
+GREEN evidence: `node --test test/post-tool-use.test.mjs` exited with 0 at 2026-11-28T00:39:00.742Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: ok (isolated reviewer)
 ### T4
 Status: pending
 ### T5
