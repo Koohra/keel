@@ -70,7 +70,7 @@ Depends on: T1, T2, T5
 
 ## Progress
 ### T1
-Status: in review
+Status: done (a0079f2)
 RED evidence: `node --test test/arch-check.test.mjs` exited with 1 at 2026-11-28T00:33:15.058Z
 GREEN evidence: `node --test test/arch-check.test.mjs` exited with 0 at 2026-11-28T00:34:53.246Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
