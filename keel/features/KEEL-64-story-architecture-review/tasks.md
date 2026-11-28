@@ -70,11 +70,16 @@ GREEN evidence: `node --test test/closing.test.mjs` exited with 0 at 2026-11-28T
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
 Review: findings (isolated reviewer); F1 fixed (Review: findings sem sufixo é recusado, com teste); F2 fixed (a linha precisa começar com findings, com teste); F3 kept (segunda ocorrência; o princípio 7 extrai na terceira)
 ### T4
-Status: pending
+Status: in review
+RED evidence: `node --test test/story-skill.test.mjs` exited with 1 at 2026-11-28T00:52:15.301Z
+GREEN evidence: `node --test test/story-skill.test.mjs` exited with 0 at 2026-11-28T00:55:29.761Z
+Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
+Review: findings (isolated reviewer); F1 fixed (o fechamento passa o git diff <closing.base>..HEAD, porque o revisor não roda git; teste confere); F2 fixed (teste confere a frase do Não julgado); F3 kept (a description do frontmatter passa a citar a história inteira; desvio do Code map registrado para o PR)
 ### T5
 Status: pending
 
 ## Implementation notes
+- T4: três falhas seguidas (texto do reviewer.md sem as palavras exatas do teste); `block` gravado com a causa e seguido sob a aprovação permanente. Desvio do design: a `description` do frontmatter do `agents/reviewer.md` cita a história inteira.
 - 2026-11-28: o `Files:` da T3 ganhou `scripts/keel-state.mjs` (o critério `review:story` precisa receber o tasks.md); tasks.md aprovado de novo por Miguel (aprovação permanente do épico #61).
 - O design tem `Trigger: contract`, então o `next` pede o checklist de contrato; T1 e T2 foram revisadas sem ele, a partir da T3 ele vai ao revisor.
 - Fora do escopo: a lista `['ok', 'findings', 'unavailable']` aparece em `scripts/keel-state.mjs`, `scripts/task-loop.mjs` e `scripts/closing.mjs`; extrair pede mexer no `task-loop.mjs`.
