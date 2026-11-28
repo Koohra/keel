@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readJson } from './helpers.mjs';
+import { read, readJson } from './helpers.mjs';
 import { designDoc, requirementsDoc, tasksDoc } from './fixtures.mjs';
 import { newState, nextStep, advance, approve, setLevel, recordReview, recordGenerated } from '../scripts/keel-state.mjs';
 import { storyRepo } from './story-repo.mjs';
@@ -365,4 +365,22 @@ test('adr: approve commit points the project docs to the closing', () => {
     /T1 changed keel\/adrs\/ADR-002-x\.md, outside its Files:.*closing.*adr-draft\.md/s);
   assert.throws(() => approveCommit(reviewed, 'Ana', inReview(), 'tree', taskExit, now, ['src/extra.js']),
     (error) => !/adr-draft\.md/.test(error.message));
+});
+
+test('checklists: new structure or a rung change brings the structure checklist', () => {
+  const design = (trigger, structure) => designDoc().replace('Trigger: new dependency', `Trigger: ${trigger}`)
+    .replace('Security: token on the server.', 'Security: not applicable')
+    .replace('## New structure and rationale\nNenhuma.\n', `## New structure and rationale\n${structure}\n`);
+  const header = '| Element | Kind (interface, layer, mapper/DTO, module, helper, dependency) | Rationale | Simpler alternative and why not |\n|---|---|---|---|';
+  const row = `${header}\n| UserStore | interface | 2nd implementation (o fake de teste) | função direta: dois lugares gravam |`;
+  assert.deepEqual(reviewChecklists(design('trade-off — cache', row)), ['checklists/structure.md']);
+  assert.deepEqual(reviewChecklists(design('new structure — módulo de usuários', 'none')), ['checklists/structure.md']);
+  assert.deepEqual(reviewChecklists(design('rung change — usuários ganham camadas', 'none')), ['checklists/structure.md']);
+  assert.deepEqual(reviewChecklists(design('contract — a API muda', row)), ['checklists/contract.md', 'checklists/structure.md']);
+  assert.deepEqual(reviewChecklists(design('contract — a API muda', `none — a resposta esperada.\n\n${header}`)), ['checklists/contract.md']);
+  assert.deepEqual(reviewChecklists(design('trade-off — cache', `${header}\n| <element> | <kind> | <R#> | <why not> |`)), []);
+  assert.deepEqual(reviewChecklists(design('trade-off — cache', `${header.replace('|---|', '|:---|')}`)), [], 'an aligned separator is not a row');
+  const items = read('skills/story/checklists/structure.md').split('\n').filter((line) => /^\d+\. /.test(line));
+  assert.equal(items.length, 5);
+  for (const [i, topic] of [/componente/, /degrau/, /reus/, /`architecture\.json`/, /formato de erro e de dados/].entries()) assert.match(items[i], topic);
 });

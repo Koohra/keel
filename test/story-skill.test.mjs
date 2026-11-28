@@ -85,7 +85,7 @@ test('debugging, review answer and checklists are in the skill', () => {
   assert.match(implementation, /task\.debugging/);
   assert.match(implementation, /task\.checklists/);
   for (const answer of ['Confira cada achado no código', 'discorde com a fonte', 'nunca afrouxe o teste']) assert.match(implementation, new RegExp(answer), answer);
-  for (const name of ['security', 'data', 'contract']) {
+  for (const name of ['security', 'data', 'contract', 'structure']) {
     const items = read(`skills/story/checklists/${name}.md`).split('\n').filter((line) => /^\d+\. /.test(line));
     assert.ok(items.length >= 1 && items.length <= 5, `${name}: ${items.length} itens`);
   }
@@ -214,4 +214,13 @@ test('plain: phase texts and guides put degrau, porta and mapper only in parenth
       assert.doesNotMatch(outside, /\b(degraus?|portas?|mappers?)\b/i, `${file}: ${line}`);
     }
   }
+});
+
+test('triage: the phase reads designTriggers and proposes with-design', () => {
+  const triage = read('skills/story/phases/triage.md');
+  assert.match(triage, /triage\.designTriggers/);
+  assert.match(triage, /gatilho automático[^\n]*`with-design`/);
+  assert.match(triage, /o script recusa `trivial` e `standard`/);
+  const spec = read('docs/specification.md');
+  assert.match(spec, /triage\.designTriggers/);
 });

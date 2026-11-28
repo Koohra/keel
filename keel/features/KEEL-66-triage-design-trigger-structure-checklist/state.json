@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "story": {
+    "key": "KEEL-66",
+    "title": "Triagem: gatilho automático de design e checklist de estrutura",
+    "source": null,
+    "folder": "keel/features/KEEL-66-triage-design-trigger-structure-checklist",
+    "branch": "feat/triage-design-trigger-structure-checklist",
+    "base": null
+  },
+  "level": "with-design",
+  "phase": "done",
+  "steps": {
+    "triage": {
+      "done": true,
+      "confirmedBy": "Miguel",
+      "at": "2026-11-28T02:08:17.936Z"
+    },
+    "reading": {
+      "repoMap": true
+    },
+    "requirements": {
+      "review": {
+        "result": "findings",
+        "at": "2026-11-28T02:10:04.226Z"
+      },
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T02:10:04.269Z",
+      "hash": "0232f085a827f89d698847c9cd3d58e649d91a0724bc62881be8c7b12af091d6"
+    },
+    "design": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T02:10:57.293Z",
+      "hash": "e9cdec11b9ed5a716a61f152766b79011d8c59ed03ea0d33b595ba25279ac830"
+    },
+    "tasks": {
+      "approved": true,
+      "approvedBy": "Miguel",
+      "approvedAt": "2026-11-28T02:13:51.072Z",
+      "hash": "f1f91813ecac04c739d33519cffd284605ec7fd406fda93d465082b4261b73b5"
+    },
+    "implementation": {
+      "currentTask": "T4",
+      "blocked": null,
+      "red": {
+        "command": "node --test test/task-loop.test.mjs test/story-skill.test.mjs",
+        "exitCode": 1,
+        "output": "  actual:\n  operator: 'deepStrictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///home/user/keel/test/task-loop.test.mjs:376:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n1..40\n# tests 40\n# suites 0\n# pass 38\n# fail 2\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 5181.763349",
+        "at": "2026-11-28T02:21:30.679Z"
+      },
+      "green": {
+        "command": "node --test test/task-loop.test.mjs test/story-skill.test.mjs",
+        "exitCode": 0,
+        "output": "ok 39 - adr: approve commit points the project docs to the closing\n  ---\n  duration_ms: 1.692548\n  type: 'test'\n  ...\n# Subtest: checklists: new structure or a rung change brings the structure checklist\nok 40 - checklists: new structure or a rung change brings the structure checklist\n  ---\n  duration_ms: 0.688924\n  type: 'test'\n  ...\n1..40\n# tests 40\n# suites 0\n# pass 40\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 4861.748908",
+        "at": "2026-11-28T02:23:42.877Z"
+      },
+      "checks": {
+        "passed": true,
+        "fingerprint": "b52d28c4bd3d217175405fa9549d527ddc764365cb2d5fe57aee356c87b5f91b",
+        "at": "2026-11-28T02:23:47.828Z",
+        "results": [
+          {
+            "name": "Architecture",
+            "command": "node scripts/arch-check.mjs",
+            "exitCode": 0,
+            "output": "arch-check (approximate scanner): 58 file(s) read, 0 new violation(s), 0 known in the baseline"
+          },
+          {
+            "name": "Tests",
+            "command": "npm test",
+            "exitCode": 0,
+            "output": "ok 264 - implementation loops per task and requires evidence, review and commit approval\n  ---\n  duration_ms: 0.091066\n  type: 'test'\n  ...\n# Subtest: dev gates sit in the right phases\nok 265 - dev gates sit in the right phases\n  ---\n  duration_ms: 0.110603\n  type: 'test'\n  ...\n1..265\n# tests 265\n# suites 0\n# pass 265\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 39037.515864"
+          }
+        ]
+      },
+      "review": {
+        "task": "T4",
+        "result": "findings",
+        "at": "2026-11-28T02:24:32.544Z"
+      },
+      "commit": {
+        "task": "T4",
+        "approvedBy": "Miguel",
+        "at": "2026-11-28T02:24:32.666Z",
+        "fingerprint": "b52d28c4bd3d217175405fa9549d527ddc764365cb2d5fe57aee356c87b5f91b"
+      },
+      "failedAttempts": null
+    },
+    "closing": {
+      "base": "de837a6a4dfef006211645f75535cac6ebac5395",
+      "head": "8071800c8e9ba28854cfd2dc625c7e02029e6692",
+      "convergence": [
+        {
+          "rule": "R1",
+          "evidence": "T1 `triage: a planned component without files makes the level with-design` (a3f31b4); T2 `triage: a new orphan file and a project without source code are design triggers` (920b4ee)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R2",
+          "evidence": "T1 `triage: a planned component without files makes the level with-design` (a3f31b4)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R3",
+          "evidence": "T3 `triage: the phase reads designTriggers and proposes with-design` (39a2ab8)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R4",
+          "evidence": "T4 `checklists: new structure or a rung change brings the structure checklist` (22025e1)",
+          "outcome": "met"
+        },
+        {
+          "rule": "R5",
+          "evidence": "T1 `triage: a planned component without files makes the level with-design` (a3f31b4); T4 `checklists: new structure or a rung change brings the structure checklist` (22025e1)",
+          "outcome": "met"
+        }
+      ],
+      "arch": {
+        "status": "ok",
+        "violations": [],
+        "grown": [],
+        "orphans": [],
+        "created": [],
+        "noActive": false
+      },
+      "deltas": {
+        "files": [],
+        "sections": {
+          "added": [],
+          "modified": [],
+          "removed": []
+        },
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "deltasApproved": null,
+      "review": {
+        "result": "findings",
+        "head": "8071800c8e9ba28854cfd2dc625c7e02029e6692",
+        "at": "2026-11-28T02:25:56.146Z"
+      },
+      "pullRequest": null
+    }
+  },
+  "updatedAt": "2026-11-28T02:25:56.345Z"
+}

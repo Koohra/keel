@@ -29,10 +29,11 @@ export function storyRepo({ verification = 'node check.mjs', checks = 'Tests: `n
   write('keel/product.md', `# Produto\n\n## Engineering principles\n1. Nada.\n\n### Checks\n${checks}\n`);
   // check.mjs passes once src/login.js exists.
   write('check.mjs', check ?? "import { existsSync } from 'node:fs';\nif (!existsSync('src/login.js')) { console.log('not ok 1 - login.test.js abre o consentimento'); process.exit(1); }\nconsole.log('ok 1');\n");
-  if (architecture) write('keel/architecture.json', JSON.stringify(architecture, null, 2));
   const ok = (r) => assert.equal(r.status, 0, r.stderr);
   ok(state('init', '--key', 'APP-1', '--slug', 'login', '--title', 'Login', ...(base ? ['--base', base] : [])));
   ok(state('level', 'standard', '--by', 'Ana'));
+  // Written after the triage: a planned component without files would make the level with-design.
+  if (architecture) write('keel/architecture.json', JSON.stringify(architecture, null, 2));
   ok(state('advance'));
   ok(state('generated', 'repo-map'));
   ok(state('advance'));
