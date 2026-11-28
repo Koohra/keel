@@ -16,7 +16,7 @@ Depends on: —
 
 ## Progress
 ### T1
-Status: in review
+Status: done (9c9db31)
 RED evidence: `npm test` exited with 1 at 2026-11-28T11:16:16.494Z
 GREEN evidence: `npm test` exited with 0 at 2026-11-28T15:28:51.401Z
 Checks: Architecture `node scripts/arch-check.mjs` exited with 0; Tests `npm test` exited with 0
